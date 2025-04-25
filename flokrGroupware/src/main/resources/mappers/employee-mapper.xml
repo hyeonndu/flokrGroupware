@@ -22,6 +22,20 @@
         <result property="status" column="STATUS"/>
     </resultMap>
     
+    <resultMap id="departmentResultMap" type="department">
+        <result property="deptNo" column="DEPT_NO"/>
+        <result property="deptName" column="DEPT_NAME"/>
+        <result property="createDate" column="CREATE_DATE"/>
+        <result property="status" column="STATUS"/>
+    </resultMap>
+    
+    <resultMap id="positionResultMap" type="position">
+        <result property="positionNo" column="POSITION_NO"/>
+        <result property="positionName" column="POSITION_NAME"/>
+        <result property="createDate" column="CREATE_DATE"/>
+        <result property="status" column="STATUS"/>
+    </resultMap>
+    
     <select id="loginEmployee" parameterType="employee" resultMap="employeeResultMap">
         SELECT *
         FROM EMPLOYEE
@@ -29,4 +43,48 @@
         AND STATUS = 'Y'
     </select>
     
+    <select id="selectDepartmentList" resultMap="departmentResultMap">
+        SELECT *
+        FROM DEPARTMENT
+        WHERE STATUS = 'Y'
+        ORDER BY DEPT_NO
+    </select>
+    
+    <select id="selectPositionList" resultMap="positionResultMap">
+        SELECT *
+        FROM POSITION
+        WHERE STATUS = 'Y'
+        ORDER BY POSITION_NO
+    </select>
+    
+    <insert id="insertEmployee" parameterType="employee">
+        INSERT INTO EMPLOYEE(
+            EMP_NO,
+            EMP_NAME,
+            EMP_ID,
+            PASSWORD_HASH,
+            EMAIL,
+            PHONE,
+            DEPT_NO,
+            POSITION_NO,
+            HIRE_DATE,
+            WORK_LOCATION,
+            IS_ADMIN,
+            STATUS
+        )
+        VALUES(
+            SEQ_EMPLOYEE.NEXTVAL,
+            #{empName},
+            #{empId},
+            #{passwordHash},
+            #{email},
+            #{phone},
+            #{deptNo},
+            #{positionNo},
+            #{hireDate},
+            #{workLocation},
+            #{isAdmin, jdbcType=VARCHAR},
+            'Y'
+        )
+    </insert>
 </mapper>
