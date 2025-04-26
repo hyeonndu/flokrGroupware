@@ -1,6 +1,8 @@
 package com.kh.flokrGroupware.employee.model.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,5 +32,13 @@ public class EmployeeDao {
     
     public int insertEmployee(Employee e) {
         return sqlSession.insert("employeeMapper.insertEmployee", e);
+    }
+    
+    public String getLastEmployeeId(int deptNo, String yearPrefix) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("deptNo", deptNo);
+        params.put("yearPrefix", yearPrefix);
+        
+        return sqlSession.selectOne("employeeMapper.getLastEmployeeId", params);
     }
 }

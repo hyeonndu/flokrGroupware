@@ -7,10 +7,12 @@ import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.employee.model.vo.Position;
 
 public interface EmployeeService {
-
     Employee loginEmployee(Employee e);
     
     ArrayList<Department> selectDepartmentList();
     ArrayList<Position> selectPositionList();
+    
     int insertEmployee(Employee e);
+    
+    String getLastEmployeeId(int deptNo, String yearPrefix);
 }
