@@ -207,7 +207,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- 헤더 인클루드 -->
   <jsp:include page="common/header.jsp"/>
   
   <!-- 관리자 대시보드 메인 콘텐츠 -->
@@ -252,7 +251,7 @@
       </div>
     </div>
     
-    <!-- 관리자 기능 카드 - 헤더 메뉴와 일치하게 수정 -->
+    <!-- 관리자 기능 카드 -->
     <div class="admin-features">
       <!-- 조직 관리 카드 -->
       <div class="feature-card">
@@ -266,8 +265,8 @@
           부서와 직급 정보를 관리하고 조직도를 설정합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/admin/organization" class="feature-btn primary">조직도 관리</a>
-          <a href="${pageContext.request.contextPath}/admin/department" class="feature-btn">부서 관리</a>
+          <a href="${pageContext.request.contextPath}/adminOrganization" class="feature-btn primary">조직도 관리</a>
+          <a href="${pageContext.request.contextPath}/adminDepartment" class="feature-btn">부서 관리</a>
         </div>
       </div>
       
@@ -283,8 +282,8 @@
           신규 직원 정보를 등록하고 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/employee/register" class="feature-btn primary">신규 등록</a>
-          <a href="${pageContext.request.contextPath}/admin/employee/list" class="feature-btn">사원 목록</a>
+          <a href="${pageContext.request.contextPath}/employeeRegister" class="feature-btn primary">신규 등록</a>
+          <a href="${pageContext.request.contextPath}/employeeList" class="feature-btn">사원 목록</a>
         </div>
       </div>
       
@@ -300,9 +299,9 @@
           공지사항을 등록하고 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/admin/notice/create" class="feature-btn primary">공지 등록</a>
-          <a href="${pageContext.request.contextPath}/admin/notice/list" class="feature-btn">공지 목록</a>
-          <a href="${pageContext.request.contextPath}/notification/admin" class="feature-btn">알림 관리</a>
+          <a href="${pageContext.request.contextPath}/noticeCreate" class="feature-btn primary">공지 등록</a>
+          <a href="${pageContext.request.contextPath}/noticeList" class="feature-btn">공지 목록</a>
+          <a href="${pageContext.request.contextPath}/notificationAdmin" class="feature-btn">알림 관리</a>
         </div>
       </div>
       
@@ -318,8 +317,8 @@
           현재 시스템에 접속 중인 사용자를 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/admin/online-users" class="feature-btn primary">접속자 관리</a>
-          <a href="${pageContext.request.contextPath}/admin/user-logs" class="feature-btn">로그 조회</a>
+          <a href="${pageContext.request.contextPath}/onlineUsers" class="feature-btn primary">접속자 관리</a>
+          <a href="${pageContext.request.contextPath}/userLogs" class="feature-btn">로그 조회</a>
         </div>
       </div>
       
@@ -335,8 +334,8 @@
           사용자 권한 설정 및 계정 정보를 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/admin/user-permissions" class="feature-btn primary">권한 설정</a>
-          <a href="${pageContext.request.contextPath}/admin/password-reset" class="feature-btn">사용자 정보 관리</a>
+          <a href="${pageContext.request.contextPath}/userPermissions" class="feature-btn primary">권한 설정</a>
+          <a href="${pageContext.request.contextPath}/userInformation" class="feature-btn">사용자 정보 관리</a>
         </div>
       </div>
       
@@ -352,8 +351,8 @@
           회의실, 공용 장비 등 사내 시설을 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/admin/facility" class="feature-btn primary">시설 현황</a>
-          <a href="${pageContext.request.contextPath}/admin/facility/reservation" class="feature-btn">예약 관리</a>
+          <a href="${pageContext.request.contextPath}/adminFacility" class="feature-btn primary">시설 현황</a>
+          <a href="${pageContext.request.contextPath}/facilityReservation" class="feature-btn">예약 관리</a>
         </div>
       </div>
     </div>

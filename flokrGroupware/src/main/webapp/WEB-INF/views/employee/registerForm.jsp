@@ -18,7 +18,7 @@
     <div class="register-container">
         <h2 class="register-title">사원 등록</h2>
         
-        <form action="insert" method="post" id="employeeForm">
+        <form action="${pageContext.request.contextPath}/insertEmployee" method="post" id="employeeForm">
             <div class="register-row">
                 <div class="register-col">
                     <div class="register-group">
@@ -111,7 +111,7 @@
                 if(deptNo) {
                     // 서버에서 해당 부서의 마지막 사번 조회
                     $.ajax({
-                        url: "${pageContext.request.contextPath}/employee/getLastEmpId",
+                        url: "${pageContext.request.contextPath}/getLastEmpId",
                         data: {deptNo: deptNo, yearPrefix: currentYear},
                         success: function(data) {
                             // data는 마지막 순번 (예: 001, 002 등)

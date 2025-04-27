@@ -33,15 +33,15 @@ public class EmployeeController {
     public String root(HttpSession session) {
         // 로그인이 되어 있지 않으면 로그인 페이지로
         if(session.getAttribute("loginUser") == null) {
-            return "redirect:/loginForm"; // WEB-INF/views/loginForm.jsp
+            return "redirect:/";
         }
         
         // 로그인 되어 있으면 권한에 따라 다른 메인 페이지로
         Employee loginUser = (Employee)session.getAttribute("loginUser");
         if("Y".equals(loginUser.getIsAdmin())) {
-            return "redirect:/admin/main"; // 관리자 대시보드
+            return "redirect:/adminMain"; // 관리자 대시보드
         } else {
-            return "redirect:/user/main"; // 일반 사용자 메인
+            return "redirect:/userMain"; // 일반 사용자 메인
         }
     }
     
@@ -78,22 +78,20 @@ public class EmployeeController {
                 // 관리자 여부에 따라 다른 메인 페이지로 리다이렉트
                 if("Y".equals(loginUser.getIsAdmin())) {
                     session.setAttribute("alertMsg", "관리자로 로그인되었습니다.");
-                    // 직접 adminMain.jsp로 이동
-                    return "adminMain";
+                    return "redirect:/adminMain";
                 } else {
                     session.setAttribute("alertMsg", "로그인에 성공했습니다.");
-                    // 직접 main.jsp로 이동
-                    return "main";
+                    return "redirect:/userMain";
                 }
             } else {
                 // 비밀번호 불일치
                 session.setAttribute("alertMsg", "비밀번호가 일치하지 않습니다.");
-                return "loginForm";
+                return "redirect:/";
             }
         } else {
             // 아이디 존재하지 않음
             session.setAttribute("alertMsg", "존재하지 않는 아이디입니다.");
-            return "loginForm";
+            return "redirect:/";
         }
     }
     */
@@ -118,32 +116,33 @@ public class EmployeeController {
                 // 관리자 여부에 따라 다른 메인 페이지로 리다이렉트
                 if("Y".equals(loginUser.getIsAdmin())) {
                     session.setAttribute("alertMsg", "관리자로 로그인되었습니다.");
-                    return "redirect:/admin/main";
+                    return "redirect:/adminMain";
                 } else {
                     session.setAttribute("alertMsg", "로그인에 성공했습니다.");
-                    return "redirect:/user/main";
+                    return "redirect:/userMain";
                 }
             } else {
                 // 비밀번호 불일치
                 session.setAttribute("alertMsg", "비밀번호가 일치하지 않습니다.");
-                return "redirect:/loginForm";
+                return "redirect:/";
             }
         } else {
             // 아이디 존재하지 않음
             session.setAttribute("alertMsg", "존재하지 않는 아이디입니다.");
-            return "redirect:/loginForm";
+            return "redirect:/";
         }
     } 
     
     // 로그아웃
     @RequestMapping("logout.me")
     public String logoutEmployee(HttpSession session) {
+        session.setAttribute("alertMsg", "로그아웃 되었습니다.");
         session.invalidate();
-        return "redirect:/loginForm";
+        return "redirect:/";
     }
     
     // 사원 등록 폼 페이지 - 관리자만 접근 가능
-    @GetMapping("employee/register")
+    @GetMapping("employeeRegister")
     public String registerForm(Model model, HttpSession session) {
         // 로그인 여부 및 관리자 권한 체크
         Employee loginUser = (Employee)session.getAttribute("loginUser");
@@ -162,7 +161,7 @@ public class EmployeeController {
     
     // 해당 부서의 마지막 사번 순번 조회 (AJAX용)
     @ResponseBody
-    @GetMapping("employee/getLastEmpId")
+    @GetMapping("getLastEmpId")
     public String getLastEmployeeId(@RequestParam("deptNo") int deptNo, 
                                     @RequestParam("yearPrefix") String yearPrefix) {
         // 해당 부서와 년도로 시작하는 마지막 사번 조회
@@ -178,7 +177,7 @@ public class EmployeeController {
     }
     
     // 사원 등록 처리 - 관리자만 가능
-    @PostMapping("employee/insert")
+    @PostMapping("insertEmployee")
     public String insertEmployee(Employee e, 
                               @RequestParam(value="phone1", defaultValue="") String phone1,
                               @RequestParam(value="phone2", defaultValue="") String phone2,
@@ -233,7 +232,7 @@ public class EmployeeController {
             
             if(result > 0) {
                 session.setAttribute("alertMsg", "사원 등록이 완료되었습니다. 초기 비밀번호는 '" + initialPassword + "'입니다.");
-                return "redirect:/admin/main";
+                return "redirect:/adminMain";
             } else {
                 model.addAttribute("errorMsg", "사원 등록에 실패했습니다.");
                 return "common/errorPage";
@@ -245,7 +244,7 @@ public class EmployeeController {
     }
     
     // 관리자 메인 페이지 매핑
-    @RequestMapping("admin/main")
+    @RequestMapping("adminMain")
     public String adminMain(HttpSession session, Model model) {
         // 로그인 여부 및 관리자 권한 체크
         Employee loginUser = (Employee)session.getAttribute("loginUser");
@@ -256,9 +255,9 @@ public class EmployeeController {
         
         return "adminMain";
     }
-    
+
     // 사용자 메인 페이지 매핑
-    @RequestMapping("user/main")
+    @RequestMapping("userMain")
     public String userMain(HttpSession session) {
         // 로그인 여부 체크
         if(session.getAttribute("loginUser") == null) {
