@@ -3,6 +3,7 @@ package com.kh.flokrGroupware.schedule.model.service;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.schedule.model.vo.Schedule;
 import com.kh.flokrGroupware.schedule.model.vo.ScheduleAttendee;
 
@@ -15,7 +16,10 @@ public interface ScheduleService {
     Schedule selectSchedule(int scheduleNo);
     
     // 일정 등록
-    int insertSchedule(Schedule schedule, int[] attendees);
+    int insertSchedule(Schedule schedule, int[] attendeeArray);
+    
+    // 직원 목록 조회
+    ArrayList<Employee> selectEmployeeList();
     
     // 일정 수정
     int updateSchedule(Schedule schedule, int[] attendees);

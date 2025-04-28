@@ -1,11 +1,15 @@
 package com.kh.flokrGroupware.schedule.controller;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,34 +20,61 @@ import com.kh.flokrGroupware.schedule.model.service.ScheduleService;
 import com.kh.flokrGroupware.schedule.model.vo.Schedule;
 import com.kh.flokrGroupware.schedule.model.vo.ScheduleAttendee;
 
+/**
+ * @author user1
+ *
+ */
 @Controller
 public class ScheduleController {
 	
 	@Autowired
     private ScheduleService scheduleService;
     
-    // 일정 캘린더 화면으로 이동
+    /**
+     * 일정 캘린더 화면으로 이동 메소드
+     * @param model
+     * @return
+     */
     @RequestMapping("calendar.sc")
     public String scheduleCalendar(Model model) {
         model.addAttribute("currentPage", "schedule");
         return "schedule/scheduleCalendar";
     }
     
-    // 일정 데이터 조회 (AJAX 요청 처리)
+    /**
+     * 일정 데이터 조회 (AJAX 요청 처리) 메소드
+     * @param start
+     * @param end
+     * @param personal
+     * @param dept
+     * @param company
+     * @param session
+     * @return
+     */
     @ResponseBody
     @RequestMapping("getSchedules.sc")    
-    public ArrayList<Map<String, Object>> getSchedules(String start, String end, String personal, String dept, String company, HttpSession session) {
+    public ResponseEntity<Object> getSchedules(String start, String end, String personal, String dept, String company, HttpSession session) {
         
     	// 로그인한 사용자 정보 가져오기
         Employee loginUser = (Employee)session.getAttribute("loginUser");
+        if (loginUser == null) {
+            // 로그인되지 않은 경우 401 Unauthorized 상태 코드 반환
+            return new ResponseEntity<Object>(HttpStatus.UNAUTHORIZED);
+        }
         int empNo = loginUser.getEmpNo();
         int deptNo = loginUser.getDeptNo();
         
         // 서비스를 통해 일정 데이터 조회 및 변환
-        return scheduleService.getScheduleEvents(empNo, deptNo, start, end, personal, dept, company);
+        ArrayList<Map<String, Object>> events = scheduleService.getScheduleEvents(empNo, deptNo, start, end, personal, dept, company);
+        return new ResponseEntity<Object>(events, HttpStatus.OK);
     }
     
-    // 일정 상세 조회 (모달용)
+    /**
+     * 일정 상세 조회 (모달용) 메소드
+     * @param scheduleNo
+     * @param model
+     * @return
+     */
     @RequestMapping("detailModal.sc")
     public String scheduleDetail(int scheduleNo, Model model) {
     	// 일정 정보 조회
@@ -58,6 +89,101 @@ public class ScheduleController {
     	// 모달용 부분 뷰 리턴
     	return "schedule/scheduleDetailModal";
     	
+    }
+    
+    /**
+     * 일정 등록 폼으로 이동하는 메소드
+     * @param model 뷰에 데이터를 전달하기 위한 Model 객체
+     * @param session 로그인 정보를 가져오기 위한 HttpSession 객체
+     * @return 일정 등록 폼 페이지의 뷰 이름
+     */
+    @RequestMapping("enrollForm.sc")
+    public String scheduleEnrollForm(Model model, HttpSession session) {
+    	// 로그인한 사용자 정보 가져오기
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
+    	
+    	// 참석자 선택을 위한 직원 목록 조회
+    	ArrayList<Employee> eList = scheduleService.selectEmployeeList();
+    	
+    	// 헤더에서 일정 메뉴를 활성화하기 위해 추가
+    	model.addAttribute("currentPage", "schedule");
+    	model.addAttribute("eList", eList);
+    	//System.out.println(eList);
+    	
+    	return "schedule/scheduleEnrollForm";    	
+    	
+    }
+    
+    /**
+     * 일정 등록 메소드
+     * @param schedule 등록할 일정 정보
+     * @param attendee 참석자 ID 배열 (쉼표로 구분된 문자열)
+     * @param session 로그인 정보 확인용 세션
+     * @return 일정 목록 페이지로 리다이렉트
+     */
+    @RequestMapping("insert.sc")
+    public String insertSchedule(Schedule schedule, String startDate, String startTime,
+            String endDate, String endTime, String attendee, HttpSession session, Model model) {
+    	
+    	System.out.println("일정 등록 요청 받음");
+        System.out.println("제목: " + schedule.getScheduleTitle());
+        System.out.println("참석자: " + attendee);
+    	
+    	// 날짜와 시간 결합
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            java.util.Date startDateTime = dateFormat.parse(startDate + " " + startTime);
+            java.util.Date endDateTime = dateFormat.parse(endDate + " " + endTime);
+            
+            // java.util.Date => java.sql.Date로 변환
+            schedule.setStartDate(new java.sql.Date(startDateTime.getTime()));
+            schedule.setEndDate(new java.sql.Date(endDateTime.getTime()));
+        } catch (ParseException e) {
+            model.addAttribute("errorMsg", "날짜/시간 처리 중 오류가 발생했습니다.");
+            return "common/errorPage";
+        }
+    	
+    	// 로그인한 사용자 정보 가져오기
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
+    	if (loginUser == null) {
+    	    model.addAttribute("errorMsg", "로그인이 필요한 서비스입니다.");
+    	    return "common/errorPage";
+    	}
+    	
+    	int createEmpNo = loginUser.getEmpNo();
+    	
+    	// 일정 작성자 설정
+    	schedule.setCreateEmpNo(createEmpNo);
+    	
+    	// 참석자 ID 배열 처리
+        int[] attendeeArray = null;
+        if(attendee != null && !attendee.isEmpty()) {
+            try {
+                String[] attendeeStrings = attendee.split(",");
+                attendeeArray = new int[attendeeStrings.length];
+                
+                for(int i=0; i<attendeeStrings.length; i++) {
+                    attendeeArray[i] = Integer.parseInt(attendeeStrings[i]);
+                }
+            } catch (Exception e) {
+                model.addAttribute("errorMsg", "참석자 정보 처리 중 오류가 발생했습니다.");
+                return "common/errorPage";
+            }
+        }
+    	
+    	// 서비스 호출하여 일정 등록
+    	int result = scheduleService.insertSchedule(schedule, attendeeArray);
+    	
+    	if(result > 0) { 
+    		// 일정 등록 성공
+    		session.setAttribute("alertMsg", "일정이 성공적으로 등록되었습니다.");
+    		return "redirect:calendar.sc";
+    		
+    	}else {
+    		// 일정 등록 실패
+    		model.addAttribute("errorMsg", "일정 등록에 실패했습니다.");
+            return "common/errorPage";
+    	}
     	
     }
 

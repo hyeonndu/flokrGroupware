@@ -7,11 +7,12 @@ public class Schedule {
 	private int scheduleNo;				// 일정 번호
 	private int createEmpNo; 			// 작성자 사번
 	private String scheduleTitle;		// 일정 제목
-	private String discription;      	// 일정 설명
+	private String description;      	// 일정 설명
 	private Date startDate;				// 시작일
 	private Date endDate;				// 종료일
 	private String location;			// 장소
 	private String important;			// 중요도
+	private String scheduleType;		// 일정유형
 	private Date createDate;			// 생성일
 	private Date updateDate;			// 수정일
 	private String status;				// 활성상태
@@ -28,7 +29,7 @@ public class Schedule {
 		this.scheduleNo = scheduleNo;
 		this.createEmpNo = createEmpNo;
 		this.scheduleTitle = scheduleTitle;
-		this.discription = discription;
+		this.description = description;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.location = location;
@@ -63,12 +64,12 @@ public class Schedule {
 		this.scheduleTitle = scheduleTitle;
 	}
 
-	public String getDiscription() {
-		return discription;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setDiscription(String discription) {
-		this.discription = discription;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public Date getStartDate() {
@@ -134,15 +135,23 @@ public class Schedule {
 	public void setEmpName(String empName) {
 		this.empName = empName;
 	}
+	
+	public String getScheduleType() {
+	    return scheduleType;
+	}
+
+	public void setScheduleType(String scheduleType) {
+	    this.scheduleType = scheduleType;
+	}
 
 	@Override
 	public String toString() {
 		return "Schedule [scheduleNo=" + scheduleNo + ", createEmpNo=" + createEmpNo + ", scheduleTitle="
-				+ scheduleTitle + ", discription=" + discription + ", startDate=" + startDate + ", endDate=" + endDate
-				+ ", location=" + location + ", important=" + important + ", createDate=" + createDate + ", updateDate="
-				+ updateDate + ", status=" + status + ", empName=" + empName + "]";
+				+ scheduleTitle + ", description=" + description + ", startDate=" + startDate + ", endDate=" + endDate
+				+ ", location=" + location + ", important=" + important + ", scheduleType=" + scheduleType
+				+ ", createDate=" + createDate + ", updateDate=" + updateDate + ", status=" + status + ", empName="
+				+ empName + "]";
 	}
-    
-    
+
 
 }

@@ -32,6 +32,10 @@ public class Employee {
     private Date updateDate;
     private String status;
     
+    // 추가
+    private String deptName;
+    private String positionName; 
+    
     public String getPasswordHash() {
         return this.passwordHash;
     }
@@ -78,5 +82,21 @@ public class Employee {
 
     public void setIsAdmin(String isAdmin) {
         this.isAdmin = isAdmin;
+    }
+    
+    public void setDeptName(String deptName) {
+        this.deptName = deptName;
+    }
+
+    public String getDeptName() {
+        return deptName;
+    }
+    
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
+    }
+
+    public String getPositionName() {
+        return positionName;
     }
 }

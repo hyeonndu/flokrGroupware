@@ -122,7 +122,7 @@
         
         /* 날짜 번호 스타일 및 위치 조정 */
         .fc-daygrid-day-number {
-            font-size: 14px;
+            display: inline-block;
             padding: 3px 0;
             color: #333;
             text-decoration: none !important;
@@ -194,6 +194,21 @@
             background-color: #dbebfb !important;
         }
         
+        /* 날짜 선택 동그라미 스타일 */
+		.date-circle {
+		    width: 36px;
+		    height: 36px;
+		    background-color: #003561;
+		    color: white !important;
+		    border-radius: 50%;
+		    display: inline-flex !important;
+		    justify-content: center;
+		    align-items: center;
+		    font-weight: bold;
+		    text-align: center;
+		}
+		
+        
         /* 요일 행 스타일 */
         .fc-col-header {
             background-color: #f8f9fa;
@@ -203,6 +218,14 @@
         .fc-day-selected .fc-daygrid-day-number {
             font-weight: bold;
         }
+        
+		.fc-day-selected .fc-daygrid-day-number.date-circle {
+		    padding: 0 !important;
+		    margin: 5px 0 0 5px !important;
+		    width: 35px !important;
+		    height: 35px !important;
+		    text-align: center !important;
+		}
         
         /* 날짜 그리드 높이 조정 */
         .fc-daygrid-body .fc-daygrid-day {
@@ -259,7 +282,8 @@
 </head>
 <body class="calendar-wrapper">
     <jsp:include page="../common/header.jsp"/>
-    
+    <jsp:include page="scheduleDetailModal.jsp" /> 
+        
     <div class="calendar-content-container">
         <div class="calendar-header">
             <div style="display: flex; align-items: center;">
@@ -271,6 +295,9 @@
                     <span>&#8250;</span>
                 </button>
                 <button class="calendar-today-button" id="calendar-today-button" style="margin-left: 10px; background-color: #dbebfb; color: #114d79; border-radius: 4px; font-size: 14px; font-weight: bold; padding: 5px 12px;">오늘</button>
+	            <button id="add-schedule-btn" class="calendar-today-button" style="margin-left: 10px; background-color: white; color: #003561; border: 1px solid #003561; border-radius: 4px; font-size: 14px; font-weight: bold; padding: 5px 12px; transition: background-color 0.2s ease;">
+				    <span style="font-size: 16px; margin-right: 4px;">+</span> 새 일정 등록
+				</button>            
             </div>
             <div class="calendar-navigation">
                 <div class="calendar-view-controls">
@@ -409,17 +436,26 @@
                     });
                 },
                 
-                // 날짜 클릭 이벤트 - 해당 날짜에 색상 적용
+                // 날짜 클릭 이벤트 - 해당 날짜에 색상 적용 및 동그라미 추가
                 dateClick: function(info) {
                     // 모든 셀의 배경색 초기화
                     document.querySelectorAll('.fc-day').forEach(function(cell) {
                         cell.classList.remove('fc-day-selected');
                         cell.style.backgroundColor = '';
                     });
+                    document.querySelectorAll('.fc-daygrid-day-number').forEach(function(dateEl) {
+                        dateEl.classList.remove('date-circle');
+                    });
                     
                     // 선택한 날짜에 배경색 적용
                     info.dayEl.classList.add('fc-day-selected');
                     info.dayEl.style.backgroundColor = 'rgba(0, 53, 97, 0.1)';
+                    
+                 	// 선택한 날짜의 번호에 동그라미 스타일 적용
+                    var dateEl = info.dayEl.querySelector('.fc-daygrid-day-number');
+                    if(dateEl) {
+                        dateEl.classList.add('date-circle');
+                    }
                     
                     console.log('날짜 클릭: ' + info.dateStr);
                     
@@ -481,12 +517,22 @@
                             cell.classList.remove('fc-day-selected');
                             cell.style.backgroundColor = '';
                         });
+                        document.querySelectorAll('.fc-daygrid-day-number').forEach(function(dateEl) {
+                            dateEl.classList.remove('date-circle');
+                        });
                         
                         // 오늘 날짜 셀 찾기 및 강조 표시
                         var todayEl = document.querySelector('.fc-day[data-date="' + todayStr + '"]');
                         if (todayEl) {
                             todayEl.classList.add('fc-day-selected');
                             todayEl.style.backgroundColor = 'rgba(0, 53, 97, 0.1)';
+                            
+                         	// 오늘 날짜 번호에 동그라미 추가
+                            var todayNumEl = todayEl.querySelector('.fc-daygrid-day-number');
+                            if (todayNumEl) {
+                                todayNumEl.classList.add('date-circle');
+                            }
+                            
                             console.log('오늘 날짜 강조:', todayStr);
                         }
                     }, 100);
@@ -674,7 +720,23 @@
                 // 피커를 DOM에 추가
                 document.body.appendChild(picker);
             });
-        });
+         
+	         // 새 일정 등록 버튼 호버 효과
+	            const addScheduleBtn = document.getElementById('add-schedule-btn');
+	            addScheduleBtn.addEventListener('mouseenter', function() {
+	                this.style.backgroundColor = 'rgba(0, 53, 97, 0.1)'; // 테마 색상의 투명도를 낮춘 배경색
+	            });
+	            addScheduleBtn.addEventListener('mouseleave', function() {
+	                this.style.backgroundColor = 'white';
+	            });
+	
+	            // 새 일정 등록 버튼 클릭 이벤트
+	            addScheduleBtn.addEventListener('click', function() {
+	                // 일정 등록 페이지로 이동
+	                location.href = 'enrollForm.sc';
+	            });
+        });   
+        
     </script>
 
 </body>
