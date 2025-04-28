@@ -9,6 +9,8 @@
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/main.min.css' rel='stylesheet' />
 <!-- main CSS -->
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css">
+<!-- Material Icons 추가 -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">
 </head>
 <body>
 
@@ -147,8 +149,8 @@
                       <tr>
                         <th>NAME</th>
                         <th>GRADE</th>
-                        <th>CHECK</th>
-                        <th></th> <%-- 옵션 헤더 --%>
+                        <th>CHAT</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -164,7 +166,7 @@
                           </div>
                         </td>
                         <td><span class="addr-grade-label">팀원</span></td> <%-- 등급 예시 --%>
-                        <td><input type="checkbox"></td>
+                        <td><span class="material-icons" style="font-size: 20px;">sms</span></td>
                         <td><span class="addr-options-icon">⋮</span></td>
                       </tr>
                       <%-- Ryan --%>
@@ -179,7 +181,7 @@
                           </div>
                         </td>
                         <td><span class="addr-grade-label">팀원</span></td> <%-- 등급 예시 --%>
-                        <td><input type="checkbox"></td>
+                        <td><span class="material-icons" style="font-size: 20px;">sms</span></td>
                         <td><span class="addr-options-icon">⋮</span></td>
                       </tr>
                       <%-- Brian --%>
@@ -194,7 +196,7 @@
                           </div>
                         </td>
                         <td><span class="addr-grade-label">팀장</span></td> <%-- 등급 예시 --%>
-                        <td><input type="checkbox"></td>
+                        <td><span class="material-icons" style="font-size: 20px;">sms</span></td>
                         <td><span class="addr-options-icon">⋮</span></td>
                       </tr>
                     </tbody>
