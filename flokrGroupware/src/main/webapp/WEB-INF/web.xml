@@ -48,4 +48,9 @@
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
+	
+	<!-- 세션 타임아웃 (30분) -->
+	<session-config>
+		<session-timeout>30</session-timeout>
+	</session-config>
 </web-app>
