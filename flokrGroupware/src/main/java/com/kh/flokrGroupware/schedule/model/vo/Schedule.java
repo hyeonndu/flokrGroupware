@@ -19,10 +19,11 @@ public class Schedule {
 	
 	// FullCalendar 표시용 추가 필드
     private String empName;       		// 작성자 이름
+    private String allDay;				// 종일일정
     
     public Schedule() {}
 
-	public Schedule(int scheduleNo, int createEmpNo, String scheduleTitle, String discription, Date startDate,
+	public Schedule(int scheduleNo, int createEmpNo, String scheduleTitle, String description, Date startDate,
 			Date endDate, String location, String important, Date createDate, Date updateDate, String status,
 			String empName) {
 		super();
@@ -143,6 +144,14 @@ public class Schedule {
 	public void setScheduleType(String scheduleType) {
 	    this.scheduleType = scheduleType;
 	}
+	
+	public String getAllDay() {
+	    return allDay;
+	}
+
+	public void setAllDay(String allDay) {
+	    this.allDay = allDay;
+	}
 
 	@Override
 	public String toString() {
@@ -150,7 +159,7 @@ public class Schedule {
 				+ scheduleTitle + ", description=" + description + ", startDate=" + startDate + ", endDate=" + endDate
 				+ ", location=" + location + ", important=" + important + ", scheduleType=" + scheduleType
 				+ ", createDate=" + createDate + ", updateDate=" + updateDate + ", status=" + status + ", empName="
-				+ empName + "]";
+				+ empName + ", allDay=" + allDay + "]";
 	}
 
 

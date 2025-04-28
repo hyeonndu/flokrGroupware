@@ -8,6 +8,13 @@
     <link href="${pageContext.request.contextPath}/resources/css/tabler.min.css" rel="stylesheet" />
     <link href="${pageContext.request.contextPath}/resources/css/flokr.css" rel="stylesheet" />
     <style>
+    
+    	/* body 태그의 마진 제거 */
+		body {
+		    margin: 0;
+		    padding: 0;
+		}
+		
         /* 일정 등록 페이지 깔끔한 스타일 */
         .sc-enroll-container {
             max-width: 720px;
@@ -516,7 +523,7 @@
 </head>
 <body>
     <jsp:include page="../common/header.jsp"/>
-
+	
     <div class="page-body">
         <div class="sc-enroll-container">
             <div class="sc-enroll-card">
@@ -707,10 +714,12 @@
                 timeFieldsContainer.classList.add('hidden');
                 startTimeInput.value = '00:00';
                 endTimeInput.value = '23:59';
+                allDayCheckbox.value = 'Y'; // 체크됐을 때 "Y" 값 설정
             } else {
                 timeFieldsContainer.classList.remove('hidden');
                 if (!startTimeInput.value || startTimeInput.value === '00:00') startTimeInput.value = '09:00';
                 if (!endTimeInput.value || endTimeInput.value === '23:59') endTimeInput.value = '18:00';
+                allDayCheckbox.value = 'N'; // 체크 해제됐을 때 "N" 값 설정
             }
         }
 
@@ -838,6 +847,36 @@
             closeModal(); // 모달 닫기
         });
         // --- 참석자 선택 모달 관련 로직 끝 ---
+        
+        // 초기 값 설정
+		allDayCheckbox.value = allDayCheckbox.checked ? 'Y' : 'N';
+     	// 폼 제출 시 처리 로직 추가 
+        const scheduleForm = document.getElementById('scheduleForm');
+
+        scheduleForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // 기본 제출 동작 중지
+            
+            // 종일 일정이 아닐 경우, 시작일과 종료일을 시간과 결합
+            if (!allDayCheckbox.checked) {
+                // 날짜와 시간 결합을 서버에서 처리할 수도 있지만, 프론트에서도 유효성 검증을 위해 확인
+                const startDateValue = startDateInput.value;
+                const endDateValue = endDateInput.value;
+                const startTimeValue = startTimeInput.value;
+                const endTimeValue = endTimeInput.value;
+                
+                // 같은 날짜에 종료 시간이 시작 시간보다 빠른지 확인
+                if (startDateValue === endDateValue && startTimeValue > endTimeValue) {
+                    alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+                    return false;
+                }
+            } else {
+                // 종일 일정일 경우 allDay 값이 Y로 설정되도록
+                allDayCheckbox.value = 'Y';
+            }
+            
+            // 추가 검증 통과 시 폼 제출
+            this.submit();
+        });
 
     });
     </script>

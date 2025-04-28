@@ -12,9 +12,15 @@
     <style>
         /* 전체 레이아웃 */
         .calendar-wrapper {
-            font-family: 'Noto Sans KR', sans-serif;
             background-color: #f5f6f8;
+            margin-top: 0;
         }
+        
+        /* body 태그의 마진 제거 */
+		body {
+		    margin: 0;
+		    padding: 0;
+		}
         
         .calendar-content-container {
             max-width: 1400px;
@@ -160,29 +166,58 @@
             font-weight: normal;
         }
         
-        .calendar-blue-event {
-            background-color: rgba(0, 53, 97, 0.1) !important;
-            color: #003561 !important;
-            border-left: 3px solid #003561 !important;
-        }
-        
-        .calendar-green-event {
-            background-color: rgba(46, 204, 113, 0.1) !important;
-            color: #27ae60 !important;
-            border-left: 3px solid #27ae60 !important;
-        }
-        
-        .calendar-orange-event {
-            background-color: rgba(255, 159, 67, 0.1) !important;
-            color: #f39c12 !important;
-            border-left: 3px solid #f39c12 !important;
-        }
-        
-        .calendar-purple-event {
-            background-color: rgba(155, 89, 182, 0.1) !important;
-            color: #8e44ad !important;
-            border-left: 3px solid #8e44ad !important;
-        }
+        /* 일정 유형별 스타일 */
+		.calendar-personal-event {
+		    background-color: #dbeafe !important;
+		    color: #003561 !important;
+		    border-left: 3px solid #003561 !important;
+		}
+		
+		.calendar-team-event {
+		    background-color: #d1fae5;
+		    color: #27ae60 !important;
+		    border-left: 3px solid #27ae60;
+		}
+		
+		.calendar-company-event {
+		    background-color: #ffedd5;
+		    color: #f39c12 !important;
+		    border-left: 3px solid #f39c12;
+		}
+		
+		.calendar-other-event {
+		    background-color: #ede9fe  !important;
+		    color: #8e44ad !important; /* 보라색 */
+		    border-left: 3px solid #8e44ad !important;
+		}
+		
+		/* 중요도 배지 (일정 제목 옆에 작은 원형 또는 알약 모양) */
+		.importance-high {
+		    background-color: #e74c3c;
+		    color: white;
+		    padding: 2px 6px;
+		    border-radius: 10px;
+		    font-size: 0.7em;
+		    margin-left: 5px;
+		}
+		
+		.importance-medium {
+		    background-color: #27ae60; /* 녹색 */
+		    color: white;
+		    padding: 2px 6px;
+		    border-radius: 10px;
+		    font-size: 0.7em;
+		    margin-left: 5px;
+		}
+		
+		.importance-low {
+		    background-color: #003561; /* 파란색 */
+		    color: white;
+		    padding: 2px 6px;
+		    border-radius: 10px;
+		    font-size: 0.7em;
+		    margin-left: 5px;
+		}
         
         /* 오늘 날짜 스타일 */
         .fc .fc-daygrid-day.fc-day-today {
@@ -359,79 +394,19 @@
                             start: info.startStr, // 시작 날짜
                             end: info.endStr      // 종료 날짜
                         },
-                        success: function(result) {
-                            // 서버에서 받은 일정 데이터 처리
-                            successCallback(result.map(function(event) {
-                                // 이벤트 유형에 따라 클래스 지정
-                                var className = 'calendar-blue-event'; // 기본값
-                                
-                                if (event.scheduleType === 'PERSONAL') {
-                                    className = 'calendar-blue-event';
-                                } else if (event.scheduleType === 'TEAM') {
-                                    className = 'calendar-green-event';
-                                } else if (event.scheduleType === 'COMPANY') {
-                                    className = 'calendar-orange-event';
-                                } else if (event.scheduleType === 'OTHER') {
-                                    className = 'calendar-purple-event';
-                                }
-                                
-                                return {
-                                    id: event.scheduleNo,
-                                    title: event.scheduleTitle,
-                                    start: event.startDate,
-                                    end: event.endDate,
-                                    className: className,
-                                    // 기타 필요한 데이터
-                                    extendedProps: {
-                                        description: event.scheduleContent,
-                                        location: event.location
-                                    }
-                                };
-                            }));
+                        success: function(result) { 
+                        	// 서버에서 받은 일정 데이터 처리
+                            successCallback(result);  // 서버에서 이미 FullCalendar 형식으로 변환된 데이터를 받기 때문에 바로 사용
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             failureCallback(errorThrown);
                             console.error("일정 데이터를 불러오는데 실패했습니다.", errorThrown);
                             
-                            // 개발 중에는 예시 데이터 사용
-                            successCallback([
-                                {
-                                    title: '우건 개발팀 회의',
-                                    start: '2024-04-05',
-                                    className: 'calendar-blue-event'
-                                },
-                                {
-                                    title: '월간 실적 보고',
-                                    start: '2024-04-10',
-                                    className: 'calendar-blue-event'
-                                },
-                                {
-                                    title: '기획팀 미팅',
-                                    start: '2024-04-17',
-                                    end: '2024-04-18',
-                                    className: 'calendar-blue-event'
-                                },
-                                {
-                                    title: '신규 프로젝트 킥오프',
-                                    start: '2024-04-13',
-                                    className: 'calendar-green-event'
-                                },
-                                {
-                                    title: '월간 리뷰',
-                                    start: '2024-04-25',
-                                    className: 'calendar-purple-event'
-                                },
-                                {
-                                    title: '팀 회식',
-                                    start: '2024-04-28',
-                                    className: 'calendar-blue-event'
-                                },
-                                {
-                                    title: '외부 교육사 미팅',
-                                    start: '2024-04-20',
-                                    className: 'calendar-orange-event'
-                                }
-                            ]);
+                         	// 실패 시 빈 배열을 전달
+                            successCallback([]);
+                         	
+                         	// 사용자에게 오류 메시지 표시
+                            alert("일정을 불러오는데 실패했습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.");
                         }
                     });
                 },

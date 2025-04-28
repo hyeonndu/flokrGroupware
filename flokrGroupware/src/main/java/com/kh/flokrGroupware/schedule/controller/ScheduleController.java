@@ -65,7 +65,7 @@ public class ScheduleController {
         int deptNo = loginUser.getDeptNo();
         
         // 서비스를 통해 일정 데이터 조회 및 변환
-        ArrayList<Map<String, Object>> events = scheduleService.getScheduleEvents(empNo, deptNo, start, end, personal, dept, company);
+        ArrayList<Map<String, Object>> events = scheduleService.getScheduleEvents(empNo, deptNo, start, end);
         return new ResponseEntity<Object>(events, HttpStatus.OK);
     }
     
@@ -134,6 +134,14 @@ public class ScheduleController {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             java.util.Date startDateTime = dateFormat.parse(startDate + " " + startTime);
             java.util.Date endDateTime = dateFormat.parse(endDate + " " + endTime);
+            
+            // 종일 일정인 경우 시간 처리 (allDay값이 "Y"면 종일 일정)
+            if ("Y".equals(schedule.getAllDay())) {
+                // 종일 일정은 시작일은 00:00, 종료일은 23:59로 설정
+                SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
+                startDateTime = dateFormat.parse(dateOnlyFormat.format(startDateTime) + " 00:00");
+                endDateTime = dateFormat.parse(dateOnlyFormat.format(endDateTime) + " 23:59");
+            }
             
             // java.util.Date => java.sql.Date로 변환
             schedule.setStartDate(new java.sql.Date(startDateTime.getTime()));

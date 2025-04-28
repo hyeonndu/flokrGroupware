@@ -9,9 +9,6 @@ import com.kh.flokrGroupware.schedule.model.vo.ScheduleAttendee;
 
 public interface ScheduleService {
 	
-	// 일정 목록 조회
-    ArrayList<Schedule> selectScheduleList(int empNo, String start, String end);
-    
     // 일정 상세 조회
     Schedule selectSchedule(int scheduleNo);
     
@@ -30,16 +27,10 @@ public interface ScheduleService {
     // 일정 참석자 조회
     ArrayList<ScheduleAttendee> selectAttendees(int scheduleNo);
     
-    // 부서 일정 조회
-    ArrayList<Schedule> selectDeptScheduleList(int deptNo, String start, String end);
-    
-    // 회사 일정 조회
-    ArrayList<Schedule> selectCompanyScheduleList(String start, String end);
-    
     // 캘린더용 일정 변환
     ArrayList<Map<String, Object>> convertToCalendarEvents(ArrayList<Schedule> scheduleList);
     
     // FullCalendar용 일정 데이터 조회 및 변환
-    ArrayList<Map<String, Object>> getScheduleEvents(int empNo, int deptNo, String start, String end, String personal, String dept, String company);
+    ArrayList<Map<String, Object>> getScheduleEvents(int empNo, int deptNo, String start, String end);
 
 }

@@ -1,6 +1,9 @@
 package com.kh.flokrGroupware.schedule.model.service;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -22,13 +25,8 @@ public class ScheduleServiceImpl implements ScheduleService {
 	private SqlSessionTemplate sqlSession;
 
 	@Override
-	public ArrayList<Schedule> selectScheduleList(int empNo, String start, String end) {
-		return null;
-	}
-
-	@Override
 	public Schedule selectSchedule(int scheduleNo) {
-		return null;
+		return sDao.selectSchedule(sqlSession, scheduleNo);
 	}
 
 	@Override
@@ -69,28 +67,142 @@ public class ScheduleServiceImpl implements ScheduleService {
 
 	@Override
 	public ArrayList<ScheduleAttendee> selectAttendees(int scheduleNo) {
-		return null;
+		return sDao.selectAttendees(sqlSession, scheduleNo);
 	}
 
 	@Override
-	public ArrayList<Schedule> selectDeptScheduleList(int deptNo, String start, String end) {
-		return null;
+	public ArrayList<Map<String, Object>> getScheduleEvents(int empNo, int deptNo, String start, String end) {
+		
+		// 개인 일정, 팀 일정, 회사 일정 모두 한번에 조회
+		Map<String, Object> params = new HashMap<>();
+		params.put("empNo", empNo);
+		params.put("deptNo", deptNo);
+		params.put("start", start);
+		params.put("end", end);
+		
+		// 2. DAO 호출: 사용자가 볼 수 있는 모든 관련 일정 조회
+		ArrayList<Schedule> allSchedules = sDao.selectAllTypeSchedules(sqlSession, params);
+		
+		// 3. 조회된 데이터를 FullCalendar 형식으로 변환하는 메소드 호출
+        return convertToCalendarEvents(allSchedules);
+	
 	}
-
-	@Override
-	public ArrayList<Schedule> selectCompanyScheduleList(String start, String end) {
-		return null;
-	}
-
+	
+	// 데이터 변환 메소드 구현
 	@Override
 	public ArrayList<Map<String, Object>> convertToCalendarEvents(ArrayList<Schedule> scheduleList) {
-		return null;
-	}
-
-	@Override
-	public ArrayList<Map<String, Object>> getScheduleEvents(int empNo, int deptNo, String start, String end ,
-			String personal, String dept, String company) {
-		return null;
+		ArrayList<Map<String, Object>> events = new ArrayList<>();
+		
+		if (scheduleList == null || scheduleList.isEmpty()) {
+	        return events;
+	    }
+		
+		// 날짜 포맷 설정
+	    SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		
+		for(Schedule schedule : scheduleList) {
+			Map<String, Object> event = new HashMap<>();
+			
+			// 기본 이벤트 데이터
+	        event.put("id", schedule.getScheduleNo());
+	        event.put("title", schedule.getScheduleTitle());
+	        
+	        // 종일 일정 여부 확인
+	        boolean isAllDay = false;
+	        
+	     // 1. allDay 필드 확인 (입력 폼에서 설정된 경우)
+	        if ("Y".equals(schedule.getAllDay())) {
+	            isAllDay = true;
+	        } 
+	        // 2. 시간 분석 (allDay 필드가 없거나 null인 경우)
+	        else if (schedule.getAllDay() == null || schedule.getAllDay().isEmpty()) {
+	            if (schedule.getStartDate() != null && schedule.getEndDate() != null) {
+	                Calendar startCal = Calendar.getInstance();
+	                startCal.setTime(schedule.getStartDate());
+	                
+	                Calendar endCal = Calendar.getInstance();
+	                endCal.setTime(schedule.getEndDate());
+	                
+	                // 시작 시간이 00:00:00이고, 종료 시간이 00:00:00 이거나 23:59:59인 경우 종일 일정으로 판단
+	                boolean startTimeIsMidnight = startCal.get(Calendar.HOUR_OF_DAY) == 0 &&
+	                                              startCal.get(Calendar.MINUTE) == 0 &&
+	                                              startCal.get(Calendar.SECOND) == 0;
+	                                              
+	                boolean endTimeIsMidnightOrLastSecond =
+	                        (endCal.get(Calendar.HOUR_OF_DAY) == 0 &&
+	                         endCal.get(Calendar.MINUTE) == 0 &&
+	                         endCal.get(Calendar.SECOND) == 0) ||
+	                        (endCal.get(Calendar.HOUR_OF_DAY) == 23 &&
+	                         endCal.get(Calendar.MINUTE) == 59 &&
+	                         endCal.get(Calendar.SECOND) == 59);
+	                
+	                isAllDay = startTimeIsMidnight && endTimeIsMidnightOrLastSecond;
+	            }
+	        }
+	        
+	        // 날짜 포맷 적용
+	        if (schedule.getStartDate() != null) {
+	            event.put("start", isAllDay ? 
+	                      dateFormat.format(schedule.getStartDate()) : 
+	                      isoFormat.format(schedule.getStartDate()));
+	        }
+	        
+	        if (schedule.getEndDate() != null) {
+	            // 종일 일정인 경우 종료일 처리
+	            if (isAllDay) {
+	                Calendar  endCal = Calendar.getInstance();
+	                endCal.setTime(schedule.getEndDate());
+	                
+	                // 종료 시간이 00:00:00이 아닌 경우(23:59:59)에는 다음 날로 설정하지 않음
+	                // FullCalendar는 종일 일정의 end date를 exclusive로 처리하기 때문
+	                if (endCal.get(Calendar.HOUR_OF_DAY) == 0 && 
+	                    endCal.get(Calendar.MINUTE) == 0 && 
+	                    endCal.get(Calendar.SECOND) == 0) {
+	                    endCal.add(Calendar.DATE, 1);
+	                }
+	                
+	                event.put("end", dateFormat.format(endCal.getTime()));
+	            } else {
+	                event.put("end", isoFormat.format(schedule.getEndDate()));
+	            }
+	        }
+	        
+	        // FullCalendar에 종일 일정 여부 전달
+	        event.put("allDay", isAllDay);
+			
+			// 일정 유형에 따른 클래스 지정
+			String className = "";
+			
+			if("PERSONAL".equals(schedule.getScheduleType())) {
+				className = "calendar-personal-event";
+			}else if("TEAM".equals(schedule.getScheduleType())) {
+				className = "calendar-team-event";
+			}else if("COMPANY".equals(schedule.getScheduleType())) {
+				className = "calendar-company-event";
+			}else if("OTHER".equals(schedule.getScheduleType())) {
+			    className = "calendar-other-event";
+			}else { // 기본값
+				className = "calendar-personal-event";
+			}
+			
+			event.put("className", className);
+			
+			// 추가속성
+			Map<String, Object> extendedProps = new HashMap<>();
+	        extendedProps.put("description", schedule.getDescription());
+	        extendedProps.put("location", schedule.getLocation());
+	        extendedProps.put("important", schedule.getImportant());
+	        extendedProps.put("scheduleType", schedule.getScheduleType());
+	        
+	        event.put("extendedProps", extendedProps);
+	        
+	        events.add(event);
+			
+		}
+		
+		return events;
+		
 	}
 
 	@Override
