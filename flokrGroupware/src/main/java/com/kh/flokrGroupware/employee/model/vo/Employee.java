@@ -23,7 +23,6 @@ public class Employee {
     private int deptNo;
     private int positionNo;
     private Date hireDate;
-    private String workLocation;
     private String profileImgPath;
     private String signatureImgPath;
     private String isAdmin;
@@ -31,7 +30,8 @@ public class Employee {
     private Date createDate;
     private Date updateDate;
     private String status;
-    
+    private String deptName;
+    private String positionName;
     
     public String getPasswordHash() {
         return this.passwordHash;
@@ -81,4 +81,19 @@ public class Employee {
         this.isAdmin = isAdmin;
     }
     
+    public String getDeptName() {
+        return this.deptName;
+    }
+    
+    public void setDeptName(String deptName) {
+        this.deptName = deptName;
+    }
+    
+    public String getPositionName() {
+        return this.positionName;
+    }
+    
+    public void setPositionName(String positionName) {
+        this.positionName = positionName;
+    }
 }
