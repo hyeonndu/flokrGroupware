@@ -9,6 +9,9 @@
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Employee" alias="employee"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Department" alias="department"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Position" alias="position"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatRoom" alias="chatRoom"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatMessage" alias="chatMessage"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatRoomMember" alias="chatRoomMember"/>
 	</typeAliases>
 	<!-- 유의사항 : 미리 등록해두려면 해당 클래스가 진짜 존재하고 있는 상태여야됨 -->
 	

@@ -4,155 +4,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
-
-<style>
-    .chat-outer {
-        background-color: #F8F9FAFF;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-    }
-    .chat-content {
-        display: flex;
-        height: calc(100vh - 112px);
-        background-color: #fff;
-        padding: 20px;
-        background-color: #fff;   
-        border-radius: 12px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      overflow: hidden; /* 내부 요소 넘침 방지 */
-    }
-    .chat-sidebar {
-        width: 280px;
-        border-right: 1px solid #e0e0e0;
-    }
-    .search-box {
-        padding: 12px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    .search-input {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #e0e0e0;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-    }
-    .search-input input {
-        border: none;
-        outline: none;
-        width: 100%;
-        font-size: 14px;
-    }
-    .chat-list {
-        overflow-y: auto;
-        height: calc(100% - 60px);
-    }
-    .chat-item {
-        padding: 10px 12px;
-        display: flex;
-        gap: 12px;
-        border-bottom: 1px solid #f5f5f5;
-    }
-    .chat-message {
-        flex: 1;
-        font-size: 14px;
-    }
-    .chat-name {
-        font-weight: 500;
-        margin-bottom: 2px;
-    }
-    .chat-text {
-        color: #666;
-    }
-    .chat-main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    .message-list {
-        flex: 1;
-        padding: 16px;
-        overflow-y: auto;
-    }
-    .message {
-        margin-bottom: 16px;
-        display: flex;
-        gap: 12px;
-    }
-    /* 사용자 메시지 스타일 */
-    .user-message {
-        flex-direction: row-reverse;
-        text-align: right;
-    }
-    .message-content {
-        flex: 1;
-    }
-    .message-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 4px;
-    }
-    /* 사용자 메시지 헤더 스타일 */
-    .user-message .message-header {
-        justify-content: flex-end;
-    }
-    .message-name {
-        font-weight: 500;
-        margin-right: 8px;
-    }
-    /* 사용자 메시지 이름 스타일 */
-    .user-message .message-name {
-        margin-right: 0;
-        margin-left: 8px;
-    }
-    .message-time {
-        color: #999;
-        font-size: 12px;
-    }
-    .message-bubble {
-        background-color: #f0f8ff;
-        padding: 10px 14px;
-        border-radius: 8px;
-        max-width: 80%;
-        display: inline-block;
-    }
-    /* 사용자 메시지 버블 스타일 */
-    .user-bubble {
-        background-color: #003561;
-        color: #fff;
-    }
-    .badge {
-        background-color: #e6f0ff;
-        color: #0d6efd;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-    }
-    .emoji {
-        font-size: 16px;
-    }
-    .highlight {
-        background-color: #e6f0ff;
-        color: #0d6efd;
-        padding: 0 2px;
-        border-radius: 2px;
-    }
-    .avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        overflow: hidden;
-        background-color: #f0f0f0;
-    }
-    .avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-  </style>
+<title>Flokr</title>
+<!-- chatList CSS -->
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/chatList.css">
+<!-- Material Icons 추가 -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">
 </head>
 <body>
     <jsp:include page="../common/header.jsp"/>
@@ -162,8 +18,13 @@
         <div class="chat-content">
             <div class="chat-sidebar">
                 <div class="search-box">
+                    <div class="chat-list-header">
+                        <div class="sub-title">채팅</div>
+                        <%-- 채팅방 추가 버튼 (+ 모양) --%>
+                        <button type="button" id="add-chat-btn" class="material-icons">add</button>
+                    </div>
                     <div class="search-input">
-                        <span>🔍</span>
+                        <span class="material-icons">search</span>
                         <input type="text" placeholder="검색...">
                     </div>
                 </div>
@@ -243,6 +104,31 @@
                 </div>
             </div>
             <div class="chat-main">
+
+                <%-- ========= 채팅방 메인 헤더 추가 시작 ========= --%>
+                <div class="chat-main-header">
+                    <div class="chat-header-left">
+                        <%-- 1:1 채팅 시 상대방 프로필 이미지 (옵션) --%>
+                        <div class="chat-header-info">
+                            <%-- 채팅방 이름 또는 상대방 이름 표시될 곳 --%>
+                            <span class="chat-header-title">채팅방 제목 또는 상대방 이름</span>
+                            <%-- 상태(온라인/오프라인) 또는 인원수 표시될 곳 --%>
+                            <span class="chat-header-subtitle">
+                                <%-- 1:1 채팅 시 온라인 상태 표시 (초록색 점) --%>
+                                    <span class="status-dot online"></span> 온라인
+                                <%-- 단체 채팅 시 인원수 표시 (예: 아이콘 + 숫자) --%>
+                                </span>
+                        </div>
+                    </div>
+                    <div class="chat-header-right">
+                        <%-- 오른쪽 아이콘 버튼들 (예: Font Awesome 사용) --%>
+                        <button type="button" class="material-icons">call</button>
+                        <button type="button" class="material-icons">search</i></button>
+                        <button type="button" class="material-icons">more_vert</button>
+                    </div>
+                </div>
+                <%-- ========= 채팅방 메인 헤더 추가 끝 =========== --%>
+
                 <div class="message-list">
                     <!-- 사용자(파벨 쿠나) 메시지 - 오른쪽 정렬 -->
                     <div class="message user-message">
@@ -337,6 +223,13 @@
                         </div>
                     </div>
                 </div>
+
+                <%-- 메시지 입력창 등 추가 ... --%>
+                <div class="message-input-area">
+                    <input type="text" placeholder="메시지를 입력하세요...">
+                    <button>전송</button>
+                </div>
+
             </div>
         </div>
     

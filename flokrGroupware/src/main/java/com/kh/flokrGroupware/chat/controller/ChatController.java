@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -12,6 +13,7 @@ import com.kh.flokrGroupware.chat.model.service.ChatServiceImpl;
 import com.kh.flokrGroupware.chat.model.vo.ChatRoom;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 
+@Controller
 public class ChatController {
 	
 	@Autowired
@@ -48,7 +50,7 @@ public class ChatController {
         mv.addObject("chatRoomList", chatRoomList); // JSTL 등에서 사용할 이름 지정
 
         // 6. 보여줄 View(JSP) 경로 설정
-        mv.setViewName("chat/chat"); // 예시 경로: /WEB-INF/views/chat/chatListView.jsp
+        mv.setViewName("chat/chatList"); // 예시 경로: /WEB-INF/views/chat/chatListView.jsp
 
         // 7. ModelAndView 반환
         return mv;
