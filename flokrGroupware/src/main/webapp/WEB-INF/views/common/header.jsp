@@ -30,12 +30,14 @@
 
     <div class="header-right-section">
         <!-- 채팅 아이콘 -->
-        <div class="header-icon-badge">
-            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span class="header-badge">1</span>
-        </div>
+        <a href="chat.ch">
+	        <div class="header-icon-badge">
+	            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
+	                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+	            </svg>
+	            <span class="header-badge">1</span>
+	        </div>
+        </a>
         
         <!-- 알림 아이콘 -->
         <div class="header-icon-badge">
@@ -48,35 +50,24 @@
             </c:if>
         </div>
 
-        <!-- 로그인 처리 영역 -->
-        <c:choose>
-            <c:when test="${empty loginUser}">
-                <!-- 로그인 전 -->
-                <form action="login.me" method="post" class="header-login-form">
-                    <input type="text" name="empId" placeholder="아이디" class="header-form-control-sm" required>
-                    <input type="password" name="passwordHash" placeholder="비밀번호" class="header-form-control-sm" required>
-                    <button type="submit" class="header-btn-sm">로그인</button>
-                </form>
-            </c:when>
-            <c:otherwise>
-                <!-- 로그인 후 -->
-                <div class="header-profile">
-                    <c:choose>
-                        <c:when test="${not empty loginUser.profileImgPath}">
-                            <img src="${loginUser.profileImgPath}" alt="프로필" class="header-profile-img">
-                        </c:when>
-                        <c:otherwise>
-                            <img src="${pageContext.request.contextPath}/resources/images/default-profile.png" alt="프로필" class="header-profile-img">
-                        </c:otherwise>
-                    </c:choose>
-                    <div class="header-profile-info">
-                        <span class="header-profile-name">${loginUser.empName}님</span>
-                    </div>
-                    <!-- 로그아웃 버튼 -->
-                    <a href="logout.me" class="header-btn-sm header-logout-btn">로그아웃</a>
+        <!-- 로그인 상태 표시 영역 -->
+        <c:if test="${not empty loginUser}">
+            <div class="header-profile">
+                <c:choose>
+                    <c:when test="${not empty loginUser.profileImgPath}">
+                        <img src="${loginUser.profileImgPath}" alt="프로필" class="header-profile-img">
+                    </c:when>
+                    <c:otherwise>
+                        <img src="${pageContext.request.contextPath}/resources/images/default-profile.png" alt="프로필" class="header-profile-img">
+                    </c:otherwise>
+                </c:choose>
+                <div class="header-profile-info">
+                    <span class="header-profile-name">${loginUser.empName}님</span>
                 </div>
-            </c:otherwise>
-        </c:choose>
+                <!-- 로그아웃 버튼 -->
+                <a href="logout.me" class="header-btn-sm header-logout-btn">로그아웃</a>
+            </div>
+        </c:if>
     </div>
 </header>
 
@@ -102,7 +93,7 @@
                     </svg>
                     조직 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/employee/register" class="header-nav-item ${currentPage eq 'empRegister' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/employeeRegister" class="header-nav-item ${currentPage eq 'empRegister' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -110,13 +101,6 @@
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                     사원 등록
-                </a>
-                <a href="${pageContext.request.contextPath}/employee/detail" class="header-nav-item ${currentPage eq 'empDetail' ? 'active' : ''}">
-                    <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    직원 상세 조회
                 </a>
                 <a href="${pageContext.request.contextPath}/notice" class="header-nav-item ${currentPage eq 'notice' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -35,4 +35,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public int insertEmployee(Employee e) {
         return employeeDao.insertEmployee(e);
     }
+    
+    @Override
+    public String getLastEmployeeId(int deptNo, String yearPrefix) {
+        return employeeDao.getLastEmployeeId(deptNo, yearPrefix);
+    }
 }

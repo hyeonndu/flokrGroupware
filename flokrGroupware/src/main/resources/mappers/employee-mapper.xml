@@ -68,7 +68,6 @@
             DEPT_NO,
             POSITION_NO,
             HIRE_DATE,
-            WORK_LOCATION,
             IS_ADMIN,
             STATUS
         )
@@ -82,9 +81,20 @@
             #{deptNo},
             #{positionNo},
             #{hireDate},
-            #{workLocation},
             #{isAdmin, jdbcType=VARCHAR},
             'Y'
         )
     </insert>
+    
+    <select id="getLastEmployeeId" parameterType="map" resultType="string">
+		SELECT EMP_ID
+		FROM (
+		    SELECT EMP_ID
+		    FROM EMPLOYEE
+		    WHERE DEPT_NO = #{deptNo}
+		    AND EMP_ID LIKE #{deptNo} || #{yearPrefix} || '%'
+		    ORDER BY EMP_ID DESC
+		)
+		WHERE ROWNUM = 1
+    </select>
 </mapper>
