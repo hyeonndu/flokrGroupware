@@ -1,10 +1,12 @@
 package com.kh.flokrGroupware.employee.model.service;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.kh.flokrGroupware.common.model.vo.PageInfo;
 import com.kh.flokrGroupware.employee.model.dao.EmployeeDao;
 import com.kh.flokrGroupware.employee.model.vo.Department;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
@@ -12,7 +14,7 @@ import com.kh.flokrGroupware.employee.model.vo.Position;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
-    
+
     @Autowired
     private EmployeeDao employeeDao;
     
@@ -32,12 +34,42 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
     
     @Override
+    public String getLastEmployeeId(int deptNo, String yearPrefix) {
+        return employeeDao.getLastEmployeeId(deptNo, yearPrefix);
+    }
+    
+    @Override
     public int insertEmployee(Employee e) {
         return employeeDao.insertEmployee(e);
     }
     
     @Override
-    public String getLastEmployeeId(int deptNo, String yearPrefix) {
-        return employeeDao.getLastEmployeeId(deptNo, yearPrefix);
+    public int getEmployeeCount(Employee searchCondition) {
+        return employeeDao.getEmployeeCount(searchCondition);
+    }
+    
+    @Override
+    public ArrayList<Employee> selectEmployeeList(Map<String, Object> params) {
+        return employeeDao.selectEmployeeList(params);
+    }
+    
+    @Override
+    public Employee selectEmployee(int empNo) {
+        return employeeDao.selectEmployee(empNo);
+    }
+    
+    @Override
+    public int updateEmployee(Employee e) {
+        return employeeDao.updateEmployee(e);
+    }
+    
+    @Override
+    public int deleteEmployee(int empNo) {
+        return employeeDao.deleteEmployee(empNo);
+    }
+    
+    @Override
+    public int resetPassword(Map<String, Object> params) {
+        return employeeDao.resetPassword(params);
     }
 }
