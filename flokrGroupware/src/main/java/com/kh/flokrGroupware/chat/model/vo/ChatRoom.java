@@ -16,7 +16,7 @@ public class ChatRoom {
 	private int roomNo;
 	private String roomName;
 	private String roomType;
-	private String createByEmpNo;
+	private int createByEmpNo;
 	private String createDate;
 	private String status;
 	
@@ -41,10 +41,10 @@ public class ChatRoom {
 	public void setRoomType(String roomType) {
 		this.roomType = roomType;
 	}
-	public String getCreateByEmpNo() {
+	public int getCreateByEmpNo() {
 		return createByEmpNo;
 	}
-	public void setCreateByEmpNo(String createByEmpNo) {
+	public void setCreateByEmpNo(int createByEmpNo) {
 		this.createByEmpNo = createByEmpNo;
 	}
 	

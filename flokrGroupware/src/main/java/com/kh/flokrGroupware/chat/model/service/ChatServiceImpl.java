@@ -21,27 +21,27 @@ public class ChatServiceImpl implements ChatService{
 	private SqlSessionTemplate sqlSession;
 
 	@Override
-	public ChatRoom createChatRoom(String roomName, String creatorEmpId) {
+	public ChatRoom createChatRoom(String roomName, int creatorEmpNo) {
 		return null;
 	}
 
 	@Override
-	public ArrayList<ChatRoom> findMyChatRooms(String empId) {
+	public ArrayList<ChatRoom> findMyChatRooms(int empNo) {
+		return cDao.findMyChatRooms(sqlSession, empNo);
+	}
+
+	@Override
+	public ChatRoom findChatRoomById(int roomNo) {
 		return null;
 	}
 
 	@Override
-	public ChatRoom findChatRoomById(int roomId) {
-		return null;
-	}
-
-	@Override
-	public int updateChatRoomName(int roomId, String newRoomName, String empId) {
+	public int updateChatRoomName(int roomNo, String newRoomName, int empNo) {
 		return 0;
 	}
 
 	@Override
-	public int deleteChatRoom(int roomId, String empId) {
+	public int deleteChatRoom(int roomNo, int empNo) {
 		return 0;
 	}
 
@@ -50,28 +50,30 @@ public class ChatServiceImpl implements ChatService{
 	}
 
 	@Override
-	public ArrayList<ChatMessage> getChatHistory(int roomId) {
+	public ArrayList<ChatMessage> getChatHistory(int roomNo) {
 		return null;
 	}
 
 	@Override
-	public int inviteUserToRoom(int roomId, String inviterEmpId, String inviteeEmpId) {
+	public int inviteUserToRoom(int roomNo, int inviterEmpNo, int inviteeEmpNo) {
 		return 0;
 	}
 
 	@Override
-	public int leaveChatRoom(int roomId, String empId) {
+	public int leaveChatRoom(int roomNo, int empNo) {
 		return 0;
 	}
 
 	@Override
-	public ArrayList<Employee> findChatRoomMembers(int roomId) {
+	public ArrayList<Employee> findChatRoomMembers(int roomNo) {
 		return null;
 	}
 
 	@Override
-	public boolean isUserInRoom(int roomId, String empId) {
+	public boolean isUserInRoom(int roomNo, int empNo) {
 		return false;
 	}
+
+
 
 }

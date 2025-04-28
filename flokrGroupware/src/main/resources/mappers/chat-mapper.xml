@@ -2,4 +2,30 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="chatMapper">
 
+	<resultMap id="chatRoomResultMap" type="ChatRoom">
+		<result column="room_no" property="roomNo"/>
+		<result column="room_name" property="roomName"/>
+		<result column="room_type" property="roomType"/>
+		<result column="create_by_emp_no" property="createByEmpNo"/>
+	
+	</resultMap>
+	<select id="findMyChatRooms" parameterType="int" resultMap="chatRoomResultMap">
+        SELECT
+            CR.ROOM_NO,
+            CR.ROOM_NAME,
+            CR.ROOM_TYPE,
+            CR.CREATED_BY_EMP_NO,
+            CR.CREATE_DATE,
+            CR.STATUS
+        FROM
+            CHAT_ROOM CR
+        JOIN
+            CHAT_ROOM_MEMBER CRM ON CR.ROOM_NO = CRM.ROOM_NO
+        WHERE
+            CRM.EMP_NO = #{empNo}
+            AND CR.STATUS = 'Y'
+        ORDER BY
+            CR.CREATE_DATE DESC 
+	</select>
+
 </mapper>
