@@ -72,4 +72,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public int resetPassword(Map<String, Object> params) {
         return employeeDao.resetPassword(params);
     }
+    
+    @Override
+    public ArrayList<Map<String, Object>> searchEmployee(String keyword) {
+        return employeeDao.searchEmployee(keyword);
+    }
 }
