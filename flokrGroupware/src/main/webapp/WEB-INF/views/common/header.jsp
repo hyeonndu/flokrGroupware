@@ -1,91 +1,82 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<!-- jQuery 라이브러리 -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<!-- JavaScript (Alertify) -->
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
-<!-- CSS (Alertify) -->
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
-<!-- Default theme (Alertify) -->
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/themes/default.min.css"/>
-<!-- 헤더 CSS -->
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/header.css">
 
-<!-- 세션에 메시지가 있다면 alertify로 표시하고 세션에서 제거 -->
 <c:if test="${ not empty alertMsg }">
     <script>
         alertify.alert("${ alertMsg }");
     </script>
-    <c:remove var="alertMsg" scope="session"/> <!-- session scope에 있는 alertMsg를 지워줌 -->
-</c:if>
+    <c:remove var="alertMsg" scope="session"/> </c:if>
 
-<!-- 로고와 사용자 정보 헤더 -->
 <header class="header-top">
     <div class="header-logo">
-        <!-- 로고 이미지 사용 -->
-        <img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Flokr" class="header-logo-img">
-        Flokr
+        <c:choose>
+            <c:when test="${not empty loginUser and loginUser.isAdmin eq 'Y'}">
+                <a href="${pageContext.request.contextPath}/adminMain" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+            </c:when>
+            <c:when test="${not empty loginUser and loginUser.isAdmin eq 'N'}">
+                <a href="${pageContext.request.contextPath}/userMain" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+            </c:when>
+            <c:otherwise>
+                <a href="${pageContext.request.contextPath}/" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+            </c:otherwise>
+        </c:choose>
+            <img src="${pageContext.request.contextPath}/resources/images/logo.png" alt="Flokr" class="header-logo-img">
+            Flokr
+        </a>
     </div>
 
     <div class="header-right-section">
-        <!-- 채팅 아이콘 -->
+        <a href="chat.ch">
+            <div class="header-icon-badge">
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span class="header-badge">1</span>
+            </div>
+        </a>
+
         <div class="header-icon-badge">
             <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span class="header-badge">1</span>
-        </div>
-        
-        <!-- 알림 아이콘 -->
-        <div class="header-icon-badge">
-            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
             <c:if test="${not empty unreadNotificationCount && unreadNotificationCount > 0}">
                 <span class="header-badge">${unreadNotificationCount}</span>
             </c:if>
         </div>
 
-        <!-- 로그인 처리 영역 -->
-        <c:choose>
-            <c:when test="${empty loginUser}">
-                <!-- 로그인 전 -->
-                <form action="login.me" method="post" class="header-login-form">
-                    <input type="text" name="empId" placeholder="아이디" class="header-form-control-sm" required>
-                    <input type="password" name="passwordHash" placeholder="비밀번호" class="header-form-control-sm" required>
-                    <button type="submit" class="header-btn-sm">로그인</button>
-                </form>
-            </c:when>
-            <c:otherwise>
-                <!-- 로그인 후 -->
-                <div class="header-profile">
-                    <c:choose>
-                        <c:when test="${not empty loginUser.profileImgPath}">
-                            <img src="${loginUser.profileImgPath}" alt="프로필" class="header-profile-img">
-                        </c:when>
-                        <c:otherwise>
-                            <img src="${pageContext.request.contextPath}/resources/images/default-profile.png" alt="프로필" class="header-profile-img">
-                        </c:otherwise>
-                    </c:choose>
-                    <div class="header-profile-info">
-                        <span class="header-profile-name">${loginUser.empName}님</span>
-                    </div>
-                    <!-- 로그아웃 버튼 -->
-                    <a href="logout.me" class="header-btn-sm header-logout-btn">로그아웃</a>
+        <c:if test="${not empty loginUser}">
+            <div class="header-profile">
+                <c:choose>
+                    <c:when test="${not empty loginUser.profileImgPath}"> <%-- loginUser 변수 사용 --%>
+                        <img src="${loginUser.profileImgPath}" alt="프로필" class="profile-img"> <%-- loginUser 변수 사용 --%>
+                    </c:when>
+                    <c:otherwise>
+                        <svg class="header-profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
+                            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
+                        </svg>
+                    </c:otherwise>
+                </c:choose>
+                <div class="header-profile-info">
+                    <span class="header-profile-name">${loginUser.empName}님</span>
                 </div>
-            </c:otherwise>
-        </c:choose>
+                <a href="logout.me" class="header-btn-sm header-logout-btn">로그아웃</a>
+            </div>
+        </c:if>
     </div>
 </header>
 
-<!-- 네비게이션 바 - 권한에 따라 다른 메뉴 표시 -->
 <nav class="header-nav-bar">
     <div class="header-nav-container">
         <c:choose>
             <c:when test="${loginUser.isAdmin eq 'Y'}">
-                <!-- 관리자용 메뉴 -->
                 <a href="${pageContext.request.contextPath}/" class="header-nav-item ${currentPage eq 'home' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -102,7 +93,7 @@
                     </svg>
                     조직 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/employee/register" class="header-nav-item ${currentPage eq 'empRegister' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/employeeRegister" class="header-nav-item ${currentPage eq 'empRegister' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -110,13 +101,6 @@
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                     사원 등록
-                </a>
-                <a href="${pageContext.request.contextPath}/employee/detail" class="header-nav-item ${currentPage eq 'empDetail' ? 'active' : ''}">
-                    <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    직원 상세 조회
                 </a>
                 <a href="${pageContext.request.contextPath}/notice" class="header-nav-item ${currentPage eq 'notice' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -152,7 +136,6 @@
                 </a>
             </c:when>
             <c:otherwise>
-                <!-- 일반 사용자용 메뉴 (이미지에 보이는 메뉴) -->
                 <a href="${pageContext.request.contextPath}/" class="header-nav-item ${currentPage eq 'home' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -217,7 +200,7 @@
                 </a>
             </c:otherwise>
         </c:choose>
-        
+
         <div class="header-search-container">
             <input type="text" class="header-search-bar" placeholder="Search...">
             <svg class="header-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
