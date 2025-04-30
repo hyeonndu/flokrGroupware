@@ -38,8 +38,8 @@ public class ScheduleDao {
 	 * @param sqlSession SQL 세션
 	 * @return 전체 직원 목록
 	 */
-	public ArrayList<Employee> selectEmployeeList(SqlSessionTemplate sqlSession){
-		return (ArrayList)sqlSession.selectList("scheduleMapper.selectEmployeeList");
+	public ArrayList<Employee> selectEmployeeList(SqlSessionTemplate sqlSession, int loginEmpNo){
+		return (ArrayList)sqlSession.selectList("scheduleMapper.selectEmployeeList", loginEmpNo);
 	}
 	
 	/**
@@ -70,6 +70,17 @@ public class ScheduleDao {
 	 */
 	public ArrayList<ScheduleAttendee> selectAttendees(SqlSessionTemplate sqlSession, int scheduleNo){
 		return (ArrayList)sqlSession.selectList("scheduleMapper.selectAttendees", scheduleNo);
+	}
+	
+	/**
+	 * 특정 날짜에 해당하는 일정 목록을 조회
+	 * @param sqlSession SQL 세션
+	 * @param date 조회할 날짜 (형식: YYYY-MM-DD)
+	 * @param empNo 로그인한 사용자의 사번
+	 * @return 해당 날짜에 포함된 모든 일정 목록     
+	 */
+	public ArrayList<Schedule> selectDaySchedules(SqlSessionTemplate sqlSession, Map<String, Object> params){
+		return (ArrayList)sqlSession.selectList("scheduleMapper.selectDaySchedules", params);
 	}
 	
 

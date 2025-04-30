@@ -727,11 +727,20 @@
         allDayCheckbox.addEventListener('change', toggleTimeFields);
 
         startDateInput.addEventListener('change', function() {
-            if (!endDateInput.value || new Date(endDateInput.value) < new Date(this.value)) {
+            const selectedDate = new Date(this.value);
+            selectedDate.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                // 사용자에게 알림만 제공하고 계속 진행 허용
+                alert('선택하신 날짜는 과거 날짜입니다.');
+            }
+            
+            // 기존 로직 유지 (종료일이 시작일보다 빠르면 종료일 업데이트)
+            if (!endDateInput.value || new Date(endDateInput.value) < selectedDate) {
                 endDateInput.value = this.value;
             }
             endDateInput.min = this.value;
-        });
+        });;
 
          endDateInput.addEventListener('change', function() {
              if (startDateInput.value && new Date(this.value) < new Date(startDateInput.value)) {
@@ -739,17 +748,89 @@
              }
          });
 
-        const today = new Date();
-        const year = today.getFullYear();
-        let month = today.getMonth() + 1;
-        let day = today.getDate();
-        month = month < 10 ? '0' + month : month;
-        day = day < 10 ? '0' + day : day;
-        const todayString = `${year}-${month}-${day}`;
+      // URL에서 날짜 파라미터 가져오기 (script 태그 내의 기존 DOMContentLoaded 함수 안에 추가)
 
-        if (!startDateInput.value) startDateInput.value = todayString;
-        if (!endDateInput.value) endDateInput.value = todayString;
-        if (startDateInput.value) endDateInput.min = startDateInput.value;
+      // URL에서 전달된 날짜 파라미터 확인
+      function getUrlParameter(name) {
+          name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+          var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+          var results = regex.exec(location.search);
+          return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+      }
+
+      // 오늘 날짜 생성
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // 시간 부분을 0으로 설정하여 날짜만 비교하도록 함
+
+      // 날짜 문자열 포맷팅 함수
+      function formatDate(date) {
+          const year = date.getFullYear();
+          let month = date.getMonth() + 1;
+          let day = date.getDate();
+          month = month < 10 ? '0' + month : month;
+          day = day < 10 ? '0' + day : day;
+          return `${year}-${month}-${day}`;
+      }
+
+      // 오늘 날짜 문자열
+      const todayString = formatDate(today);
+
+      // 날짜 파라미터가 있다면 해당 날짜로 시작일과 종료일 설정
+      const dateParam = getUrlParameter('date');
+      if (dateParam) {
+          try {
+              // 파라미터가 유효한 날짜 형식인지 확인
+              const paramDate = new Date(dateParam);
+              paramDate.setHours(0, 0, 0, 0); // 시간 부분을 0으로 설정하여 날짜만 비교하도록 함
+              
+              if (!isNaN(paramDate.getTime())) {
+                  const formattedDate = formatDate(paramDate);
+                  
+                  // 시작일과 종료일 모두 선택된 날짜로 설정
+                  startDateInput.value = formattedDate;
+                  endDateInput.value = formattedDate;
+                  endDateInput.min = formattedDate; // 종료일의 최소값도 설정
+                  
+                  // 선택된 날짜가 오늘보다 이전인지 확인
+                  if (paramDate < today) {
+                      // 사용자에게 과거 날짜임을 알림
+                      setTimeout(() => {
+                          const confirmPastDate = confirm('선택하신 날짜는 과거 날짜입니다. 계속 진행하시겠습니까?');
+                          if (!confirmPastDate) {
+                              // 사용자가 취소를 선택한 경우 오늘 날짜로 변경
+                              startDateInput.value = todayString;
+                              endDateInput.value = todayString;
+                              endDateInput.min = todayString;
+                          }
+                      }, 100); // 약간의 지연 후 경고 표시
+                  }
+              }
+          } catch (e) {
+              console.error('날짜 파라미터 처리 중 오류:', e);
+          }
+      } else {
+          // 날짜 파라미터가 없을 경우 기존 코드대로 오늘 날짜로 설정
+          if (!startDateInput.value) startDateInput.value = todayString;
+          if (!endDateInput.value) endDateInput.value = todayString;
+          if (startDateInput.value) endDateInput.min = startDateInput.value;
+      }
+
+      // 시작일 변경 시에도 과거 날짜 체크
+      startDateInput.addEventListener('change', function() {
+          const selectedDate = new Date(this.value);
+          selectedDate.setHours(0, 0, 0, 0);
+          
+          if (selectedDate < today) {
+              // 사용자에게 알림만 제공하고 계속 진행 허용
+              alert('선택하신 날짜는 과거 날짜입니다.');
+          }
+          
+          // 기존 로직 유지 (종료일이 시작일보다 빠르면 종료일 업데이트)
+          if (!endDateInput.value || new Date(endDateInput.value) < selectedDate) {
+              endDateInput.value = this.value;
+          }
+          endDateInput.min = this.value;
+      });
 
         document.querySelectorAll('.sc-enroll-date-input-overlay, .sc-enroll-time-input-overlay').forEach(overlay => {
             overlay.addEventListener('click', function() {

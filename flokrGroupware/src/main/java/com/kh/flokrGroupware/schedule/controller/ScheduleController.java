@@ -71,20 +71,30 @@ public class ScheduleController {
     
     /**
      * 일정 상세 조회 (모달용) 메소드
-     * @param scheduleNo
-     * @param model
-     * @return
+     * @param scheduleNo 조회할 일정 번호
+     * @param model 뷰로 데이터를 전달하기 위한 Model 객체
+     * @return 일정 상세 모달 뷰
      */
     @RequestMapping("detailModal.sc")
-    public String scheduleDetail(int scheduleNo, Model model) {
+    public String scheduleDetail(int scheduleNo, Model model, HttpSession session) {
     	// 일정 정보 조회
     	Schedule schedule = scheduleService.selectSchedule(scheduleNo);
     	
-    	// 참석자 정보 조회
-    	ArrayList<ScheduleAttendee> sa = scheduleService.selectAttendees(scheduleNo);
+    	// 일정이 없는 경우 처리
+        if(schedule == null) {
+            model.addAttribute("errorMsg", "존재하지 않는 일정입니다.");
+            return "common/errorPage";
+        }
+    	
+    	// 일정 참석자 목록 조회
+    	ArrayList<ScheduleAttendee> attendees = scheduleService.selectAttendees(scheduleNo);
+    	
+    	// 로그인한 사용자 정보 가져오기
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
     	
     	model.addAttribute("schedule", schedule);
-    	model.addAttribute("sa", sa);
+    	model.addAttribute("attendees", attendees);
+    	model.addAttribute("loginUser", loginUser);
     	
     	// 모달용 부분 뷰 리턴
     	return "schedule/scheduleDetailModal";
@@ -103,7 +113,7 @@ public class ScheduleController {
     	Employee loginUser = (Employee)session.getAttribute("loginUser");
     	
     	// 참석자 선택을 위한 직원 목록 조회
-    	ArrayList<Employee> eList = scheduleService.selectEmployeeList();
+    	ArrayList<Employee> eList = scheduleService.selectEmployeeList(loginUser.getEmpNo());
     	
     	// 헤더에서 일정 메뉴를 활성화하기 위해 추가
     	model.addAttribute("currentPage", "schedule");
@@ -194,6 +204,36 @@ public class ScheduleController {
     	}
     	
     }
+    
+    /**
+     * 특정 날짜에 해당하는 일정 목록을 조회하는 메소드
+     * @param date 조회할 날짜 (형식: YYYY-MM-DD)
+     * @param session 로그인한 사용자 정보를 담고 있는 HttpSession 객체
+     * @return ArrayList<Schedule> 해당 날짜의 일정 목록
+     */
+    @ResponseBody
+    @RequestMapping("getDaySchedules.sc")
+    public ArrayList<Schedule> getDaySchedules(String date, HttpSession session){
+    	// 로그인한 사용자의 empNo 가져오기
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
+    	int empNo = loginUser.getEmpNo();
+    	int deptNo = loginUser.getDeptNo();
+    	
+    	// 특정 날짜의 일정목록 조회
+    	ArrayList<Schedule> daySchedules = scheduleService.selectDaySchedules(date, empNo, deptNo);
+    	
+    	return daySchedules;
+    }
+    
+    @RequestMapping("updateForm.sc")
+    public String updateForm(int scheduleNo, Model model) {
+    	// 1. 일정 정보 조회 - 입력받은 scheduleNo로 해당 일정의 상세 정보를 조회
+    	Schedule schedule = scheduleService.selectSchedule(scheduleNo);
+    	
+    	// 2. 참석자 정보 조회 - 해당 일정에 참석하는 직원 목록 조회
+    	ArrayList<Employee> eList = scheduleService.selectAttendees(scheduleNo);
+    }
+    
 
 
 }

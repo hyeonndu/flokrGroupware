@@ -24,6 +24,9 @@ public class ScheduleServiceImpl implements ScheduleService {
 	@Autowired
 	private SqlSessionTemplate sqlSession;
 
+	/**
+	 * 일정 상세 정보 조회
+	 */
 	@Override
 	public Schedule selectSchedule(int scheduleNo) {
 		return sDao.selectSchedule(sqlSession, scheduleNo);
@@ -65,6 +68,9 @@ public class ScheduleServiceImpl implements ScheduleService {
 		return 0;
 	}
 
+	/**
+	 * 일정 참석자 목록 조회
+	 */
 	@Override
 	public ArrayList<ScheduleAttendee> selectAttendees(int scheduleNo) {
 		return sDao.selectAttendees(sqlSession, scheduleNo);
@@ -205,9 +211,25 @@ public class ScheduleServiceImpl implements ScheduleService {
 		
 	}
 
+	/**
+	 * 직원 목록 조회 (등록폼)
+	 */
 	@Override
-	public ArrayList<Employee> selectEmployeeList() {
-		return sDao.selectEmployeeList(sqlSession);
+	public ArrayList<Employee> selectEmployeeList(int loginEmpNo) {
+		return sDao.selectEmployeeList(sqlSession, loginEmpNo);
+	}
+
+	/**
+	 * 특정 날짜의 일정 목록을 조회하는 메소드
+	 */
+	@Override
+	public ArrayList<Schedule> selectDaySchedules(String date, int empNo, int deptNo) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("date", date);
+		params.put("empNo", empNo);
+		params.put("deptNo", deptNo);
+		
+		return sDao.selectDaySchedules(sqlSession, params);
 	}
 
 }
