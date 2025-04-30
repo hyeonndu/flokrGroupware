@@ -1,14 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<form id="insert-task-form" action="" method="post" enctype="multipart/form-data">
-
+<form id="insert-task-form" action="${pageContext.request.contextPath}/task/insert" method="post" enctype="multipart/form-data">
+<input type="hidden" name="taskWriter" value="${ loginUser.empNo }" />
   <div class="insert-wrapper">
     <!-- 상단 헤더 -->
     <div class="insert-header">
       <div class="insert-title-left">
-        <button type="button" class="emoji-btn">🎨</button>
-        <input type="hidden" name="emoji" id="selectedEmoji" value="🎨" />
+        <button type="button" class="emoji-btn">
+        	<span class="material-symbols-outlined">
+				add_circle
+			</span>
+        </button>
+        <input type="hidden" name="emoji" id="selectedEmoji" value="" />
         <input type="text" name="taskTitle" class="insert-title-input" placeholder="제목을 입력하세요" />
       </div>
       <div class="insert-header-actions">
@@ -47,7 +51,7 @@
 
         <div class="insert-rowRight">
           <label>마감일</label>
-          <input type="date" name="deadline" class="insert-date-input" />
+          <input type="date" name="dueDate" class="insert-date-input" />
         </div>
 
         <div class="insert-rowRight">
@@ -61,7 +65,7 @@
         </div>
 
         <div class="insert-btn-group">
-          <button type="reset" class="gray-btn">초기화</button>
+          <button type="button" class="gray-btn" onclick="resetInsertForm()">초기화</button>
           <button type="submit" class="red-btn">등록</button>
         </div>
       </div>

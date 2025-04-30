@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,6 +10,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/taskListView.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/taskDetailView.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/taskInsertForm.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add_circle" />
 </head>
 <body>
 
@@ -42,12 +44,9 @@
 					</div>
 					
 					<div class="task-group" id="in-progress">
-					    <div class="task-subitem" data-task-id="1">🎨 화면 설계</div>
-					    <div class="task-subitem" data-task-id="2">📄 데이터 설계</div>
-					    <div class="task-subitem" data-task-id="3">📁 DB 스크립트 파일</div>
-					    <div class="task-subitem">🛠 기능 구현</div>
-					    
-					    <!-- 여기서 1은 예시이므로 나중엔 ${task.taskId} 같은 동적 값으로 바꾸기 -->
+						<c:forEach var="list" items="${ list }">
+					    	<div class="task-subitem" data-task-id="${ list.taskNo }">${ list.emoji } ${ list.taskTitle }</div>
+						</c:forEach>
 					</div>
 					
 					<div class="section-divider"></div>
@@ -113,99 +112,31 @@
 					<!-- 업무 카드 목록 -->
 					<div class="task-cards">
 					    <!-- 카드 1 -->
-					    <div class="task-card" onclick="loadTaskDetail(1)">
-					        <div class="task-header">
-					            <span class="task-title">🎨 화면 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 A, B 외</div>
-					            <div><strong>카테고리:</strong> 디렉터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 진행중">진행중</span></div>
-					        </div>
-					    </div>
-					
-					    <!-- 카드 2 (복붙해서 추가 가능) -->
-					    <div class="task-card">
-					        <div class="task-header">
-					            <span class="task-title">📄 데이터 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 C, D 외</div>
-					            <div><strong>카테고리:</strong> 데이터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 완료">완료</span></div>
-					        </div>
-					    </div>
-					    
-					    <div class="task-card">
-					        <div class="task-header">
-					            <span class="task-title">📄 데이터 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 C, D 외</div>
-					            <div><strong>카테고리:</strong> 데이터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 완료">완료</span></div>
-					        </div>
-					    </div>
-					    
-					    <div class="task-card">
-					        <div class="task-header">
-					            <span class="task-title">📄 데이터 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 C, D 외</div>
-					            <div><strong>카테고리:</strong> 데이터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 완료">완료</span></div>
-					        </div>
-					    </div>
-					    
-					    <div class="task-card">
-					        <div class="task-header">
-					            <span class="task-title">📄 데이터 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 C, D 외</div>
-					            <div><strong>카테고리:</strong> 데이터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 완료">완료</span></div>
-					        </div>
-					    </div>
-					    
-					    <div class="task-card">
-					        <div class="task-header">
-					            <span class="task-title">📄 데이터 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 C, D 외</div>
-					            <div><strong>카테고리:</strong> 데이터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 완료">완료</span></div>
-					        </div>
-					    </div>
-					    
-					    <div class="task-card">
-					        <div class="task-header">
-					            <span class="task-title">📄 데이터 설계</span>
-					        </div>
-					        <div class="task-meta">
-					            <div><strong>업무 담당자:</strong> 👤 C, D 외</div>
-					            <div><strong>카테고리:</strong> 데이터</div>
-					            <div><strong>마감일:</strong> 2025-04-18</div>
-					            <div><strong>상태:</strong> <span class="badge 완료">완료</span></div>
-					        </div>
-					    </div>
+					    <c:forEach var="list" items="${ list }">
+						    <div class="task-card" onclick="loadTaskDetail(${list.taskNo}, this)">
+						        <div class="task-header">
+						            <span class="task-title">${ list.emoji } ${ list.taskTitle }</span>
+						        </div>
+						        <div class="task-meta">
+						            <div><strong>업무 담당자:</strong> 👤 A, B 외</div>
+						            <div><strong>카테고리:</strong> ${ list.category }</div>
+						            <div><strong>마감일:</strong> ${ list.dueDate }</div>
+						            
+						            <div>
+							            <strong>상태:</strong> 
+							            <span class="badge ${statusColorMap[list.taskStatus]}">
+							            	${statusNameMap[list.taskStatus]}
+							            </span>
+						            </div>
+						        </div>
+						    </div>
+					    </c:forEach>
 					</div>
 				</div>
 				
-				<div id="task-detail-view" style="display:none;">
-				    <!-- AJAX로 불러올 상세 JSP가 들어올 자리 -->
-				</div>
+				<div id="task-detail-view" style="display:none;"></div>
 				
 				<div id="task-insert-view" style="display:none;"></div> 
-				<!-- 새 업무 추가 -->
 	            
 	        </div>
         </div>
@@ -235,6 +166,7 @@
 		function loadTaskDetail(taskId, clickedItem) {
 		  document.getElementById("task-list-view").style.display = "none";
 		  document.getElementById("task-detail-view").style.display = "block";
+		  document.getElementById("task-insert-view").style.display = "none";
 
 		  fetch("${pageContext.request.contextPath}/task/detail?taskId=" + taskId)
 		    .then(res => res.text())
@@ -263,7 +195,7 @@
 			  document.getElementById("task-detail-view").style.display = "none";
 			  document.getElementById("task-insert-view").style.display = "block";
 
-			  fetch("${pageContext.request.contextPath}/task/insert")
+			  fetch("${pageContext.request.contextPath}/task/insertForm")
 			    .then(res => res.text())
 			    .then(html => {
 			      document.getElementById("task-insert-view").innerHTML = html;
@@ -318,6 +250,8 @@
 	    document.querySelector('.insert-content-box').value = '';
 	    document.querySelector('.insert-dropdown').selectedIndex = 0;
 	    document.querySelector('.insert-date-input').value = '';
+	    document.querySelector('#selectedEmoji').value = '';
+	    document.querySelector('.emoji-btn').innerHTML = '<span class="material-symbols-outlined">add_circle</span>';
 	    // 첨부파일 초기화
 	    document.querySelector('.insert-attachment-box input[type="file"]').value = '';
 	  }
@@ -328,7 +262,20 @@
 	  }
 	  
 	  </script>
-
+	  
+		<script>
+		  window.addEventListener('DOMContentLoaded', function() {
+		    fetch("${pageContext.request.contextPath}/task/checkFailFlag")
+		      .then(res => res.json())
+		      .then(fail => {
+		        if (fail) {
+		          alertify.alert("업무 등록에 실패했습니다. 다시 시도해주세요.", function() {
+		            loadTaskInsert(); // 등록폼 AJAX로 불러오기
+		          });
+		        }
+		      });
+		  });
+		</script>
 
 </body>
 </html>
