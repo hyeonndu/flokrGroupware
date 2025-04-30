@@ -36,30 +36,32 @@
 					
 					<div class="section-divider"></div>
 					
-					<div class="section-title" onclick="toggleSection('in-progress', this)">
-					    진행 중인 업무 목록
-					    <svg class="arrow rotate" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-					        <path d="M6 9l6 6 6-6" />
-					    </svg>
-					</div>
-					
-					<div class="task-group" id="in-progress">
-						<c:forEach var="list" items="${ list }">
-					    	<div class="task-subitem" data-task-id="${ list.taskNo }">${ list.emoji } ${ list.taskTitle }</div>
-						</c:forEach>
-					</div>
-					
-					<div class="section-divider"></div>
-					
-					<div class="section-title" onclick="toggleSection('completed', this)">
-					    완료된 업무 목록
-					    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-					        <path d="M6 9l6 6 6-6" />
-					    </svg>
-					</div>
-					
-					<div class="task-group closed" id="completed">
-					    <div class="task-subitem">📌 프로젝트 기획 및 요구사항 분석</div>
+					<div class="left-scrollable">
+						<div class="section-title" onclick="toggleSection('in-progress', this)">
+						    진행 중인 업무 목록
+						    <svg class="arrow rotate" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						        <path d="M6 9l6 6 6-6" />
+						    </svg>
+						</div>
+						
+						<div class="task-group" id="in-progress">
+							<c:forEach var="list" items="${ list }">
+						    	<div class="task-subitem" data-task-id="${ list.taskNo }">${ list.emoji } ${ list.taskTitle }</div>
+							</c:forEach>
+						</div>
+						
+						<div class="section-divider"></div>
+						
+						<div class="section-title" onclick="toggleSection('completed', this)">
+						    완료된 업무 목록
+						    <svg class="arrow" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						        <path d="M6 9l6 6 6-6" />
+						    </svg>
+						</div>
+						
+						<div class="task-group closed" id="completed">
+						    <div class="task-subitem">📌 프로젝트 기획 및 요구사항 분석</div>
+						</div>
 					</div>
 	        </div>
 	        

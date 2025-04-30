@@ -15,8 +15,12 @@ public class TaskDao {
 		return (ArrayList)sqlSession.selectList("taskMapper.taskList", empNo);
 	}
 	
-	public int taskInsert(SqlSessionTemplate sqlSession, Task task, Attachment atmt) {
+	public int taskInsert(SqlSessionTemplate sqlSession, Task task) {
 		return sqlSession.insert("taskMapper.taskInsert", task);
+	}
+	
+	public int insertAttachment(SqlSessionTemplate sqlSession, Attachment atmt) {
+		return sqlSession.insert("taskMapper.insertAttachment", atmt);
 	}
 
 }

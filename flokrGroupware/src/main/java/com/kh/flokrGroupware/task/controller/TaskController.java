@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
@@ -72,15 +73,33 @@ public class TaskController {
     }
 
 	@RequestMapping("/insert")
-	public String taskInsert(Task task, MultipartFile upfile, Model model, HttpSession session, Attachment atmt) {
+	public String taskInsert(Task task,  @RequestParam("uploadFile") MultipartFile upfile, Model model, HttpSession session, Attachment atmt) {
 		
-		if(upfile != null && !upfile.getOriginalFilename().equals("")) {
-			String changeName = saveFile(upfile, session);
-			atmt.setOriginalFilename(upfile.getOriginalFilename());
-			atmt.setStoredFilepath("resources/uploadFiles/" + changeName);
-			atmt.setFileExtension(upfile.getOriginalFilename().substring(upfile.getOriginalFilename().lastIndexOf(".")));
-			atmt.setRefType("TASK");
+		Employee loginUser = (Employee) session.getAttribute("loginUser");
+		int empNo = loginUser.getEmpNo();
+		
+		System.out.println("upfile: " + upfile);
+		System.out.println("upfile.getOriginalFilename(): " + (upfile != null ? upfile.getOriginalFilename() : "null"));
+		System.out.println("upfile.isEmpty(): " + (upfile != null ? upfile.isEmpty() : "null"));
+
+		
+		if (upfile != null && !upfile.isEmpty() && upfile.getOriginalFilename() != null && !upfile.getOriginalFilename().trim().equals("")) {
+		    atmt = new Attachment();
+		    String changeName = saveFile(upfile, session);
+
+		    if (changeName != null) {
+		        atmt.setOriginalFilename(upfile.getOriginalFilename());
+		        atmt.setStoredFilepath("resources/uploadFiles/" + changeName);
+		        atmt.setFileExtension(changeName.substring(changeName.lastIndexOf(".")));
+		        atmt.setUploaderEmpNo(empNo);
+		    } else {
+		        System.out.println("파일 저장 실패: changeName is null");
+		    }
+		} else {
+		    System.out.println("파일 업로드 조건 불충족: 업로드 생략됨");
+		    atmt = null;
 		}
+
 		
 		int result = tService.taskInsert(task, atmt);
 		

@@ -38,7 +38,33 @@ body {
     height: 100%;       /* 부모 높이 채우기 */
     padding: 20px;
     border-right: 1px solid #ddd;
+    display: flex;
+  	flex-direction: column;
   }
+  
+  .left-scrollable {
+	  flex-grow: 1;
+	  overflow-y: auto;
+	  padding-right: 8px; /* 스크롤바 여유 공간 */
+	}
+	
+	.left-scrollable::-webkit-scrollbar {
+	  width: 6px; /* 세로 스크롤바 너비 */
+	}
+	
+	.left-scrollable::-webkit-scrollbar-thumb {
+	  background-color: #c0c0c0;
+	  border-radius: 10px;
+	}
+	
+	.left-scrollable::-webkit-scrollbar-thumb:hover {
+	  background-color: #a0a0a0;
+	}
+	
+	.left-scrollable::-webkit-scrollbar-track {
+	  background-color: transparent; /* 트랙 배경 */
+	}
+	
 
   .right-section {
       width: 80%;         /* 전체의 70% */

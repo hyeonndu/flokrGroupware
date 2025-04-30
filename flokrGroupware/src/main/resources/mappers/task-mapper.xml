@@ -56,5 +56,29 @@
 		  , #{emoji}
 		  )
 	</insert>
+	
+	<insert id="insertAttachment">
+		insert
+		  into attachment
+		  (
+		    attachment_no
+		  , ref_type
+		  , ref_no
+		  , uploader_emp_no
+		  , original_filename
+		  , stored_filepath
+		  , file_extension
+		  )
+		  values
+		  (
+		    seq_attachment.nextval
+		  , 'TASK'
+		  , seq_task.currval
+		  , #{uploaderEmpNo}
+		  , #{originalFilename}
+		  , #{storedFilepath}
+		  , #{fileExtension}
+		  )
+	</insert>
 
 </mapper>

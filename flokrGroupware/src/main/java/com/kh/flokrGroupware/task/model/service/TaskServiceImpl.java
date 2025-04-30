@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.flokrGroupware.attachment.model.vo.Attachment;
 import com.kh.flokrGroupware.task.model.dao.TaskDao;
@@ -25,9 +26,18 @@ public class TaskServiceImpl implements TaskService {
 	}
 
 	@Override
+	@Transactional
 	public int taskInsert(Task task, Attachment atmt) {
-		return tDao.taskInsert(sqlSession, task, atmt);
+	    int result1 = tDao.taskInsert(sqlSession, task);
+	    int result2 = 1;
+
+	    if (atmt != null) {
+	        result2 = tDao.insertAttachment(sqlSession, atmt);
+	    }
+
+	    return result1 * result2;
 	}
+
 
 	@Override
 	public Task taskDetail(int taskNo) {

@@ -16,7 +16,7 @@ public class Attachment {
 	private int attachmentNo;
 	private String refType;
 	private int refNo;
-	private String uploaderEmpNo;
+	private int uploaderEmpNo;
 	private String originalFilename;
 	private String storedFilepath;
 	private String fileExtension;
