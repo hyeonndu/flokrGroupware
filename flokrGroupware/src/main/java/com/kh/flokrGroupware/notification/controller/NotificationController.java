@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.kh.flokrGroupware.common.model.vo.PageInfo;
+import com.kh.flokrGroupware.common.template.Pagination;
 import com.kh.flokrGroupware.employee.model.service.EmployeeService;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.notification.model.service.NotificationService;
@@ -43,7 +45,7 @@ public class NotificationController {
     public String allNotifications(
             HttpSession session, 
             Model model,
-            @RequestParam(value="page", defaultValue="1") int page) {
+            @RequestParam(value="page", defaultValue="1") int currentPage) {
         
         Employee loginUser = (Employee) session.getAttribute("loginUser");
         
@@ -51,30 +53,28 @@ public class NotificationController {
             return "redirect:/";
         }
         
-        int limit = 10; // 페이지당 표시할 알림 수
+        // 페이지당 표시할 알림 수
+        int limit = 10;
         
-        List<Map<String, Object>> notifications = notificationService.getAllNotificationsPaging(loginUser.getEmpNo(), page, limit);
-        int totalCount = notificationService.getTotalNotificationsCount(null, null);
+        // 특정 사용자의 총 알림 수 조회 (중요: 로그인한 사용자의 알림만 카운트해야 함)
+        int listCount = notificationService.getUserNotificationsCount(loginUser.getEmpNo());
         
-        int maxPage = (int)Math.ceil((double)totalCount / limit);
-        if(maxPage == 0) maxPage = 1; // 데이터가 없어도 최소 1페이지는 표시
-
-        // 한 번에 표시할 페이지 버튼 수
-        int pageButtonCount = 5;
-
-        // 시작 페이지와 끝 페이지 계산 로직
-        int startPage = ((page - 1) / pageButtonCount) * pageButtonCount + 1;
-        int endPage = Math.min(startPage + pageButtonCount - 1, maxPage);
-
-        if(endPage > maxPage) {
-            endPage = maxPage;
+        // 페이지 정보 설정 (Pagination 템플릿 사용)
+        PageInfo pi = Pagination.getPageInfo(listCount, currentPage, 5, limit);
+        
+        // 실제 데이터가 있는 페이지 범위를 넘어가면 마지막 페이지로 리다이렉트
+        if(listCount > 0 && currentPage > pi.getMaxPage()) {
+            return "redirect:/notificationAll?page=" + pi.getMaxPage();
         }
         
+        // 알림 목록 조회
+        List<Map<String, Object>> notifications = notificationService.getAllNotificationsPaging(loginUser.getEmpNo(), currentPage, limit);
+        
         model.addAttribute("notifications", notifications);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("maxPage", maxPage);
-        model.addAttribute("startPage", startPage);
-        model.addAttribute("endPage", endPage);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("maxPage", pi.getMaxPage());
+        model.addAttribute("startPage", pi.getStartPage());
+        model.addAttribute("endPage", pi.getEndPage());
         
         return "notification/notificationAll";
     }
@@ -102,9 +102,10 @@ public class NotificationController {
     public String adminNotifications(
             HttpSession session, 
             Model model,
-            @RequestParam(value="page", defaultValue="1") int page,
+            @RequestParam(value="page", defaultValue="1") int currentPage,
             @RequestParam(value="type", required=false) String type,
-            @RequestParam(value="keyword", required=false) String keyword) {
+            @RequestParam(value="keyword", required=false) String keyword,
+            @RequestParam(value="tab", required=false) String tab) {
         
         Employee loginUser = (Employee) session.getAttribute("loginUser");
         
@@ -113,32 +114,35 @@ public class NotificationController {
             return "redirect:/";
         }
         
-        int limit = 10; // 페이지당 표시할 알림 수
+        // 페이지당 표시할 알림 수
+        int limit = 10;
         
-        List<Map<String, Object>> notifications = notificationService.getNotificationsForAdmin(page, limit, type, keyword);
-        int totalCount = notificationService.getTotalNotificationsCount(type, keyword);
+        // 필터 조건에 맞는 총 알림 수 조회
+        int listCount = notificationService.getTotalNotificationsCount(type, keyword);
         
-        int maxPage = (int)Math.ceil((double)totalCount / limit);
-        if(maxPage == 0) maxPage = 1; // 데이터가 없어도 최소 1페이지는 표시
-
-        // 한 번에 표시할 페이지 버튼 수
-        int pageButtonCount = 5;
-
-        // 시작 페이지와 끝 페이지 계산 로직
-        int startPage = ((page - 1) / pageButtonCount) * pageButtonCount + 1;
-        int endPage = Math.min(startPage + pageButtonCount - 1, maxPage);
-
-        if(endPage > maxPage) {
-            endPage = maxPage;
+        // 페이지 정보 설정 (Pagination 템플릿 사용)
+        PageInfo pi = Pagination.getPageInfo(listCount, currentPage, 5, limit);
+        
+        // 실제 데이터가 있는 페이지 범위를 넘어가면 마지막 페이지로 리다이렉트
+        if(listCount > 0 && currentPage > pi.getMaxPage()) {
+            String redirect = "redirect:/notificationAdmin?page=" + pi.getMaxPage();
+            if(type != null) redirect += "&type=" + type;
+            if(keyword != null) redirect += "&keyword=" + keyword;
+            if(tab != null) redirect += "&tab=" + tab;
+            return redirect;
         }
         
+        // 알림 목록 조회
+        List<Map<String, Object>> notifications = notificationService.getNotificationsForAdmin(currentPage, limit, type, keyword);
+        
         model.addAttribute("notifications", notifications);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("maxPage", maxPage);
-        model.addAttribute("startPage", startPage);
-        model.addAttribute("endPage", endPage);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("maxPage", pi.getMaxPage());
+        model.addAttribute("startPage", pi.getStartPage());
+        model.addAttribute("endPage", pi.getEndPage());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("tab", tab);
         
         // 부서 목록 조회 (알림 발송용)
         model.addAttribute("departments", employeeService.selectDepartmentList());

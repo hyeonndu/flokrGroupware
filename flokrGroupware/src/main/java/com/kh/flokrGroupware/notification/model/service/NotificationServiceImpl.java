@@ -101,4 +101,9 @@ public class NotificationServiceImpl implements NotificationService {
         params.put("searchKeyword", searchKeyword);
         return notificationDao.getTotalNotificationsCount(params);
     }
+    
+    @Override
+    public int getUserNotificationsCount(int empNo) {
+        return notificationDao.getUserNotificationsCount(empNo);
+    }
 }

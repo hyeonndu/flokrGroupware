@@ -166,6 +166,7 @@
     </div>
     
     <form id="noticeForm" action="${pageContext.request.contextPath}/noticeInsert" method="post">
+      <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
       <div class="notice-form">
         <!-- 제목 -->
         <div class="form-group">
