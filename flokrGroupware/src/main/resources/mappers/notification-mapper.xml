@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="notificationMapper">
+    <resultMap id="notificationResultMap" type="hashmap">
+        <id property="notificationNo" column="NOTIFICATION_NO" />
+        <result property="recipientEmpNo" column="RECIPIENT_EMP_NO" />
+        <result property="type" column="TYPE" />
+        <result property="title" column="TITLE" />
+        <result property="notificationContent" column="NOTIFICATION_CONTENT" />
+        <result property="refType" column="REF_TYPE" />
+        <result property="refNo" column="REF_NO" />
+        <result property="createDate" column="CREATE_DATE" />
+        <result property="readDate" column="READ_DATE" />
+        <result property="empName" column="EMP_NAME" />
+        <result property="empId" column="EMP_ID" />
+        <result property="deptName" column="DEPT_NAME" />
+    </resultMap>
+    
+    <select id="getUnreadNotifications" parameterType="int" resultMap="notificationResultMap">
+        SELECT *
+        FROM NOTIFICATION
+        WHERE RECIPIENT_EMP_NO = #{empNo}
+        AND READ_DATE IS NULL
+        ORDER BY CREATE_DATE DESC
+    </select>
+    
+    <select id="getAllNotifications" parameterType="int" resultMap="notificationResultMap">
+        SELECT *
+        FROM NOTIFICATION
+        WHERE RECIPIENT_EMP_NO = #{empNo}
+        ORDER BY CREATE_DATE DESC
+    </select>
+    
+    <select id="getAllNotificationsPaging" parameterType="hashmap" resultMap="notificationResultMap">
+        SELECT *
+        FROM (
+            SELECT ROWNUM AS RNUM, N.*
+            FROM (
+                SELECT *
+                FROM NOTIFICATION
+                WHERE RECIPIENT_EMP_NO = #{empNo}
+                ORDER BY CREATE_DATE DESC
+            ) N
+            WHERE ROWNUM &lt;= #{offset} + #{limit}
+        )
+        WHERE RNUM > #{offset}
+    </select>
+    
+    <select id="getNotification" parameterType="int" resultMap="notificationResultMap">
+        SELECT *
+        FROM NOTIFICATION
+        WHERE NOTIFICATION_NO = #{notificationNo}
+    </select>
+    
+    <update id="markAsRead" parameterType="int">
+        UPDATE NOTIFICATION
+        SET READ_DATE = SYSDATE
+        WHERE NOTIFICATION_NO = #{notificationNo}
+    </update>
+    
+    <insert id="saveNotification" parameterType="hashmap">
+        INSERT INTO NOTIFICATION (
+            NOTIFICATION_NO,
+            RECIPIENT_EMP_NO,
+            TYPE,
+            TITLE,
+            NOTIFICATION_CONTENT,
+            REF_TYPE,
+            REF_NO,
+            CREATE_DATE
+        ) VALUES (
+            SEQ_NOTIFICATION.NEXTVAL,
+            #{empNo},
+            #{type},
+            #{title},
+            #{content},
+            #{refType},
+            #{refNo},
+            SYSDATE
+        )
+    </insert>
+    
+    <insert id="saveNotificationForAll" parameterType="hashmap">
+        INSERT INTO NOTIFICATION (
+            NOTIFICATION_NO,
+            RECIPIENT_EMP_NO,
+            TYPE,
+            TITLE,
+            NOTIFICATION_CONTENT,
+            REF_TYPE,
+            REF_NO,
+            CREATE_DATE
+        )
+        SELECT 
+            SEQ_NOTIFICATION.NEXTVAL,
+            EMP_NO,
+            #{type},
+            #{title},
+            #{content},
+            #{refType},
+            #{refNo},
+            SYSDATE
+        FROM EMPLOYEE
+        WHERE STATUS = 'Y'
+    </insert>
+    
+    <insert id="saveNotificationForDepartment" parameterType="hashmap">
+        INSERT INTO NOTIFICATION (
+            NOTIFICATION_NO,
+            RECIPIENT_EMP_NO,
+            TYPE,
+            TITLE,
+            NOTIFICATION_CONTENT,
+            REF_TYPE,
+            REF_NO,
+            CREATE_DATE
+        )
+        SELECT 
+            SEQ_NOTIFICATION.NEXTVAL,
+            EMP_NO,
+            #{type},
+            #{title},
+            #{content},
+            #{refType},
+            #{refNo},
+            SYSDATE
+        FROM EMPLOYEE
+        WHERE DEPT_NO = #{deptNo}
+        AND STATUS = 'Y'
+    </insert>
+    
+    <delete id="deleteOldNotifications" parameterType="int">
+        DELETE FROM NOTIFICATION
+        WHERE CREATE_DATE &lt; SYSDATE - #{days}
+    </delete>
+    
+    <select id="getNotificationsForAdmin" parameterType="hashmap" resultMap="notificationResultMap">
+        SELECT *
+        FROM (
+            SELECT ROWNUM AS RNUM, N.*
+            FROM (
+                SELECT 
+                    N.NOTIFICATION_NO, 
+                    N.RECIPIENT_EMP_NO, 
+                    N.TYPE, 
+                    N.TITLE, 
+                    N.NOTIFICATION_CONTENT, 
+                    N.REF_TYPE, 
+                    N.REF_NO, 
+                    N.CREATE_DATE, 
+                    N.READ_DATE,
+                    E.EMP_NAME, 
+                    E.EMP_ID,
+                    D.DEPT_NAME
+                FROM NOTIFICATION N
+                LEFT JOIN EMPLOYEE E ON N.RECIPIENT_EMP_NO = E.EMP_NO
+                LEFT JOIN DEPARTMENT D ON E.DEPT_NO = D.DEPT_NO
+                WHERE 1=1
+                <if test="type != null and type != ''">
+                    AND N.TYPE = #{type}
+                </if>
+                <if test="searchKeyword != null and searchKeyword != ''">
+                    AND (
+                        N.TITLE LIKE '%' || #{searchKeyword} || '%'
+                        OR N.NOTIFICATION_CONTENT LIKE '%' || #{searchKeyword} || '%'
+                        OR E.EMP_NAME LIKE '%' || #{searchKeyword} || '%'
+                        OR E.EMP_ID LIKE '%' || #{searchKeyword} || '%'
+                    )
+                </if>
+                ORDER BY N.CREATE_DATE DESC
+            ) N
+            WHERE ROWNUM &lt;= #{offset} + #{limit}
+        )
+        WHERE RNUM > #{offset}
+    </select>
+    
+    <select id="getTotalNotificationsCount" parameterType="hashmap" resultType="int">
+        SELECT COUNT(*)
+        FROM NOTIFICATION N
+        LEFT JOIN EMPLOYEE E ON N.RECIPIENT_EMP_NO = E.EMP_NO
+        WHERE 1=1
+        <if test="type != null and type != ''">
+            AND N.TYPE = #{type}
+        </if>
+        <if test="searchKeyword != null and searchKeyword != ''">
+            AND (
+                N.TITLE LIKE '%' || #{searchKeyword} || '%'
+                OR N.NOTIFICATION_CONTENT LIKE '%' || #{searchKeyword} || '%'
+                OR E.EMP_NAME LIKE '%' || #{searchKeyword} || '%'
+                OR E.EMP_ID LIKE '%' || #{searchKeyword} || '%'
+            )
+        </if>
+    </select>
+</mapper>

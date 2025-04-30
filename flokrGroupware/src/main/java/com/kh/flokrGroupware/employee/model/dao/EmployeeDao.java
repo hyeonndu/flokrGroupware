@@ -66,4 +66,8 @@ public class EmployeeDao {
     public int resetPassword(Map<String, Object> params) {
         return sqlSession.update("employeeMapper.resetPassword", params);
     }
+    
+    public ArrayList<Map<String, Object>> searchEmployee(String keyword) {
+        return (ArrayList)sqlSession.selectList("employeeMapper.searchEmployee", keyword);
+    }
 }

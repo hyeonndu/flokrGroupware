@@ -1,0 +1,854 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>알림 관리</title>
+ <!-- jQuery 라이브러리 -->
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+ <!-- Font Awesome CDN -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <!-- Alertify -->
+ <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+ <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
+ <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/themes/default.min.css"/>
+ <style>
+   .admin-notification {
+     max-width: 1280px;
+     margin: 0 auto;
+     padding: 2rem 1.5rem;
+   }
+   
+   .admin-notification-title {
+     margin-bottom: 1.5rem;
+   }
+   
+   .admin-notification-title h1 {
+     font-size: 1.75rem;
+     font-weight: 600;
+     margin-bottom: 0.5rem;
+   }
+   
+   .admin-notification-title p {
+     color: #64748b;
+     font-size: 0.95rem;
+   }
+   
+   .notification-tabs {
+     display: flex;
+     border-bottom: 1px solid #e2e8f0;
+     margin-bottom: 1.5rem;
+   }
+   
+   .notification-tab {
+     padding: 0.75rem 1.5rem;
+     font-size: 0.95rem;
+     cursor: pointer;
+     border-bottom: 2px solid transparent;
+     transition: all 0.2s;
+   }
+   
+   .notification-tab.active {
+     border-bottom-color: #003561;
+     color: #003561;
+     font-weight: 600;
+   }
+   
+   .notification-tab:hover {
+     color: #003561;
+   }
+   
+   .notification-content {
+     display: none;
+   }
+   
+   .notification-content.active {
+     display: block;
+   }
+   
+   /* 알림 목록 */
+   .notification-table-container {
+     overflow-x: auto;
+   }
+   
+   .notification-table {
+     width: 100%;
+     border-collapse: collapse;
+     font-size: 0.9rem;
+   }
+   
+   .notification-table th,
+   .notification-table td {
+     padding: 0.75rem 1rem;
+     text-align: left;
+     border-bottom: 1px solid #e2e8f0;
+   }
+   
+   .notification-table th {
+     background-color: #f8fafc;
+     font-weight: 600;
+   }
+   
+   .notification-table tr:hover {
+     background-color: #f1f5f9;
+   }
+   
+   /* 검색 및 필터 */
+   .notification-filters {
+     display: flex;
+     margin-bottom: 1rem;
+     gap: 0.5rem;
+     align-items: center;
+   }
+   
+   .notification-search {
+     display: flex;
+     flex-grow: 1;
+     max-width: 400px;
+   }
+   
+   .notification-search input {
+     flex-grow: 1;
+     padding: 0.5rem 1rem;
+     border: 1px solid #e2e8f0;
+     border-radius: 4px 0 0 4px;
+     outline: none;
+   }
+   
+   .notification-search button {
+     background-color: #003561;
+     color: white;
+     border: none;
+     padding: 0.5rem 1rem;
+     border-radius: 0 4px 4px 0;
+     cursor: pointer;
+   }
+   
+   .notification-select {
+     padding: 0.5rem 1rem;
+     border: 1px solid #e2e8f0;
+     border-radius: 4px;
+     outline: none;
+   }
+   
+   /* 페이지네이션 */
+   .notification-pagination {
+     display: flex;
+     justify-content: center;
+     margin-top: 1.5rem;
+     gap: 0.25rem;
+   }
+   
+   .notification-pagination a {
+     padding: 0.5rem 0.75rem;
+     border: 1px solid #e2e8f0;
+     border-radius: 4px;
+     color: #64748b;
+     text-decoration: none;
+     transition: all 0.2s;
+   }
+   
+   .notification-pagination a:hover {
+     background-color: #f1f5f9;
+   }
+   
+   .notification-pagination a.active {
+     background-color: #003561;
+     color: white;
+     border-color: #003561;
+   }
+   
+   /* 발송 폼 */
+   .notification-form {
+     background-color: #fff;
+     border-radius: 8px;
+     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+     padding: 1.5rem;
+     margin-bottom: 1.5rem;
+   }
+   
+   .form-group {
+     margin-bottom: 1rem;
+   }
+   
+   .form-label {
+     display: block;
+     margin-bottom: 0.5rem;
+     font-weight: 600;
+     font-size: 0.95rem;
+   }
+   
+   .form-control {
+     width: 100%;
+     padding: 0.5rem 1rem;
+     border: 1px solid #e2e8f0;
+     border-radius: 4px;
+     font-size: 0.95rem;
+   }
+   
+   .form-control:focus {
+     outline: none;
+     border-color: #003561;
+     box-shadow: 0 0 0 1px #003561;
+   }
+   
+   .form-select {
+     width: 100%;
+     padding: 0.5rem 1rem;
+     border: 1px solid #e2e8f0;
+     border-radius: 4px;
+     font-size: 0.95rem;
+   }
+   
+   .form-actions {
+     display: flex;
+     justify-content: flex-end;
+     gap: 0.5rem;
+     margin-top: 1.5rem;
+   }
+   
+   .btn {
+     padding: 0.5rem 1rem;
+     border-radius: 4px;
+     font-size: 0.95rem;
+     cursor: pointer;
+     transition: all 0.2s;
+     border: none;
+   }
+   
+   .btn-primary {
+     background-color: #003561;
+     color: white;
+   }
+   
+   .btn-primary:hover {
+     background-color: #002a4c;
+   }
+   
+   .btn-secondary {
+     background-color: #e2e8f0;
+     color: #333;
+   }
+   
+   .btn-secondary:hover {
+     background-color: #cbd5e1;
+   }
+   
+   .target-specific {
+     display: none;
+   }
+   
+   /* 로딩 스피너 */
+   .spinner {
+     display: inline-block;
+     width: 20px;
+     height: 20px;
+     border: 3px solid rgba(0, 0, 0, 0.1);
+     border-radius: 50%;
+     border-top-color: #003561;
+     animation: spin 0.8s linear infinite;
+     margin-right: 8px;
+     vertical-align: middle;
+   }
+   
+   @keyframes spin {
+     to { transform: rotate(360deg); }
+   }
+   
+   /* 직원 검색 결과 스타일 (고유한 클래스명으로 변경) */
+   .emp_search_results {
+     position: relative;
+     z-index: 9999 !important;
+   }
+   
+   .emp_result_list {
+     position: absolute;
+     width: 100%;
+     border: 1px solid #ddd;
+     border-radius: 4px;
+     background: white;
+     max-height: 200px;
+     overflow-y: auto;
+     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+   }
+   
+   .emp_result_item {
+     padding: 8px 12px;
+     cursor: pointer;
+     border-bottom: 1px solid #eee;
+   }
+
+   .emp_result_item:hover {
+     background-color: #f5f5f5;
+   }
+   
+   /* 탭 관련 추가 스타일 */
+   .notification-content {
+     opacity: 0;
+     transition: opacity 0.3s ease;
+   }
+
+   .notification-content.active {
+     opacity: 1;
+   }
+   
+   /* 선택된 직원 정보 표시 영역 */
+   .emp_selected_info {
+     margin-top: 10px;
+     padding: 10px;
+     background-color: #e8f4ff;
+     border-radius: 4px;
+     border: 1px solid #a8d1ff;
+   }
+ </style>
+</head>
+<body>
+ <jsp:include page="../common/header.jsp"/>
+ 
+ <!-- 알림 관리 메인 콘텐츠 -->
+ <main class="admin-notification">
+   <div class="admin-notification-title">
+     <h1>알림 관리</h1>
+     <p>알림을 발송하고 관리할 수 있습니다.</p>
+   </div>
+   
+   <!-- 탭 메뉴 -->
+   <div class="notification-tabs">
+     <div class="notification-tab active" data-tab="send">알림 발송</div>
+     <div class="notification-tab" data-tab="list">알림 목록</div>
+   </div>
+   
+   <!-- 알림 발송 탭 -->
+   <div class="notification-content active" id="tab-send">
+     <div class="notification-form">
+       <div class="form-group">
+         <label class="form-label">수신 대상</label>
+         <select class="form-select" id="targetType">
+           <option value="ALL">전체 직원</option>
+           <option value="DEPARTMENT">특정 부서</option>
+           <option value="EMPLOYEE">특정 직원</option>
+         </select>
+       </div>
+       
+       <div class="form-group target-specific" id="departmentSelect">
+         <label class="form-label">부서 선택</label>
+         <select class="form-select" id="deptNo">
+           <c:forEach items="${departments}" var="dept">
+             <option value="${dept.deptNo}">${dept.deptName}</option>
+           </c:forEach>
+         </select>
+       </div>
+       
+       <!-- 직원 검색 영역 (고유 ID/클래스 사용) -->
+       <div class="form-group target-specific" id="employeeSelect">
+         <label class="form-label">직원 검색</label>
+         <div class="input-group mb-3">
+           <input type="text" class="form-control" id="emp_search_input" placeholder="이름 또는 사번으로 검색">
+           <button class="btn btn-primary" type="button" id="emp_search_btn">검색</button>
+         </div>
+         
+         <!-- 검색 결과 표시 영역 -->
+         <div id="emp_search_results" class="emp_search_results mt-2"></div>
+         
+         <!-- 선택된 직원 정보 표시 영역 -->
+         <div id="emp_selected_info" class="emp_selected_info" style="display:none;"></div>
+         
+         <!-- 선택된 직원 번호 저장 (hidden) -->
+         <input type="hidden" id="selectedEmpNo" value="">
+       </div>
+       
+       <div class="form-group">
+         <label class="form-label">알림 유형</label>
+         <select class="form-select" id="notificationType">
+           <option value="NOTICE">공지사항</option>
+           <option value="APPROVAL">결재</option>
+           <option value="TASK">업무</option>
+           <option value="CHAT">채팅</option>
+           <option value="SCHEDULE">일정</option>
+         </select>
+       </div>
+       
+       <div class="form-group">
+         <label class="form-label">알림 제목</label>
+         <input type="text" class="form-control" id="notificationTitle" placeholder="알림 제목을 입력하세요">
+       </div>
+       
+       <div class="form-group">
+         <label class="form-label">알림 내용</label>
+         <textarea class="form-control" id="notificationContent" rows="4" placeholder="알림 내용을 입력하세요"></textarea>
+       </div>
+       
+       <div class="form-group">
+         <label class="form-label">연결 페이지 (선택사항)</label>
+         <div style="display: flex; gap: 0.5rem;">
+           <select class="form-select" id="refType" style="width: 40%;">
+             <option value="">선택 안함</option>
+             <option value="notice">공지사항</option>
+             <option value="approval">결재</option>
+             <option value="task">업무</option>
+             <option value="schedule">일정</option>
+           </select>
+           <input type="text" class="form-control" id="refNo" placeholder="관련 ID 입력">
+         </div>
+       </div>
+       
+       <div class="form-actions">
+         <button type="button" class="btn btn-secondary" id="resetBtn">초기화</button>
+         <button type="button" class="btn btn-primary" id="sendBtn">알림 발송</button>
+       </div>
+     </div>
+   </div>
+   
+   <!-- 알림 목록 탭 -->
+   <div class="notification-content" id="tab-list">
+     <!-- 검색 및 필터 -->
+     <div class="notification-filters">
+       <select class="notification-select" id="typeFilter">
+         <option value="">전체 유형</option>
+         <option value="NOTICE" ${type eq 'NOTICE' ? 'selected' : ''}>공지사항</option>
+         <option value="APPROVAL" ${type eq 'APPROVAL' ? 'selected' : ''}>결재</option>
+         <option value="TASK" ${type eq 'TASK' ? 'selected' : ''}>업무</option>
+         <option value="CHAT" ${type eq 'CHAT' ? 'selected' : ''}>채팅</option>
+         <option value="SCHEDULE" ${type eq 'SCHEDULE' ? 'selected' : ''}>일정</option>
+       </select>
+       
+       <div class="notification-search">
+         <input type="text" id="searchKeyword" placeholder="검색어 입력" value="${keyword}">
+         <button id="searchBtn"><i class="fas fa-search"></i></button>
+       </div>
+     </div>
+     
+     <!-- 알림 테이블 -->
+     <div class="notification-table-container">
+       <table class="notification-table">
+         <thead>
+           <tr>
+             <th width="5%">번호</th>
+             <th width="10%">유형</th>
+             <th width="30%">제목</th>
+             <th width="15%">수신자</th>
+             <th width="15%">발송일시</th>
+             <th width="15%">읽음 상태</th>
+             <th width="10%">관리</th>
+           </tr>
+         </thead>
+         <tbody>
+           <c:choose>
+             <c:when test="${empty notifications}">
+               <tr>
+                 <td colspan="7" style="text-align: center;">조회된 알림이 없습니다.</td>
+               </tr>
+             </c:when>
+             <c:otherwise>
+               <c:forEach items="${notifications}" var="notification">
+                 <tr>
+                   <td>${notification.notificationNo}</td>
+                   <td>
+                     <c:choose>
+                       <c:when test="${notification.type eq 'NOTICE'}">공지사항</c:when>
+                       <c:when test="${notification.type eq 'APPROVAL'}">결재</c:when>
+                       <c:when test="${notification.type eq 'TASK'}">업무</c:when>
+                       <c:when test="${notification.type eq 'CHAT'}">채팅</c:when>
+                       <c:when test="${notification.type eq 'SCHEDULE'}">일정</c:when>
+                       <c:otherwise>${notification.type}</c:otherwise>
+                     </c:choose>
+                   </td>
+                   <td>${notification.title}</td>
+                   <td>${notification.empName} (${notification.empId})</td>
+                   <td>
+                     <fmt:formatDate value="${notification.createDate}" pattern="yyyy-MM-dd HH:mm" />
+                   </td>
+                   <td>
+                     <c:choose>
+                       <c:when test="${empty notification.readDate}">
+                         <span style="color: #ff6b6b;">읽지 않음</span>
+                       </c:when>
+                       <c:otherwise>
+                         <span style="color: #4dabf7;">
+                           <fmt:formatDate value="${notification.readDate}" pattern="yyyy-MM-dd HH:mm" />
+                         </span>
+                       </c:otherwise>
+                     </c:choose>
+                   </td>
+                   <td>
+                     <button class="btn btn-secondary btn-sm notification-view-btn" 
+                             data-no="${notification.notificationNo}" 
+                             data-title="${notification.title}" 
+                             data-content="${notification.notificationContent}"
+                             data-type="${notification.type}"
+                             data-reftype="${notification.refType}"
+                             data-refno="${notification.refNo}">
+                       보기
+                     </button>
+                   </td>
+                 </tr>
+               </c:forEach>
+             </c:otherwise>
+           </c:choose>
+         </tbody>
+       </table>
+     </div>
+     
+     <!-- 페이지네이션 -->
+     <div class="notification-pagination">
+       <c:if test="${currentPage > 1}">
+         <a href="${pageContext.request.contextPath}/notificationAdmin?page=1&type=${type}&keyword=${keyword}">
+           <i class="fas fa-angle-double-left"></i>
+         </a>
+         <a href="${pageContext.request.contextPath}/notificationAdmin?page=${currentPage - 1}&type=${type}&keyword=${keyword}">
+           <i class="fas fa-angle-left"></i>
+         </a>
+       </c:if>
+       
+       <c:forEach var="p" begin="${startPage}" end="${endPage}">
+         <c:choose>
+           <c:when test="${p eq currentPage}">
+             <a href="#" class="active">${p}</a>
+           </c:when>
+           <c:otherwise>
+             <a href="${pageContext.request.contextPath}/notificationAdmin?page=${p}&type=${type}&keyword=${keyword}">${p}</a>
+           </c:otherwise>
+         </c:choose>
+       </c:forEach>
+       
+       <c:if test="${currentPage < maxPage}">
+         <a href="${pageContext.request.contextPath}/notificationAdmin?page=${currentPage + 1}&type=${type}&keyword=${keyword}">
+           <i class="fas fa-angle-right"></i>
+         </a>
+         <a href="${pageContext.request.contextPath}/notificationAdmin?page=${maxPage}&type=${type}&keyword=${keyword}">
+           <i class="fas fa-angle-double-right"></i>
+         </a>
+       </c:if>
+     </div>
+   </div>
+ </main>
+ 
+<script>
+//알림 관리 페이지 스크립트
+$(document).ready(function() {
+    // contextPath 정의
+    const contextPath = '${pageContext.request.contextPath}';
+    
+    // URL에서 tab 파라미터 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    // 탭 파라미터가 있으면 해당 탭 활성화
+    if(tabParam) {
+        $('.notification-tab').removeClass('active');
+        $('.notification-tab[data-tab="' + tabParam + '"]').addClass('active');
+        
+        $('.notification-content').removeClass('active');
+        $('#tab-' + tabParam).addClass('active');
+    }
+    
+    // 탭 전환 JS - 클릭 시 tab 파라미터 포함하여 URL 업데이트
+    $('.notification-tab').click(function() {
+        const tab = $(this).data('tab');
+        
+        // 탭 활성화
+        $('.notification-tab').removeClass('active');
+        $(this).addClass('active');
+        
+        // 콘텐츠 표시/숨김 처리
+        $('.notification-content').removeClass('active');
+        $('#tab-' + tab).addClass('active');
+        
+        // URL 히스토리 업데이트 (페이지 새로고침 없이)
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url);
+        
+        // 페이지네이션 링크 업데이트
+        updatePaginationLinks();
+        
+        return false;
+    });
+    
+    // 대상 유형에 따라 추가 입력 필드 표시
+    $('#targetType').change(function() {
+        const targetType = $(this).val();
+        $('.target-specific').hide();
+        
+        if(targetType === 'DEPARTMENT') {
+            $('#departmentSelect').show();
+        } else if(targetType === 'EMPLOYEE') {
+            $('#employeeSelect').show();
+        }
+    });
+    
+    // 직원 검색 버튼 클릭 이벤트 (순수 DOM 조작 방식)
+    document.getElementById('emp_search_btn').addEventListener('click', function() {
+        const inputElement = document.getElementById('emp_search_input');
+        const keyword = inputElement.value.trim();
+        
+        if(!keyword) {
+            alertify.alert("검색어를 입력하세요");
+            return;
+        }
+        
+        // 검색 중 표시
+        document.getElementById('emp_search_results').innerHTML = '<div>검색 중...</div>';
+        
+        // AJAX 요청
+        $.ajax({
+            url: contextPath + '/employeeSearch',
+            type: 'GET',
+            data: { keyword: keyword },
+            dataType: 'json',
+            success: function(data) {
+                console.log("검색 결과:", data);
+                
+                if(!data || data.length === 0) {
+                    document.getElementById('emp_search_results').innerHTML = '<div>검색 결과가 없습니다</div>';
+                    return;
+                }
+                
+                // 결과 컨테이너 생성
+                const resultsElement = document.createElement('div');
+                resultsElement.className = 'emp_result_list';
+                
+                // 각 직원에 대한 DOM 요소 생성
+                for(let i = 0; i < data.length; i++) {
+                    const currentEmp = data[i];
+                    
+                    // 대문자 필드 사용
+                    const empNo = currentEmp.EMPNO || '';
+                    const empName = currentEmp.EMPNAME || '';
+                    const empId = currentEmp.EMPID || '';
+                    const deptName = currentEmp.DEPTNAME || '';
+                    
+                    console.log("직원 데이터 처리:", {
+                        empNo: empNo,
+                        empName: empName,
+                        empId: empId,
+                        deptName: deptName
+                    });
+                    
+                    // 각 직원마다 분리된 클로저 사용
+                    (function(no, name, id, dept) {
+                        // 이 직원의 DOM 요소 생성
+                        const empElement = document.createElement('div');
+                        empElement.className = 'emp_result_item';
+                        empElement.textContent = name + ' (' + id + ') - ' + dept;
+                        
+                        // 클릭 이벤트 리스너 추가
+                        empElement.addEventListener('click', function() {
+                            console.log("직원 선택:", {
+                                empNo: no,
+                                empName: name,
+                                empId: id
+                            });
+                            
+                            // 직원 선택 처리
+                            document.getElementById('selectedEmpNo').value = no;
+                            document.getElementById('emp_selected_info').innerHTML = 
+                                '<div>선택된 직원: ' + name + ' (' + id + ')</div>';
+                            document.getElementById('emp_selected_info').style.display = 'block';
+                            
+                            // 검색 결과 초기화
+                            document.getElementById('emp_search_results').innerHTML = '';
+                            document.getElementById('emp_search_input').value = '';
+                        });
+                        
+                        // 요소를 결과 컨테이너에 추가
+                        resultsElement.appendChild(empElement);
+                    })(empNo, empName, empId, deptName);
+                }
+                
+                // 기존 내용을 모두 지우고 새로운 결과로 교체
+                const searchResultsElement = document.getElementById('emp_search_results');
+                searchResultsElement.innerHTML = '';
+                searchResultsElement.appendChild(resultsElement);
+            },
+            error: function(xhr, status, error) {
+                console.error("검색 오류:", error);
+                document.getElementById('emp_search_results').innerHTML = '<div>검색 중 오류가 발생했습니다</div>';
+            }
+        });
+    });
+    
+    // 엔터키 이벤트 처리
+    document.getElementById('emp_search_input').addEventListener('keypress', function(e) {
+        if(e.which === 13 || e.keyCode === 13) {
+            e.preventDefault();
+            document.getElementById('emp_search_btn').click();
+        }
+    });
+    
+    // 문서 클릭 이벤트 (검색 결과 영역 외 클릭 시 결과 숨김)
+    document.addEventListener('click', function(e) {
+        const searchResults = document.getElementById('emp_search_results');
+        const searchInput = document.getElementById('emp_search_input');
+        const searchBtn = document.getElementById('emp_search_btn');
+        
+        if(searchResults && !searchResults.contains(e.target) && e.target !== searchInput && e.target !== searchBtn) {
+            searchResults.innerHTML = '';
+        }
+    });
+    
+    // 알림 발송
+    $('#sendBtn').click(function() {
+        const targetType = $('#targetType').val();
+        let targetId = null;
+        
+        if(targetType === 'DEPARTMENT') {
+            targetId = $('#deptNo').val();
+            if(!targetId) {
+                alertify.alert("부서를 선택해주세요.");
+                return;
+            }
+        } else if(targetType === 'EMPLOYEE') {
+            targetId = $('#selectedEmpNo').val();
+            if(!targetId) {
+                alertify.alert("직원을 검색하여 선택해주세요.");
+                return;
+            }
+        }
+        
+        const notificationType = $('#notificationType').val();
+        const title = $('#notificationTitle').val();
+        const content = $('#notificationContent').val() || "";
+        const refType = $('#refType').val();
+        const refNo = $('#refNo').val();
+        
+        if(!title) {
+            alertify.alert("알림 제목을 입력해주세요.");
+            return;
+        }
+        
+        // 디버깅용 로그
+        console.log("전송할 데이터:", {
+            targetType, targetId, notificationType, title, content, refType, refNo
+        });
+        
+        // 버튼 비활성화 및 로딩 표시
+        const $btn = $(this);
+        const originalText = $btn.text();
+        $btn.prop('disabled', true).html('<div class="spinner"></div> 전송 중...');
+        
+        // 알림 발송 AJAX 요청
+        $.ajax({
+            url: contextPath + '/notificationAdminSend',
+            type: 'POST',
+            data: {
+                targetType: targetType,
+                targetId: targetId,
+                notificationType: notificationType,
+                title: title,
+                content: content || "",
+                refType: refType,
+                refNo: refNo
+            },
+            success: function(response) {
+                console.log("알림 발송 응답:", response);
+                if(response.success) {
+                    alertify.success(response.message);
+                    resetForm();
+                } else {
+                    alertify.error(response.message || "알림 발송에 실패했습니다.");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("알림 발송 오류:", xhr, status, error);
+                alertify.error("알림 발송 중 오류가 발생했습니다: " + (xhr.responseJSON?.message || error));
+            },
+            complete: function() {
+                // 버튼 상태 복원
+                $btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+    
+    // 폼 초기화
+    function resetForm() {
+        $('#targetType').val('ALL');
+        $('.target-specific').hide();
+        $('#deptNo').val($('#deptNo option:first').val());
+        $('#selectedEmpNo').val('');
+        $('#emp_selected_info').hide();
+        $('#notificationType').val('NOTICE');
+        $('#notificationTitle').val('');
+        $('#notificationContent').val('');
+        $('#refType').val('');
+        $('#refNo').val('');
+    }
+    
+    $('#resetBtn').click(resetForm);
+    
+    // 알림 보기 버튼
+    $(document).on('click', '.notification-view-btn', function() {
+        const no = $(this).data('no');
+        const title = $(this).data('title');
+        const content = $(this).data('content');
+        const type = $(this).data('type');
+        const refType = $(this).data('reftype');
+        const refNo = $(this).data('refno');
+        
+        let typeText = '';
+        switch(type) {
+            case 'NOTICE': typeText = '공지사항'; break;
+            case 'APPROVAL': typeText = '결재'; break;
+            case 'TASK': typeText = '업무'; break;
+            case 'CHAT': typeText = '채팅'; break;
+            case 'SCHEDULE': typeText = '일정'; break;
+            default: typeText = type;
+        }
+        
+        let refText = '';
+        if(refType && refNo) {
+            refText = `<p><strong>연결 페이지:</strong> ${refType}/${refNo}</p>`;
+        }
+        
+        alertify.alert(
+            "알림 상세 보기", 
+            `<h3>${title}</h3>
+            <p><strong>유형:</strong> ${typeText}</p>
+            <p><strong>내용:</strong> ${content}</p>
+            ${refText}`
+        );
+    });
+    
+    // 알림 검색 - 현재 탭 유지
+    $('#searchBtn').click(function(e) {
+        e.preventDefault(); // 기본 동작 방지
+        const type = $('#typeFilter').val();
+        const keyword = $('#searchKeyword').val();
+        
+        // 현재 활성화된 탭 가져오기
+        const currentTab = $('.notification-tab.active').data('tab');
+        
+        // 탭 파라미터 포함하여 URL 이동
+        location.href = contextPath + '/notificationAdmin?page=1&type=' + type + '&keyword=' + keyword + '&tab=' + currentTab;
+    });
+    
+    // 페이지네이션 링크에도 현재 탭 파라미터 추가
+    function updatePaginationLinks() {
+        const currentTab = $('.notification-tab.active').data('tab');
+        
+        $('.notification-pagination a').each(function() {
+            const href = $(this).attr('href');
+            if(href && href !== '#') {
+                const url = new URL(href, window.location.origin);
+                url.searchParams.set('tab', currentTab);
+                $(this).attr('href', url.pathname + url.search);
+            }
+        });
+    }
+    
+    // 엔터키 이벤트 바인딩
+    $('#searchKeyword').on('keypress', function(e) {
+        if (e.which == 13) {
+            $('#searchBtn').click();
+        }
+    });
+    
+    // 페이지 로드 시 페이지네이션 링크 업데이트
+    updatePaginationLinks();
+});
+</script>
+</body>
+</html>
