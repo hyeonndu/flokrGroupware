@@ -166,6 +166,7 @@
     </div>
     
     <form id="noticeForm" action="${pageContext.request.contextPath}/noticeUpdate" method="post">
+      <input type="hidden" name="noticeNo" value="${notice.noticeNo}">
       <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
       
       <div class="notice-form">
@@ -226,50 +227,7 @@
   
   <script>
     $(document).ready(function() {
-      // 폼 제출 전 유효성 검사
-      $('#noticeForm').submit(function(event) {
-        // 제목 검사
-        const title = $('#noticeTitle').val().trim();
-        if (!title) {
-          alertify.error('제목을 입력해주세요.');
-          $('#noticeTitle').focus();
-          event.preventDefault();
-          return false;
-        }
-        
-        // 분류 검사
-        const category = $('#category').val();
-        if (!category) {
-          alertify.error('분류를 선택해주세요.');
-          $('#category').focus();
-          event.preventDefault();
-          return false;
-        }
-        
-        // 내용 검사
-        const content = $('#noticeContent').val().trim();
-        if (!content) {
-          alertify.error('내용을 입력해주세요.');
-          $('#noticeContent').focus();
-          event.preventDefault();
-          return false;
-        }
-        
-        // 필독 체크박스 값 처리
-        if (!$('#isMandatory').is(':checked')) {
-          // 체크 해제 시 hidden 필드로 0 값 전송
-          $('<input>').attr({
-            type: 'hidden',
-            name: 'isMandatory',
-            value: '0'
-          }).appendTo('#noticeForm');
-        }
-        
-        // 제출 버튼 비활성화 (중복 제출 방지)
-        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 처리중...');
-        
-        return true;
-      });
+    	
     });
   </script>
 </body>

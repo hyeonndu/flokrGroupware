@@ -21,7 +21,7 @@ import com.kh.flokrGroupware.common.template.Pagination;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.notice.model.service.NoticeService;
 import com.kh.flokrGroupware.notice.model.vo.Notice;
-import com.kh.flokrGroupware.notification.controller.NotificationHandler;
+import com.kh.flokrGroupware.notification.model.service.NotificationSenderService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,7 @@ public class NoticeController {
     private NoticeService noticeService;
     
     @Autowired
-    private NotificationHandler notificationHandler;
+    private NotificationSenderService notificationSenderService;
     
     // 공지사항 목록 조회
     @GetMapping("noticeList")
@@ -145,7 +145,8 @@ public class NoticeController {
             if(noticeNo > 0) {
                 // 알림 발송 옵션이 선택된 경우 전체 사용자에게 알림 발송
                 if(sendNotification) {
-                    notificationHandler.sendNotificationToAll(
+                    // STOMP 기반 알림 발송
+                    notificationSenderService.sendNotificationToAll(
                         "NOTICE", 
                         "[공지] " + notice.getNoticeTitle(), 
                         notice.getNoticeContent(), 
@@ -218,7 +219,8 @@ public class NoticeController {
             if(result > 0) {
                 // 알림 발송 옵션이 선택된 경우 전체 사용자에게 알림 발송
                 if(sendNotification) {
-                    notificationHandler.sendNotificationToAll(
+                    // STOMP 기반 알림 발송
+                    notificationSenderService.sendNotificationToAll(
                         "NOTICE", 
                         "[공지 수정] " + notice.getNoticeTitle(), 
                         notice.getNoticeContent(), 

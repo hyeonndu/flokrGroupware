@@ -22,14 +22,18 @@
     
     <context:component-scan base-package="com.kh.flokrGroupware" />
     
-    <!-- WebSocket 설정 추가 -->
+	<!-- 기존 WebSocket 설정 주석 처리 -->
+	<!-- 
 	<websocket:handlers>
 	    <websocket:mapping handler="notificationHandler" path="/notification" />
 	    <websocket:handshake-interceptors>
 	        <beans:bean class="org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor" />
 	    </websocket:handshake-interceptors>
 	</websocket:handlers>
-    
-    <beans:bean id="notificationHandler" class="com.kh.flokrGroupware.notification.controller.NotificationHandler" />
-    
+	
+	<beans:bean id="notificationHandler" class="com.kh.flokrGroupware.notification.controller.NotificationHandler" />
+	-->
+	
+	<!-- STOMP 기반 WebSocket 설정은 WebSocketConfig 클래스에서 처리 -->
+	
 </beans:beans>

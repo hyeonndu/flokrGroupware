@@ -182,7 +182,7 @@
    }
    
    .form-control {
-     width: 100%;
+     width: 90%;
      padding: 0.5rem 1rem;
      border: 1px solid #e2e8f0;
      border-radius: 4px;
@@ -196,7 +196,7 @@
    }
    
    .form-select {
-     width: 100%;
+     width: 20%;
      padding: 0.5rem 1rem;
      border: 1px solid #e2e8f0;
      border-radius: 4px;
@@ -527,7 +527,7 @@
  </main>
  
 <script>
-//알림 관리 페이지 스크립트
+// 알림 관리 페이지 스크립트
 $(document).ready(function() {
     // contextPath 정의
     const contextPath = '${pageContext.request.contextPath}';
@@ -580,95 +580,15 @@ $(document).ready(function() {
         }
     });
     
-    // 직원 검색 버튼 클릭 이벤트 (순수 DOM 조작 방식)
+    // 직원 검색 버튼 클릭 이벤트 - notification.js의 searchEmployee 함수 사용
     document.getElementById('emp_search_btn').addEventListener('click', function() {
-        const inputElement = document.getElementById('emp_search_input');
-        const keyword = inputElement.value.trim();
-        
-        if(!keyword) {
-            alertify.alert("검색어를 입력하세요");
-            return;
-        }
-        
-        // 검색 중 표시
-        document.getElementById('emp_search_results').innerHTML = '<div>검색 중...</div>';
-        
-        // AJAX 요청
-        $.ajax({
-            url: contextPath + '/employeeSearch',
-            type: 'GET',
-            data: { keyword: keyword },
-            dataType: 'json',
-            success: function(data) {
-                console.log("검색 결과:", data);
-                
-                if(!data || data.length === 0) {
-                    document.getElementById('emp_search_results').innerHTML = '<div>검색 결과가 없습니다</div>';
-                    return;
-                }
-                
-                // 결과 컨테이너 생성
-                const resultsElement = document.createElement('div');
-                resultsElement.className = 'emp_result_list';
-                
-                // 각 직원에 대한 DOM 요소 생성
-                for(let i = 0; i < data.length; i++) {
-                    const currentEmp = data[i];
-                    
-                    // 대문자 필드 사용
-                    const empNo = currentEmp.EMPNO || '';
-                    const empName = currentEmp.EMPNAME || '';
-                    const empId = currentEmp.EMPID || '';
-                    const deptName = currentEmp.DEPTNAME || '';
-                    
-                    console.log("직원 데이터 처리:", {
-                        empNo: empNo,
-                        empName: empName,
-                        empId: empId,
-                        deptName: deptName
-                    });
-                    
-                    // 각 직원마다 분리된 클로저 사용
-                    (function(no, name, id, dept) {
-                        // 이 직원의 DOM 요소 생성
-                        const empElement = document.createElement('div');
-                        empElement.className = 'emp_result_item';
-                        empElement.textContent = name + ' (' + id + ') - ' + dept;
-                        
-                        // 클릭 이벤트 리스너 추가
-                        empElement.addEventListener('click', function() {
-                            console.log("직원 선택:", {
-                                empNo: no,
-                                empName: name,
-                                empId: id
-                            });
-                            
-                            // 직원 선택 처리
-                            document.getElementById('selectedEmpNo').value = no;
-                            document.getElementById('emp_selected_info').innerHTML = 
-                                '<div>선택된 직원: ' + name + ' (' + id + ')</div>';
-                            document.getElementById('emp_selected_info').style.display = 'block';
-                            
-                            // 검색 결과 초기화
-                            document.getElementById('emp_search_results').innerHTML = '';
-                            document.getElementById('emp_search_input').value = '';
-                        });
-                        
-                        // 요소를 결과 컨테이너에 추가
-                        resultsElement.appendChild(empElement);
-                    })(empNo, empName, empId, deptName);
-                }
-                
-                // 기존 내용을 모두 지우고 새로운 결과로 교체
-                const searchResultsElement = document.getElementById('emp_search_results');
-                searchResultsElement.innerHTML = '';
-                searchResultsElement.appendChild(resultsElement);
-            },
-            error: function(xhr, status, error) {
-                console.error("검색 오류:", error);
-                document.getElementById('emp_search_results').innerHTML = '<div>검색 중 오류가 발생했습니다</div>';
-            }
-        });
+        const keyword = document.getElementById('emp_search_input').value.trim();
+        window.searchEmployee(
+            keyword, 
+            '#emp_search_results', 
+            '#selectedEmpNo', 
+            '#emp_selected_info'
+        );
     });
     
     // 엔터키 이벤트 처리
@@ -690,7 +610,7 @@ $(document).ready(function() {
         }
     });
     
-    // 알림 발송
+    // 알림 발송 - notification.js의 sendNotification 함수 사용
     $('#sendBtn').click(function() {
         const targetType = $('#targetType').val();
         let targetId = null;
@@ -720,20 +640,8 @@ $(document).ready(function() {
             return;
         }
         
-        // 디버깅용 로그
-        console.log("전송할 데이터:", {
-            targetType, targetId, notificationType, title, content, refType, refNo
-        });
-        
-        // 버튼 비활성화 및 로딩 표시
-        const $btn = $(this);
-        const originalText = $btn.text();
-        $btn.prop('disabled', true).html('<div class="spinner"></div> 전송 중...');
-        
-        // 알림 발송 AJAX 요청
-        $.ajax({
-            url: contextPath + '/notificationAdminSend',
-            type: 'POST',
+        // window.sendNotification 함수 호출 (notification.js에 구현)
+        window.sendNotification({
             data: {
                 targetType: targetType,
                 targetId: targetId,
@@ -744,21 +652,10 @@ $(document).ready(function() {
                 refNo: refNo
             },
             success: function(response) {
-                console.log("알림 발송 응답:", response);
-                if(response.success) {
-                    alertify.success(response.message);
-                    resetForm();
-                } else {
-                    alertify.error(response.message || "알림 발송에 실패했습니다.");
-                }
+                resetForm();
             },
-            error: function(xhr, status, error) {
-                console.error("알림 발송 오류:", xhr, status, error);
-                alertify.error("알림 발송 중 오류가 발생했습니다: " + (xhr.responseJSON?.message || error));
-            },
-            complete: function() {
-                // 버튼 상태 복원
-                $btn.prop('disabled', false).text(originalText);
+            error: function(xhr) {
+                alertify.error("알림 발송 중 오류가 발생했습니다: " + (xhr.responseJSON?.message || "알 수 없는 오류"));
             }
         });
     });
@@ -814,7 +711,7 @@ $(document).ready(function() {
     
     // 알림 검색 - 현재 탭 유지
     $('#searchBtn').click(function(e) {
-        e.preventDefault(); // 기본 동작 방지
+        e.preventDefault();
         const type = $('#typeFilter').val();
         const keyword = $('#searchKeyword').val();
         

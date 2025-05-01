@@ -96,7 +96,7 @@
     }
     
     .form-control {
-      width: 100%;
+      width: 90%;
       padding: 0.75rem 1rem;
       border: 1px solid #e2e8f0;
       border-radius: 4px;
@@ -110,7 +110,7 @@
     }
     
     .form-select {
-      width: 100%;
+      width: 20%;
       padding: 0.75rem 1rem;
       border: 1px solid #e2e8f0;
       border-radius: 4px;
@@ -227,51 +227,6 @@
     $(document).ready(function() {
       // 필독 공지 체크박스 기본값 설정
       $('#isMandatory').prop('checked', false);
-      
-      // 폼 제출 전 유효성 검사
-      $('#noticeForm').submit(function(event) {
-        // 제목 검사
-        const title = $('#noticeTitle').val().trim();
-        if (!title) {
-          alertify.error('제목을 입력해주세요.');
-          $('#noticeTitle').focus();
-          event.preventDefault();
-          return false;
-        }
-        
-        // 분류 검사
-        const category = $('#category').val();
-        if (!category) {
-          alertify.error('분류를 선택해주세요.');
-          $('#category').focus();
-          event.preventDefault();
-          return false;
-        }
-        
-        // 내용 검사
-        const content = $('#noticeContent').val().trim();
-        if (!content) {
-          alertify.error('내용을 입력해주세요.');
-          $('#noticeContent').focus();
-          event.preventDefault();
-          return false;
-        }
-        
-        // 필독 체크박스 값 처리
-        if (!$('#isMandatory').is(':checked')) {
-          // 체크 해제 시 hidden 필드로 0 값 전송
-          $('<input>').attr({
-            type: 'hidden',
-            name: 'isMandatory',
-            value: '0'
-          }).appendTo('#noticeForm');
-        }
-        
-        // 제출 버튼 비활성화 (중복 제출 방지)
-        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 처리중...');
-        
-        return true;
-      });
     });
   </script>
 </body>
