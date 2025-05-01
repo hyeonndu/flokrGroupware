@@ -241,7 +241,61 @@
            and s.status = 'Y'
          order by s.start_date         
     </select>
-
+    
+    <!-- 일정 정보 업데이트 -->
+    <update id="updateSchedule" parameterType="Schedule">
+    	update schedule
+    	   set 
+    	       schedule_title = #{scheduleTitle},
+    	       description = #{description},
+    	       start_date = #{startDate},
+    	       end_date = #{endDate},
+    	       location = #{location},
+    	       important = #{important},
+    	       schedule_type = #{scheduleType},
+    	       update_date = sysdate
+    	 where schedule_no = #{scheduleNo}
+    	   and status = 'Y'    	       
+    </update>
+    
+    <!-- 일정의 모든 참석자 삭제 (활성상태 Y => N) -->
+    <update id="deleteScheduleAttendees" parameterType="_int">
+    	update schedule_attendee
+    	   set status = 'N'
+    	 where schedule_no = #{scheduleNo}
+    	   and status = 'Y'
+    </update>
+    
+    <!-- 일정-참석자 조합이 이미 존재하는지 확인 -->
+    <select id="checkExistingAttendee" parameterType="ScheduleAttendee" resultMap="attendeeResultMap">
+    	select
+    	        attendee_no
+    	      , schedule_no
+    	      , emp_no
+    	      , response_status
+    	      , notification_sent
+    	      , status
+    	  from schedule_attendee
+    	 where schedule_no = #{scheduleNo}
+    	   and emp_no = #{empNo}  
+    </select>
+    
+    <!-- 비활성화된 참석자 정보 다시 활성화 -->
+	<update id="reactivateScheduleAttendee" parameterType="ScheduleAttendee">
+		update schedule_attendee
+		   set response_status = #{responseStatus},
+		       status = 'Y'
+		 where attendee_no = #{attendeeNo}		      
+	</update>
+	
+	<!-- 일정 삭제 (활성상태 Y => N) -->
+	<update id="deleteSchedule" parameterType="_int">
+		update schedule
+		   set status = 'N',
+		update_date = sysdate
+	     where schedule_no = #{scheduleNo}
+	       and status = 'Y'	
+	</update>
 
 
 </mapper>

@@ -44,7 +44,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 				attendee.setScheduleNo(schedule.getScheduleNo());
 				attendee.setEmpNo(empNo);
 				attendee.setResponseStatus("PENDING");
-				attendee.setNotificationSent(1); // 알림 발송 여부
+				attendee.setNotificationSent(0); // 알림 발송 여부 0
 				
 				int attendeeResult = sDao.insertScheduleAttendee(sqlSession, attendee);
 				if(attendeeResult == 0) {
@@ -58,14 +58,78 @@ public class ScheduleServiceImpl implements ScheduleService {
 	
 	}
 
+	/**
+	 * 일정 수정 메소드
+	 */
 	@Override
-	public int updateSchedule(Schedule schedule, int[] attendees) {
-		return 0;
+	public int updateSchedule(Schedule schedule, int[] attendeeArray) {
+		// 1. 일정 정보 업데이트
+		int result1 = sDao.updateSchedule(sqlSession, schedule);
+		
+		if(result1 > 0) {
+			// 2. 기존 참석자 정보 삭제 (참석자 테이블 활성상태 Y -> N)
+			sDao.deleteScheduleAttendees(sqlSession, schedule.getScheduleNo());
+			
+			// 3. 새 참석자 정보 추가
+			int result2 = 1; // 참석자가 없는 경우 성공으로 처리
+			if(attendeeArray != null && attendeeArray.length > 0) {
+				for(int empNo : attendeeArray) {
+					// 해당 일정- 참석자 조합이 이미 존재하는지 확인
+					ScheduleAttendee existingAttendee = new ScheduleAttendee();
+					existingAttendee.setScheduleNo(schedule.getScheduleNo());
+					existingAttendee.setEmpNo(empNo);
+					
+					// 이미 존재하는 참석자인지 확인 (status에 상관없이)
+					ScheduleAttendee foundAttendee = sDao.checkExistingAttendee(sqlSession, existingAttendee);
+					
+					int insertResult = 0;
+					if(foundAttendee != null) {
+						// 존재하는 경우 status만 'Y'로 업데이트
+						foundAttendee.setResponseStatus("PENDING"); // 응답 상태 초기화
+						foundAttendee.setStatus("Y"); // 활성화
+						insertResult = sDao.reactivateScheduleAttendee(sqlSession, foundAttendee);
+					}else {
+						// 존재하지 않는 경우 새로 추가
+						ScheduleAttendee attendee = new ScheduleAttendee();
+						attendee.setScheduleNo(schedule.getScheduleNo());
+						attendee.setEmpNo(empNo);
+						attendee.setResponseStatus("PENDING"); // 기본 응답 상태
+						attendee.setNotificationSent(0); // 알림 미발송 상태
+						
+						insertResult = sDao.insertScheduleAttendee(sqlSession, attendee);
+					}
+					
+					if(insertResult == 0) {
+						result2 = 0; // 하나라도 실패하면 0으로 설정
+						break;
+					}
+				}
+			}
+			
+			return (result2 > 0) ? 1 : 0; // 참석자 처리까지 성공해야 성공으로 반환
+			
+		}
+		
+		return 0; // 일정 업데이트 실패
+	
 	}
 
+	/**
+	 * 일정 삭제 메소드
+	 */
 	@Override
-	public int deleteSchedule(int scheduleNo) {
-		return 0;
+	public int deleteSchedule(int scheduleNo, int empNo) {
+		// 1. 권한 확인 (작성자만 삭제 가능)
+		Schedule schedule = sDao.selectSchedule(sqlSession, scheduleNo);
+		if(schedule == null || schedule.getCreateEmpNo() != empNo) {
+			return 0; // 권한 없음
+		}
+		
+		// 참석자 테이블 삭제 처리(status = 'Y' => 'N')
+		sDao.deleteScheduleAttendees(sqlSession, scheduleNo);
+		
+		// 3. 일정 테이블 삭제 처리(status = 'Y' => 'N')
+		return sDao.deleteSchedule(sqlSession, scheduleNo);
 	}
 
 	/**

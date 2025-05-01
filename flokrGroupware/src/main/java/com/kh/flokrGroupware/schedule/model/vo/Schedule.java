@@ -2,6 +2,17 @@ package com.kh.flokrGroupware.schedule.model.vo;
 
 import java.sql.Date;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
+@Getter
+@ToString
 public class Schedule {
 	
 	private int scheduleNo;				// 일정 번호
@@ -21,146 +32,8 @@ public class Schedule {
     private String empName;       		// 작성자 이름
     private String allDay;				// 종일일정
     
-    public Schedule() {}
+ 
 
-	public Schedule(int scheduleNo, int createEmpNo, String scheduleTitle, String description, Date startDate,
-			Date endDate, String location, String important, Date createDate, Date updateDate, String status,
-			String empName) {
-		super();
-		this.scheduleNo = scheduleNo;
-		this.createEmpNo = createEmpNo;
-		this.scheduleTitle = scheduleTitle;
-		this.description = description;
-		this.startDate = startDate;
-		this.endDate = endDate;
-		this.location = location;
-		this.important = important;
-		this.createDate = createDate;
-		this.updateDate = updateDate;
-		this.status = status;
-		this.empName = empName;
-	}
-
-	public int getScheduleNo() {
-		return scheduleNo;
-	}
-
-	public void setScheduleNo(int scheduleNo) {
-		this.scheduleNo = scheduleNo;
-	}
-
-	public int getCreateEmpNo() {
-		return createEmpNo;
-	}
-
-	public void setCreateEmpNo(int createEmpNo) {
-		this.createEmpNo = createEmpNo;
-	}
-
-	public String getScheduleTitle() {
-		return scheduleTitle;
-	}
-
-	public void setScheduleTitle(String scheduleTitle) {
-		this.scheduleTitle = scheduleTitle;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public Date getStartDate() {
-		return startDate;
-	}
-
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
-	}
-
-	public Date getEndDate() {
-		return endDate;
-	}
-
-	public void setEndDate(Date endDate) {
-		this.endDate = endDate;
-	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	public String getImportant() {
-		return important;
-	}
-
-	public void setImportant(String important) {
-		this.important = important;
-	}
-
-	public Date getCreateDate() {
-		return createDate;
-	}
-
-	public void setCreateDate(Date createDate) {
-		this.createDate = createDate;
-	}
-
-	public Date getUpdateDate() {
-		return updateDate;
-	}
-
-	public void setUpdateDate(Date updateDate) {
-		this.updateDate = updateDate;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	public String getEmpName() {
-		return empName;
-	}
-
-	public void setEmpName(String empName) {
-		this.empName = empName;
-	}
-	
-	public String getScheduleType() {
-	    return scheduleType;
-	}
-
-	public void setScheduleType(String scheduleType) {
-	    this.scheduleType = scheduleType;
-	}
-	
-	public String getAllDay() {
-	    return allDay;
-	}
-
-	public void setAllDay(String allDay) {
-	    this.allDay = allDay;
-	}
-
-	@Override
-	public String toString() {
-		return "Schedule [scheduleNo=" + scheduleNo + ", createEmpNo=" + createEmpNo + ", scheduleTitle="
-				+ scheduleTitle + ", description=" + description + ", startDate=" + startDate + ", endDate=" + endDate
-				+ ", location=" + location + ", important=" + important + ", scheduleType=" + scheduleType
-				+ ", createDate=" + createDate + ", updateDate=" + updateDate + ", status=" + status + ", empName="
-				+ empName + ", allDay=" + allDay + "]";
-	}
 
 
 }

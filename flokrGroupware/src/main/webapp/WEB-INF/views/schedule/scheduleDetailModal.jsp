@@ -112,11 +112,13 @@
 		    <div class="schedule-detail-value">
 		        ${schedule.empName} 
 		        <span class="schedule-detail-date">
-		        (작성일: <fmt:formatDate value="${schedule.createDate}" pattern="yyyy-MM-dd HH:mm" />)
+		        (작성일: <fmt:formatDate value="${schedule.createDate}" pattern="yyyy-MM-dd HH:mm" />
+		    	<c:if test="${schedule.updateDate != null && schedule.updateDate.time != schedule.createDate.time}">
+                	| 최종 수정: <fmt:formatDate value="${schedule.updateDate}" pattern="yyyy-MM-dd HH:mm" />
+            	</c:if>)
 		    	</span>
 		    </div>
-		</div>
-		        
+		</div>		        
     </div>
     
     
@@ -146,7 +148,15 @@
 <script>
 // 일정 수정 페이지로 이동
 function editSchedule(scheduleNo) {
-    location.href = 'updateForm.sc?scheduleNo=' + scheduleNo;
+	console.log("수정 버튼 클릭: 일정 번호 " + scheduleNo);
+	
+	try {
+        // 수정 폼 페이지로 이동 (scheduleNo를 파라미터로 전달)
+        location.href = 'updateForm.sc?scheduleNo=' + scheduleNo;
+    } catch (e) {
+        console.error("수정 페이지 이동 중 오류 발생:", e);
+        alert("수정 페이지로 이동 중 오류가 발생했습니다.");
+    }
 }
 
 // 일정 삭제

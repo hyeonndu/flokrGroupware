@@ -20,10 +20,7 @@ import com.kh.flokrGroupware.schedule.model.service.ScheduleService;
 import com.kh.flokrGroupware.schedule.model.vo.Schedule;
 import com.kh.flokrGroupware.schedule.model.vo.ScheduleAttendee;
 
-/**
- * @author user1
- *
- */
+
 @Controller
 public class ScheduleController {
 	
@@ -225,14 +222,171 @@ public class ScheduleController {
     	return daySchedules;
     }
     
+    /**
+     * 일정 수정폼으로 이동하는 메소드
+     * @param scheduleNo 수정할 일정의 고유 번호
+     * @param model 뷰에 데이터를 전달하기 위한 Model 객체
+     * @param session 로그인한 사용자 정보를 담고 있는 HttpSession 객체
+     * @return 수정폼 JSP 페이지
+     */
     @RequestMapping("updateForm.sc")
-    public String updateForm(int scheduleNo, Model model) {
+    public String updateForm(int scheduleNo, Model model, HttpSession session) {
+    	// 로그인한 사용자 정보 가져오기
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
+    	
     	// 1. 일정 정보 조회 - 입력받은 scheduleNo로 해당 일정의 상세 정보를 조회
     	Schedule schedule = scheduleService.selectSchedule(scheduleNo);
     	
     	// 2. 참석자 정보 조회 - 해당 일정에 참석하는 직원 목록 조회
-    	ArrayList<Employee> eList = scheduleService.selectAttendees(scheduleNo);
+    	ArrayList<ScheduleAttendee> attendees = scheduleService.selectAttendees(scheduleNo);
+   
+    	// 3. 전체 직원 목록 조회 - 참석자 선택 모달에서 사용할 전체 직원 목록
+    	ArrayList<Employee> eList = scheduleService.selectEmployeeList(loginUser.getEmpNo());
+    
+    	// 4. 참석자 ID 목록 생성 - 콤마로 구분된 문자열 형태(hidden input에 사용)
+    	String attendeeEmpNo = "";
+    	
+    	// 간단한 문자열 연결 방식으로 참석자 ID 문자열 생성
+    	if(attendees != null && !attendees.isEmpty()) {
+    		for(int i=0; i<attendees.size(); i++) {
+    			attendeeEmpNo += attendees.get(i).getEmpNo();
+    			if(i<attendees.size() - 1) {
+    				attendeeEmpNo += ",";
+    			}
+    		}    		
+    	}
+    	
+    	// 5. 참석자 ID 배열 생성 - 모달에서 체크박스 상태 설정에 사용
+    	ArrayList<String> atList = new ArrayList<>();
+    	if(!attendeeEmpNo.isEmpty()) {
+    		String[] atArray = attendeeEmpNo.split(",");
+    		for(String at : atArray) {
+    			if(!at.trim().isEmpty()) {
+    				atList.add(at.trim());
+    			}
+    		}
+    	}
+    	
+    	// 6. 모델에 데이터 추가 - JSP에서 사용할 수 있도록
+    	model.addAttribute("schedule", schedule);			// 수정할 일정 정보
+    	model.addAttribute("attendees", attendees);			// 현재 참석자 목록
+    	model.addAttribute("eList", eList);					// 전체 직원 목록(참석자 선택용)
+    	model.addAttribute("attendeeEmpNo", attendeeEmpNo); // 콤마로 구분된 참석자 사번
+    	model.addAttribute("atList", atList);				// 참석자 사번 배열(체크박스 상태 설정용)
+    
+    	// 지정된 수정폼jsp로 포워딩
+    	return "schedule/scheduleUpdateForm";
+    
     }
+    
+    /**
+     * 일정 수정 메소드
+     * @param schedule 수정할 일정 정보
+     * @param startDate 시작날짜
+     * @param startTime 시작시간
+     * @param endDate 종료날짜
+     * @param endTime 종료시간
+     * @param attendee 참석자 목록 (쉼표로 구분된 문자열)
+     * @param session 세션 정보
+     * @param model 모델
+     * @return 리다이렉트 경로
+     */
+    @RequestMapping("update.sc")
+    public String updateSchedule(Schedule schedule, String startDate, String startTime, String endDate, String endTime, String attendee, HttpSession session, Model model) {
+    	
+    	// 날짜와 시간 결합
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            java.util.Date startDateTime = dateFormat.parse(startDate + " " + startTime);
+            java.util.Date endDateTime = dateFormat.parse(endDate + " " + endTime);
+            
+            // 종일 일정인 경우 시간 처리 (allDay값이 "Y"면 종일 일정)
+            if ("Y".equals(schedule.getAllDay())) {
+                // 종일 일정은 시작일은 00:00, 종료일은 23:59로 설정
+                SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("yyyy-MM-dd");
+                startDateTime = dateFormat.parse(dateOnlyFormat.format(startDateTime) + " 00:00");
+                endDateTime = dateFormat.parse(dateOnlyFormat.format(endDateTime) + " 23:59");
+            }
+            
+            // java.util.Date => java.sql.Date로 변환
+            schedule.setStartDate(new java.sql.Date(startDateTime.getTime()));
+            schedule.setEndDate(new java.sql.Date(endDateTime.getTime()));
+        } catch (ParseException e) {
+            model.addAttribute("errorMsg", "날짜/시간 처리 중 오류가 발생했습니다.");
+            return "common/errorPage";
+        }
+        
+        // 로그인한 사용자 정보 확인
+        Employee loginUser = (Employee)session.getAttribute("loginUser");
+        if(loginUser == null) {
+        	model.addAttribute("errorPage", "로그인이 필요한 서비스입니다.");
+        	return "common/errorPage";
+        }
+        
+        // 참석자 사번 배열 처리
+        int[] attendeeArray = null;
+        if(attendee != null && !attendee.isEmpty()) {
+        	try {
+	        	String[] attendeeStrings = attendee.split(",");
+	        	attendeeArray = new int[attendeeStrings.length];
+	        	
+	        	for(int i=0; i<attendeeStrings.length; i++) {
+	        		attendeeArray[i] = Integer.parseInt(attendeeStrings[i]);
+	        	}
+	        } catch(Exception e) {
+	        	model.addAttribute("errorMsg", "참석자 정보 처리 중 오류가 발생했습니다.");
+	        	return "common/errorPage";
+	        }
+        }
+        
+        // 서비스 호출하여 일정 수정
+        int result = scheduleService.updateSchedule(schedule, attendeeArray);
+        
+        if(result > 0) {
+        	// 일정 수정 성공
+        	session.setAttribute("alertMsg", "일정이 성공적으로 수정되었습니다.");
+        	return "redirect:calendar.sc";
+        	
+        }else {
+        	// 일정 수정 실패
+        	model.addAttribute("errorMsg", "일정 수정에 실패했습니다.");
+        	return "common/errorPage";
+        }
+    	
+    }
+    
+    /**
+     * 일정 삭제 메소드
+     * @param scheduleNo 삭제할 일정 번호
+     * @param session HTTP 세션 객체
+     * @param model 모델 객체
+     * @return 리다이렉트 경로
+     */
+    @RequestMapping("delete.sc")
+    public String deleteSchedule(int scheduleNo, HttpSession session, Model model) {
+    	// 로그인 사용자 확인
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
+    	if(loginUser == null) {
+    		model.addAttribute("errorMsg", "로그인이 필요한 서비스입니다.");
+    		return "common/errorPage";
+    	}
+    	
+    	// 일정 삭제 요청
+    	int result = scheduleService.deleteSchedule(scheduleNo, loginUser.getEmpNo());
+    	
+    	if(result > 0) {
+    		// 일정 삭제 성공
+    		session.setAttribute("alertMsg", "일정이 성공적으로 삭제되었습니다.");
+    		return "redirect:calendar.sc"; // 캘린더 페이지로 리다이렉트
+    	}else {
+    		// 일정 삭제 실패
+    		model.addAttribute("errorMsg", "일정 삭제에 실패했습니다.");
+    		return "common/errorPage";
+    	}
+
+    	
+    }
+    
     
 
 

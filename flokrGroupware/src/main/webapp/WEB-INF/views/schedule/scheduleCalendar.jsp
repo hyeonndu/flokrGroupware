@@ -168,36 +168,87 @@
         
         /* 일정 유형별 스타일 */
 		.calendar-personal-event {
-		    background-color: rgba(219, 234, 254, 0.8) !important;
-		    color: #003561 !important;
-		    border-left: 3px solid #003561 !important;
+		    background-color: rgba(219, 234, 254, 0.8);
+		    color: #003561 ;
+		    border-left: 3px solid #003561 ;
 		    border-radius: 4px; /*둥글게*/
 		    padding: 1px 5px;
+		    transition: all 0.2s ease;
 		}
 		
+		.calendar-personal-event:hover {
+		    background-color: rgba(219, 234, 254, 0.9);
+		    box-shadow: 0 1px 3px rgba(0, 53, 97, 0.3);
+		    transform: translateY(-1px);
+		    cursor: pointer;
+		}
+
+		.calendar-personal-event *:hover{
+			background-color: rgba(219, 234, 254, 0.9);
+			border-radius: 3px;
+		}		
 		
 		.calendar-team-event {
 		    background-color: rgba(209, 250, 229, 0.8);
-		    color: #27ae60 !important;
+		    color: #27ae60;
 		    border-left: 3px solid #27ae60;
 		    border-radius: 4px; /*둥글게*/
 		    padding: 1px 5px;
+		    transition: all 0.2s ease;
+		}
+		
+		.calendar-team-event:hover {
+			background-color: rgba(209, 250, 229, 0.9);
+			box-shadow: 0 1px 3px rgba(0, 53, 97, 0.3);
+			transform: translateY(-1px);
+		    cursor: pointer
+		}
+		
+		.calendar-team-event *:hover {
+			background-color: rgba(209, 250, 229, 0.9);
+			border-radius: 3px;
 		}
 		
 		.calendar-company-event {
 		    background-color: rgba(255, 237, 213, 0.8);
-		    color: #f39c12 !important;
+		    color: #f39c12;
 		    border-left: 3px solid #f39c12;
 		    border-radius: 4px; /*둥글게*/
 		    padding: 1px 5px;
+		    transition: all 0.2s ease;
+		}
+		
+		.calendar-company-event:hover {
+			background-color: rgba(255, 237, 213, 0.9);
+			box-shadow: 0 1px 3px rgba(0, 53, 97, 0.3);
+		    transform: translateY(-1px);
+		    cursor: pointer;		
+		}
+		
+		.calendar-company-event *:hover{
+			background-color: rgba(255, 237, 213, 0.9);
+			border-radius: 3px;
 		}
 		
 		.calendar-other-event {
-		    background-color: rgba(237, 233, 254, 0.8) !important;
-		    color: #8e44ad !important;
-		    border-left: 3px solid #8e44ad !important;
+		    background-color: rgba(237, 233, 254, 0.8);
+		    color: #8e44ad;
+		    border-left: 3px solid #8e44ad;
 		    border-radius: 4px; /*둥글게*/
 		    padding: 1px 5px;
+		    transition: all 0.2s ease;
+		}
+		
+		.calendar-other-event:hover{
+			background-color: rgba(237, 233, 254, 0.9);
+			box-shadow: 0 1px 3px rgba(0, 53, 97, 0.3);
+		    transform: translateY(-1px);
+		    cursor: pointer;
+		}
+		
+		.calendar-other-event *:hover{
+			background-color: rgba(237, 233, 254, 0.9);
+			border-radius: 3px;
 		}
 		
 		/* CSS에 추가: 일정 세로줄 겹침 방지 */
@@ -329,6 +380,7 @@
             max-height: 90vh;
             display: flex;
             flex-direction: column;
+            
             overflow: hidden;
         }
         
@@ -623,10 +675,12 @@
             transition: all 0.2s;
         }
         
+        
         .date-schedule-item:hover {
             transform: translateX(2px);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
+        
         
         .date-schedule-item.type-personal {
             border-left-color: #003561;
@@ -1271,6 +1325,29 @@
 	                modalEl.style.display = 'flex';
 	                modalEl.style.justifyContent = 'center';
 	                modalEl.style.alignItems = 'center';
+	                
+	             	// 모달 로드 후 수정/삭제 버튼에 직접 이벤트 리스너 추가
+	                const editBtn = modalEl.querySelector('.schedule-modal-btn-edit');
+	                if (editBtn) {
+	                    editBtn.addEventListener('click', function() {
+	                        console.log("수정 버튼 클릭: 일정 번호 " + scheduleNo);
+	                        try {
+	                            location.href = 'updateForm.sc?scheduleNo=' + scheduleNo;
+	                        } catch (e) {
+	                            console.error("수정 페이지 이동 중 오류 발생:", e);
+	                            alert("수정 페이지로 이동 중 오류가 발생했습니다.");
+	                        }
+	                    });
+	                }
+	                
+	                const deleteBtn = modalEl.querySelector('.schedule-modal-btn-delete');
+	                if (deleteBtn) {
+	                    deleteBtn.addEventListener('click', function() {
+	                        if (confirm('정말 이 일정을 삭제하시겠습니까?')) {
+	                            location.href = 'delete.sc?scheduleNo=' + scheduleNo;
+	                        }
+	                    });
+	                }
 	                
 	                // 모달 외부 클릭 시 닫기 이벤트 설정
 	                modalEl.addEventListener('click', function handleModalClick(e) {

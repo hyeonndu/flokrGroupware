@@ -19,10 +19,10 @@ public interface ScheduleService {
     ArrayList<Employee> selectEmployeeList(int loginEmpNo);
     
     // 일정 수정
-    int updateSchedule(Schedule schedule, int[] attendees);
+    int updateSchedule(Schedule schedule, int[] attendeeArray);
     
     // 일정 삭제
-    int deleteSchedule(int scheduleNo);
+    int deleteSchedule(int scheduleNo, int empNo);
     
     // 일정 참석자 조회
     ArrayList<ScheduleAttendee> selectAttendees(int scheduleNo);

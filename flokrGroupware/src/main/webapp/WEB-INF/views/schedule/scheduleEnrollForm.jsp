@@ -74,6 +74,7 @@
         }
 
         .sc-enroll-notice-text {
+        	margin-top: 2px;
             font-size: 14px;
             color: #334155;
             line-height: 1.5;

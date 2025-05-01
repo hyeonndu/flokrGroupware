@@ -69,6 +69,7 @@
         }
 
         .sc-update-notice-text {
+        	margin-top: 2px;
             font-size: 14px;
             color: #334155;
             line-height: 1.5;
@@ -570,7 +571,7 @@
                                     <span class="attendee-tag">${attendee.empName}</span>
                                 </c:forEach>
                             </div>
-                            <input type="hidden" name="attendee" id="attendeeIds" value="${attendeeIds}">
+                            <input type="hidden" name="attendee" id="attendeeEmpNo" value="${attendeeEmpNo}">
                             <button type="button" class="btn-select-attendee" id="openAttendeeModalBtn">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="17" y1="11" x2="23" y2="11"></line></svg>
                                 참석자 선택
@@ -586,6 +587,14 @@
                             <label class="sc-update-label">등록일</label>
                             <input type="text" class="sc-update-input" value="<fmt:formatDate value='${schedule.createDate}' pattern='yyyy-MM-dd HH:mm:ss'/>" readonly>
                         </div>
+                        
+                        <!-- 수정일 필드 추가 -->
+						<c:if test="${schedule.updateDate != null && schedule.updateDate.time != schedule.createDate.time}">
+						    <div class="sc-update-group">
+						        <label class="sc-update-label">최종 수정일</label>
+						        <input type="text" class="sc-update-input" value="<fmt:formatDate value='${schedule.updateDate}' pattern='yyyy-MM-dd HH:mm:ss'/>" readonly>
+						    </div>
+						</c:if>
 
                     </form>
                 </div>
@@ -613,7 +622,7 @@
                 <c:forEach var="emp" items="${eList}">
                     <div class="attendee-modal-item" data-emp-name="${emp.empName}" data-dept-name="${emp.deptName}">
                         <input type="checkbox" value="${emp.empNo}" id="modal_attendee_${emp.empNo}" class="attendee-modal-checkbox" 
-                            ${attendeeIdsArray.contains(emp.empNo) ? 'checked' : ''}>
+                            ${atList.contains(emp.empNo) ? 'checked' : ''}>
                         <label for="modal_attendee_${emp.empNo}" class="attendee-modal-label">
                             <span class="name">${emp.empName}</span>
                             <span class="details">${emp.deptName} / ${emp.positionName}</span>
@@ -697,13 +706,13 @@
         const attendeeSearchInput = document.getElementById('attendeeSearchInput');
         const attendeeModalList = document.getElementById('attendeeModalList');
         const selectedAttendeesDisplay = document.getElementById('selectedAttendeesDisplay');
-        const attendeeIdsInput = document.getElementById('attendeeIds');
+        const attendeeEmpNoInput = document.getElementById('attendeeEmpNo');
 
         // 모달 열기
         openModalBtn.addEventListener('click', function() {
             modalOverlay.classList.add('active');
             // 모달 열 때, 현재 숨겨진 필드에 저장된 ID를 기반으로 체크박스 상태 복원
-            const currentIds = attendeeIdsInput.value.split(',').filter(id => id); // 빈 값 제거
+            const currentIds = attendeeEmpNoInput.value.split(',').filter(id => id); // 빈 값 제거
             const checkboxes = attendeeModalList.querySelectorAll('.attendee-modal-checkbox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = currentIds.includes(checkbox.value);
@@ -772,7 +781,7 @@
             }
 
             // 숨겨진 필드에 ID 목록 업데이트 (쉼표로 구분)
-            attendeeIdsInput.value = selectedIds.join(',');
+            attendeeEmpNoInput.value = selectedIds.join(',');
 
             closeModal(); // 모달 닫기
         });
