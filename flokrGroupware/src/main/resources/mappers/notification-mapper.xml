@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="notificationMapper">
+    <!-- 알림 정보 결과 매핑 -->
     <resultMap id="notificationResultMap" type="hashmap">
         <id property="notificationNo" column="NOTIFICATION_NO" />
         <result property="recipientEmpNo" column="RECIPIENT_EMP_NO" />
@@ -16,6 +17,7 @@
         <result property="deptName" column="DEPT_NAME" />
     </resultMap>
     
+    <!-- 특정 사용자가 읽지 않은 알림을 최근 순으로 조회 -->
     <select id="getUnreadNotifications" parameterType="int" resultMap="notificationResultMap">
         SELECT *
         FROM NOTIFICATION
@@ -24,6 +26,7 @@
         ORDER BY CREATE_DATE DESC
     </select>
     
+    <!-- 특정 사용자의 모든 알림을 최근 순으로 조회 -->
     <select id="getAllNotifications" parameterType="int" resultMap="notificationResultMap">
         SELECT *
         FROM NOTIFICATION
@@ -31,6 +34,7 @@
         ORDER BY CREATE_DATE DESC
     </select>
     
+    <!-- 특정 사용자의 알림을 페이징 처리하여 최근 순으로 조회 -->
     <select id="getAllNotificationsPaging" parameterType="hashmap" resultMap="notificationResultMap">
         SELECT *
         FROM (
@@ -46,18 +50,21 @@
         WHERE RNUM > #{offset}
     </select>
     
+    <!-- 알림 번호로 특정 알림의 상세 정보를 조회 -->
     <select id="getNotification" parameterType="int" resultMap="notificationResultMap">
         SELECT *
         FROM NOTIFICATION
         WHERE NOTIFICATION_NO = #{notificationNo}
     </select>
     
+    <!-- 알림 읽음 처리 -->
     <update id="markAsRead" parameterType="int">
         UPDATE NOTIFICATION
         SET READ_DATE = SYSDATE
         WHERE NOTIFICATION_NO = #{notificationNo}
     </update>
     
+    <!-- 특정 직원에게 알림을 생성하여 저장 -->
     <insert id="saveNotification" parameterType="hashmap">
         INSERT INTO NOTIFICATION (
             NOTIFICATION_NO,
@@ -80,6 +87,7 @@
         )
     </insert>
     
+    <!-- 모든 활성 상태인 직원에게 동일한 알림을 생성하여 저장 -->
     <insert id="saveNotificationForAll" parameterType="hashmap">
         INSERT INTO NOTIFICATION (
             NOTIFICATION_NO,
@@ -104,6 +112,7 @@
         WHERE STATUS = 'Y'
     </insert>
     
+    <!-- 특정 부서에 속한 모든 활성 상태 직원에게 동일한 알림을 생성하여 저장 -->
     <insert id="saveNotificationForDepartment" parameterType="hashmap">
         INSERT INTO NOTIFICATION (
             NOTIFICATION_NO,
@@ -129,11 +138,13 @@
         AND STATUS = 'Y'
     </insert>
     
+    <!-- 지정된 일수보다 오래된 알림을 모두 삭제 -->
     <delete id="deleteOldNotifications" parameterType="int">
         DELETE FROM NOTIFICATION
         WHERE CREATE_DATE &lt; SYSDATE - #{days}
     </delete>
     
+    <!-- 알림, 직원, 부서 정보를 조인하여 필터링 및 페이징 처리된 알림 목록 조회 -->
     <select id="getNotificationsForAdmin" parameterType="hashmap" resultMap="notificationResultMap">
         SELECT *
         FROM (
@@ -174,6 +185,7 @@
         WHERE RNUM > #{offset}
     </select>
     
+    <!-- 관리자용 필터링 조건에 맞는 총 알림 수 조회  -->
     <select id="getTotalNotificationsCount" parameterType="hashmap" resultType="int">
         SELECT COUNT(*)
         FROM NOTIFICATION N
@@ -190,5 +202,12 @@
                 OR E.EMP_ID LIKE '%' || #{searchKeyword} || '%'
             )
         </if>
+    </select>
+    
+    <!-- 특정 사용자의 총 알림 수 조회 -->
+    <select id="getUserNotificationsCount" parameterType="_int" resultType="_int">
+        SELECT COUNT(*)
+        FROM NOTIFICATION
+        WHERE RECIPIENT_EMP_NO = #{empNo}
     </select>
 </mapper>

@@ -36,4 +36,7 @@ public interface NotificationService {
     
     // 알림 총 개수 조회
     int getTotalNotificationsCount(String type, String searchKeyword);
+    
+    // 특정 사용자의 총 알림 수 조회
+    int getUserNotificationsCount(int empNo);
 }
