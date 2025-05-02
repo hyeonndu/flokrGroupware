@@ -176,7 +176,7 @@ public class EmployeeController {
         model.addAttribute("positionList", employeeService.selectPositionList());
         
         logger.info("사원 등록 페이지 접근 - 관리자: " + loginUser.getEmpId());
-        return "employee/registerForm";
+        return "employee/employeeRegisterForm";
     }
     
     // 해당 부서의 마지막 사번 순번 조회 (AJAX용)
@@ -427,12 +427,12 @@ public class EmployeeController {
     // 사원 정보 수정 처리 - 관리자만 가능
     @PostMapping("employeeUpdate")
     public String updateEmployee(Employee e, 
-                                @RequestParam(value="phone1", defaultValue="") String phone1,
-                                @RequestParam(value="phone2", defaultValue="") String phone2,
-                                @RequestParam(value="phone3", defaultValue="") String phone3,
-                                @RequestParam("hireDate") String hireDateStr,
-                                HttpSession session, 
-                                Model model) {
+                              @RequestParam(value="phone1", defaultValue="") String phone1,
+                              @RequestParam(value="phone2", defaultValue="") String phone2,
+                              @RequestParam(value="phone3", defaultValue="") String phone3,
+                              @RequestParam("hireDate") String hireDateStr,
+                              HttpSession session, 
+                              Model model) {
         
         Employee loginUser = (Employee)session.getAttribute("loginUser");
         if(loginUser == null || !"Y".equals(loginUser.getIsAdmin())) {
@@ -445,6 +445,15 @@ public class EmployeeController {
             // 전화번호 형식 맞추기
             if(!phone1.isEmpty() && !phone2.isEmpty() && !phone3.isEmpty()) {
                 e.setPhone(phone1 + "-" + phone2 + "-" + phone3);
+            }
+            
+            // 기존 사원 정보에서 isAdmin 값 가져오기
+            Employee originalEmployee = employeeService.selectEmployee(e.getEmpNo());
+            if(originalEmployee != null) {
+                e.setIsAdmin(originalEmployee.getIsAdmin());
+            } else {
+                // 원래 직원을 찾을 수 없는 경우 기본값 "N"으로 설정
+                e.setIsAdmin("N");
             }
             
             logger.info("사원 정보 수정 시도 - 사원번호: " + e.getEmpNo() + ", 이름: " + e.getEmpName());
