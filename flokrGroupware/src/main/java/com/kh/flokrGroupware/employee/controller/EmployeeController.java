@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.kh.flokrGroupware.common.model.vo.PageInfo;
 import com.kh.flokrGroupware.common.template.Pagination;
 import com.kh.flokrGroupware.employee.model.service.EmployeeService;
+import com.kh.flokrGroupware.employee.model.vo.Department;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 
 // SLF4J 사용
@@ -606,6 +607,30 @@ public class EmployeeController {
             session.setAttribute("alertMsg", "관리자만 접근 가능합니다.");
             logger.warn("권한 없는 사용자의 관리자 메인 페이지 접근 시도");
             return "redirect:/";
+        }
+        
+        // 통계 데이터 조회
+        try {
+            // 총 직원 수
+            int totalEmployeeCount = employeeService.getEmployeeCount(new Employee());
+            
+            // 부서 수
+            ArrayList<Department> departments = employeeService.selectDepartmentList();
+            int departmentCount = departments.size();
+            
+            // 현재 접속자 수 - 세션 관리자를 통해 조회하거나 임시 데이터 사용
+            int activeUserCount = 3; // 임시 데이터, 실제로는 sessionManager.getActiveUsers().size();
+            
+            // 공지사항 수 - 공지사항 서비스를 통해 조회하거나 임시 데이터 사용
+            int noticeCount = 5; // 임시 데이터, 실제로는 noticeService.getNoticeCount();
+            
+            // 모델에 데이터 추가
+            model.addAttribute("totalEmployeeCount", totalEmployeeCount);
+            model.addAttribute("departmentCount", departmentCount);
+            model.addAttribute("activeUserCount", activeUserCount);
+            model.addAttribute("noticeCount", noticeCount);
+        } catch (Exception e) {
+            logger.error("관리자 대시보드 통계 데이터 조회 중 오류 발생: " + e.getMessage(), e);
         }
         
         logger.info("관리자 메인 페이지 접근 - 관리자: " + loginUser.getEmpId());

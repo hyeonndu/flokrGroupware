@@ -7,7 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/adminMain.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/adminMain.css">
   <!-- 아이콘 사용을 위한 Font Awesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -71,7 +70,6 @@
         </p>
         <div class="feature-actions">
           <a href="${pageContext.request.contextPath}/adminOrganization" class="feature-btn primary">조직도 관리</a>
-          <a href="${pageContext.request.contextPath}/adminDepartment" class="feature-btn">부서 관리</a>
         </div>
       </div>
       
@@ -81,13 +79,13 @@
           <div class="feature-icon employee">
             <i class="fas fa-user-plus"></i>
           </div>
-          <h2 class="feature-title">사원 등록</h2>
+          <h2 class="feature-title">사원 관리</h2>
         </div>
         <p class="feature-description">
           신규 직원 정보를 등록하고 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/employeeRegister" class="feature-btn primary">신규 등록</a>
+          <a href="${pageContext.request.contextPath}/employeeRegister" class="feature-btn primary">사원 등록</a>
           <a href="${pageContext.request.contextPath}/employeeList" class="feature-btn">사원 목록</a>
         </div>
       </div>
@@ -106,41 +104,23 @@
         <div class="feature-actions">
           <a href="${pageContext.request.contextPath}/noticeCreate" class="feature-btn primary">공지 등록</a>
           <a href="${pageContext.request.contextPath}/noticeList" class="feature-btn">공지 목록</a>
-          <a href="${pageContext.request.contextPath}/notificationAdmin" class="feature-btn">알림 관리</a>
         </div>
       </div>
       
-      <!-- 접속 사용자 관리 카드 -->
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-icon organization">
-            <i class="fas fa-users"></i>
-          </div>
-          <h2 class="feature-title">접속 사용자 관리</h2>
-        </div>
-        <p class="feature-description">
-          현재 시스템에 접속 중인 사용자를 관리합니다.
-        </p>
-        <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/onlineUsers" class="feature-btn primary">접속자 관리</a>
-          <a href="${pageContext.request.contextPath}/userLogs" class="feature-btn">로그 조회</a>
-        </div>
-      </div>
-      
-      <!-- 계정 및 권한 관리 카드 -->
+      <!-- 사용자 관리 통합 카드 -->
       <div class="feature-card">
         <div class="feature-header">
           <div class="feature-icon user">
             <i class="fas fa-user-shield"></i>
           </div>
-          <h2 class="feature-title">사용자 정보 관리</h2>
+          <h2 class="feature-title">사용자 관리</h2>
         </div>
         <p class="feature-description">
-          사용자 권한 설정 및 계정 정보를 관리합니다.
+          사용자 계정 정보와 접속 상태를 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/userPermissions" class="feature-btn primary">권한 설정</a>
-          <a href="${pageContext.request.contextPath}/userInformation" class="feature-btn">사용자 정보 관리</a>
+          <a href="${pageContext.request.contextPath}/adminEmployeeManagement" class="feature-btn primary">사용자 정보 관리</a>
+          <a href="${pageContext.request.contextPath}/adminOnlineEmployee" class="feature-btn">접속 사용자 관리</a>
         </div>
       </div>
       
@@ -156,10 +136,27 @@
           회의실, 공용 장비 등 사내 시설을 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/adminFacility" class="feature-btn primary">시설 현황</a>
+          <a href="${pageContext.request.contextPath}/facility" class="feature-btn primary">시설 현황</a>
           <a href="${pageContext.request.contextPath}/facilityReservation" class="feature-btn">예약 관리</a>
         </div>
       </div>
+      
+      <!-- 알림 관리 카드 -->
+      <div class="feature-card">
+        <div class="feature-header">
+          <div class="feature-icon notice" style="background-color: #e6f8f1; color: #00b97c;">
+            <i class="fas fa-bell"></i>
+          </div>
+          <h2 class="feature-title">알림 관리</h2>
+        </div>
+        <p class="feature-description">
+          시스템 알림을 설정하고 관리합니다.
+        </p>
+        <div class="feature-actions">
+          <a href="${pageContext.request.contextPath}/notificationAdmin" class="feature-btn primary">알림 설정</a>
+        </div>
+      </div>
+      
     </div>
   </main>
 </body>
