@@ -12,7 +12,13 @@
 	
 	<!-- Application Loggers -->
 	<logger name="com.kh.flokrGroupware">
-		<level value="info" />
+		<level value="debug" />
+		<!-- <level value="info" />  -->
+	</logger>
+	
+	<!-- 특히 approval 패키지는 상세 로깅 설정(추가부분 나중에 지우기) -->
+	<logger name="com.kh.flokrGroupware.approval">
+	    <level value="debug" />
 	</logger>
 	
 	<!-- 3rdparty Loggers -->

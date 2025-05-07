@@ -1,0 +1,5 @@
+package com.kh.flokrGroupware.approval.state;
+
+public class DraftState {
+
+}
