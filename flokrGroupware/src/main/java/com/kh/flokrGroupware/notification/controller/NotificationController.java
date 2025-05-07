@@ -22,6 +22,7 @@ import com.kh.flokrGroupware.common.template.Pagination;
 import com.kh.flokrGroupware.employee.model.service.EmployeeService;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.notification.model.service.NotificationService;
+import com.kh.flokrGroupware.notification.model.service.NotificationSenderService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class NotificationController {
     private NotificationService notificationService;
     
     @Autowired
-    private NotificationHandler notificationHandler;
+    private NotificationSenderService notificationSenderService;
     
     @Autowired
     private EmployeeService employeeService;
@@ -95,6 +96,20 @@ public class NotificationController {
         } catch(Exception e) {
             return Map.of("success", false, "message", e.getMessage());
         }
+    }
+    
+    // 알림 개수 조회 (AJAX)
+    @GetMapping("/notificationCount")
+    @ResponseBody
+    public int getUnreadNotificationCount(HttpSession session) {
+        Employee loginUser = (Employee) session.getAttribute("loginUser");
+        
+        if(loginUser == null) {
+            return 0;
+        }
+        
+        List<Map<String, Object>> unreadNotifications = notificationService.getUnreadNotifications(loginUser.getEmpNo());
+        return unreadNotifications.size();
     }
     
     // 관리자용 알림 관리 페이지
@@ -174,34 +189,61 @@ public class NotificationController {
         
         // 로그 형식
         logger.info("알림 발송 요청: targetType=" + targetType + ", targetId=" + targetId + 
-        	    ", type=" + notificationType + ", title=" + title);
+                ", type=" + notificationType + ", title=" + title);
         
         try {
             if("ALL".equals(targetType)) {
                 // 전체 직원에게 알림 발송
-                notificationHandler.sendNotificationToAll(notificationType, title, content, refType, refNo);
+                notificationSenderService.sendNotificationToAll(notificationType, title, content, refType, refNo);
                 return Map.of("success", true, "message", "전체 직원에게 알림이 발송되었습니다.");
             } else if("DEPARTMENT".equals(targetType) && targetId != null) {
                 // 특정 부서에게 알림 발송
                 int deptNo = Integer.parseInt(targetId);
-                notificationHandler.sendNotificationToDepartment(deptNo, notificationType, title, content, refType, refNo);
+                notificationSenderService.sendNotificationToDepartment(deptNo, notificationType, title, content, refType, refNo);
                 return Map.of("success", true, "message", "선택한 부서 직원에게 알림이 발송되었습니다.");
             } else if("EMPLOYEE".equals(targetType) && targetId != null) {
                 // 특정 직원에게 알림 발송
                 int empNo = Integer.parseInt(targetId);
-                notificationHandler.sendNotification(empNo, notificationType, title, content, refType, refNo);
+                
+                // 직원 기본 조회
+                Employee employee = employeeService.selectEmployee(empNo);
+                String empId = employee != null ? employee.getEmpId() : null;
+                
+                notificationSenderService.sendNotificationToUser(empNo, empId, notificationType, title, content, refType, refNo);
                 return Map.of("success", true, "message", "선택한 직원에게 알림이 발송되었습니다.");
             } else {
-                logger.warn("올바르지 않은 알림 대상: targetType={}, targetId={}", targetType, targetId);
+                logger.warn("올바르지 않은 알림 대상: targetType=" + targetType + ", targetId=" + targetId);
                 return Map.of("success", false, "message", "올바르지 않은 대상 유형입니다.");
             }
         } catch(NumberFormatException e) {
-            logger.error("알림 발송 중 숫자 변환 오류: {}", e.getMessage());
+            logger.error("알림 발송 중 숫자 변환 오류: " + e.getMessage());
             return Map.of("success", false, "message", "대상 ID가 올바르지 않습니다.");
         } catch(Exception e) {
             logger.error("알림 발송 중 오류 발생", e);
             return Map.of("success", false, "message", "알림 발송 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    private Object getValueOrDefault(Map<String, Object> map, Object defaultValue, String... possibleKeys) {
+        if (map == null) return defaultValue;
+        
+        // 직접 키 매칭
+        for (String key : possibleKeys) {
+            if (map.containsKey(key)) {
+                return map.get(key);
+            }
+        }
+        
+        // 대소문자 구분 없는 키 매칭
+        for (String key : possibleKeys) {
+            for (String mapKey : map.keySet()) {
+                if (mapKey.equalsIgnoreCase(key)) {
+                    return map.get(mapKey);
+                }
+            }
+        }
+        
+        return defaultValue;
     }
     
     // 알림 통계 조회
@@ -244,89 +286,5 @@ public class NotificationController {
         } catch(Exception e) {
             return Map.of("success", false, "message", "알림 정리 중 오류가 발생했습니다: " + e.getMessage());
         }
-    }
-    
-    @GetMapping("/notificationEmployeeSearch")
-    @ResponseBody
-    public List<Map<String, Object>> searchEmployee(@RequestParam("keyword") String keyword) {
-        logger.info("직원 검색 요청: keyword={}", keyword);
-        List<Map<String, Object>> originalResults = employeeService.searchEmployee(keyword);
-        
-        // 디버깅 추가
-        for (Map<String, Object> emp : originalResults) {
-            logger.info("원본 직원 데이터: {}", emp);
-        }
-        
-        // 새로운 표준화된 결과 리스트 생성
-        List<Map<String, Object>> standardizedResults = new ArrayList<>();
-        
-        for (Map<String, Object> emp : originalResults) {
-            Map<String, Object> standardizedEmp = new HashMap<>();
-            
-            // 대소문자 무시하고 키 찾기
-            // EMPNO 키가 직접 있는 경우
-            if (emp.containsKey("EMPNO")) {
-                standardizedEmp.put("empNo", emp.get("EMPNO"));
-            } 
-            // empNo 키가 직접 있는 경우
-            else if (emp.containsKey("empNo")) {
-                standardizedEmp.put("empNo", emp.get("empNo"));
-            }
-            // EMP_NO 키가 직접 있는 경우
-            else if (emp.containsKey("EMP_NO")) {
-                standardizedEmp.put("empNo", emp.get("EMP_NO"));
-            }
-            else {
-                // 다른 키들 검색 - 대소문자 구분 없이
-                for (String key : emp.keySet()) {
-                    if (key.equalsIgnoreCase("EMPNO") || 
-                        key.equalsIgnoreCase("empNo") || 
-                        key.equalsIgnoreCase("EMP_NO")) {
-                        standardizedEmp.put("empNo", emp.get(key));
-                        break;
-                    }
-                }
-            }
-            
-            // 다른 필드들도 유사하게 처리
-            standardizedEmp.put("empName", getValueOrDefault(emp, "", "EMP_NAME", "EMPNAME", "empName"));
-            standardizedEmp.put("empId", getValueOrDefault(emp, "", "EMP_ID", "EMPID", "empId"));
-            standardizedEmp.put("deptName", getValueOrDefault(emp, "", "DEPT_NAME", "DEPTNAME", "deptName"));
-            standardizedEmp.put("positionName", getValueOrDefault(emp, "", "POSITION_NAME", "POSITIONNAME", "positionName"));
-            
-            // empNo가 추가되었는지 확인
-            if (standardizedEmp.get("empNo") == null) {
-                logger.warn("직원 정보에 empNo가 없어 건너뜁니다: {}", emp);
-                continue;
-            }
-            
-            logger.info("표준화된 직원 정보: {}", standardizedEmp);
-            standardizedResults.add(standardizedEmp);
-        }
-        
-        logger.info("직원 검색 결과: {}건", standardizedResults.size());
-        return standardizedResults;
-    }
-
-    private Object getValueOrDefault(Map<String, Object> map, Object defaultValue, String... possibleKeys) {
-        if (map == null) return defaultValue;
-        
-        // 직접 키 매칭
-        for (String key : possibleKeys) {
-            if (map.containsKey(key)) {
-                return map.get(key);
-            }
-        }
-        
-        // 대소문자 구분 없는 키 매칭
-        for (String key : possibleKeys) {
-            for (String mapKey : map.keySet()) {
-                if (mapKey.equalsIgnoreCase(key)) {
-                    return map.get(mapKey);
-                }
-            }
-        }
-        
-        return defaultValue;
     }
 }

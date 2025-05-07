@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <title>사원 등록</title>
-<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/registerForm.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/employeeRegisterForm.css">
 <!-- jQuery -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <!-- Date Picker -->
