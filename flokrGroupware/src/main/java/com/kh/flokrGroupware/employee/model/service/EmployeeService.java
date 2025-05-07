@@ -42,4 +42,7 @@ public interface EmployeeService {
     
     // 비밀번호 초기화
     int resetPassword(Map<String, Object> params);
+    
+    // 직원 검색 기능 - 알림 기능에서 사용
+    ArrayList<Map<String, Object>> searchEmployee(String keyword);
 }
