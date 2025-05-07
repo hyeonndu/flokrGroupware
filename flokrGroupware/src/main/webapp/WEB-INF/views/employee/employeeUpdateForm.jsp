@@ -24,6 +24,7 @@
             <form action="${pageContext.request.contextPath}/employeeUpdate" method="post" id="updateForm">
                 <input type="hidden" name="empNo" value="${employee.empNo}">
                 <input type="hidden" name="empId" value="${employee.empId}">
+                <input type="hidden" name="isAdmin" value="${employee.isAdmin}">
                 
                 <div class="form-row">
                     <div class="form-group col-md-6">
