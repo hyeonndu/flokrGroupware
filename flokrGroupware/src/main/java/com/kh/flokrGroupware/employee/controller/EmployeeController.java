@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.kh.flokrGroupware.common.model.vo.PageInfo;
 import com.kh.flokrGroupware.common.template.Pagination;
 import com.kh.flokrGroupware.employee.model.service.EmployeeService;
+import com.kh.flokrGroupware.employee.model.vo.Department;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 
 // SLF4J 사용
@@ -176,7 +177,7 @@ public class EmployeeController {
         model.addAttribute("positionList", employeeService.selectPositionList());
         
         logger.info("사원 등록 페이지 접근 - 관리자: " + loginUser.getEmpId());
-        return "employee/registerForm";
+        return "employee/employeeRegisterForm";
     }
     
     // 해당 부서의 마지막 사번 순번 조회 (AJAX용)
@@ -427,12 +428,12 @@ public class EmployeeController {
     // 사원 정보 수정 처리 - 관리자만 가능
     @PostMapping("employeeUpdate")
     public String updateEmployee(Employee e, 
-                                @RequestParam(value="phone1", defaultValue="") String phone1,
-                                @RequestParam(value="phone2", defaultValue="") String phone2,
-                                @RequestParam(value="phone3", defaultValue="") String phone3,
-                                @RequestParam("hireDate") String hireDateStr,
-                                HttpSession session, 
-                                Model model) {
+                              @RequestParam(value="phone1", defaultValue="") String phone1,
+                              @RequestParam(value="phone2", defaultValue="") String phone2,
+                              @RequestParam(value="phone3", defaultValue="") String phone3,
+                              @RequestParam("hireDate") String hireDateStr,
+                              HttpSession session, 
+                              Model model) {
         
         Employee loginUser = (Employee)session.getAttribute("loginUser");
         if(loginUser == null || !"Y".equals(loginUser.getIsAdmin())) {
@@ -445,6 +446,15 @@ public class EmployeeController {
             // 전화번호 형식 맞추기
             if(!phone1.isEmpty() && !phone2.isEmpty() && !phone3.isEmpty()) {
                 e.setPhone(phone1 + "-" + phone2 + "-" + phone3);
+            }
+            
+            // 기존 사원 정보에서 isAdmin 값 가져오기
+            Employee originalEmployee = employeeService.selectEmployee(e.getEmpNo());
+            if(originalEmployee != null) {
+                e.setIsAdmin(originalEmployee.getIsAdmin());
+            } else {
+                // 원래 직원을 찾을 수 없는 경우 기본값 "N"으로 설정
+                e.setIsAdmin("N");
             }
             
             logger.info("사원 정보 수정 시도 - 사원번호: " + e.getEmpNo() + ", 이름: " + e.getEmpName());
@@ -606,6 +616,30 @@ public class EmployeeController {
             session.setAttribute("alertMsg", "관리자만 접근 가능합니다.");
             logger.warn("권한 없는 사용자의 관리자 메인 페이지 접근 시도");
             return "redirect:/";
+        }
+        
+        // 통계 데이터 조회
+        try {
+            // 총 직원 수
+            int totalEmployeeCount = employeeService.getEmployeeCount(new Employee());
+            
+            // 부서 수
+            ArrayList<Department> departments = employeeService.selectDepartmentList();
+            int departmentCount = departments.size();
+            
+            // 현재 접속자 수 - 세션 관리자를 통해 조회하거나 임시 데이터 사용
+            int activeUserCount = 3; // 임시 데이터, 실제로는 sessionManager.getActiveUsers().size();
+            
+            // 공지사항 수 - 공지사항 서비스를 통해 조회하거나 임시 데이터 사용
+            int noticeCount = 5; // 임시 데이터, 실제로는 noticeService.getNoticeCount();
+            
+            // 모델에 데이터 추가
+            model.addAttribute("totalEmployeeCount", totalEmployeeCount);
+            model.addAttribute("departmentCount", departmentCount);
+            model.addAttribute("activeUserCount", activeUserCount);
+            model.addAttribute("noticeCount", noticeCount);
+        } catch (Exception e) {
+            logger.error("관리자 대시보드 통계 데이터 조회 중 오류 발생: " + e.getMessage(), e);
         }
         
         logger.info("관리자 메인 페이지 접근 - 관리자: " + loginUser.getEmpId());

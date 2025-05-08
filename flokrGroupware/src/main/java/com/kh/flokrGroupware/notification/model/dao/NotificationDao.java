@@ -55,4 +55,9 @@ public class NotificationDao {
     public int getTotalNotificationsCount(Map<String, Object> params) {
         return sqlSession.selectOne("notificationMapper.getTotalNotificationsCount", params);
     }
+    
+    public int getUserNotificationsCount(int empNo) {
+        return sqlSession.selectOne("notificationMapper.getUserNotificationsCount", empNo);
+    }
+
 }
