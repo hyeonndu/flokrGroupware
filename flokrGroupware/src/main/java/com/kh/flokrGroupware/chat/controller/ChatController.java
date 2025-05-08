@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -162,17 +163,23 @@ public class ChatController {
 		
 	}
 	
-	/**
+    /**
      * 새로운 채팅방 생성 요청 처리
-     * (예: AJAX 요청으로 처리)
-     * @param roomName 생성할 채팅방 이름 (요청 파라미터)
+     * (AJAX 요청으로 처리 - RequestParam 방식)
+     * @param chatType 채팅 유형 ('oneToOne' 또는 'group')
+     * @param roomName 생성할 채팅방 이름 (단체 채팅 시 필수, 1:1 채팅 시 null)
+     * @param participants 참여자 직원 번호 목록 (쉼표로 구분된 문자열 형태)
      * @param session 현재 사용자 정보를 얻기 위한 세션 객체
      * @return 생성 결과 (JSON 응답)
-	 */
-	@RequestMapping(value="createChatRoom.ch", method=RequestMethod.POST)
-	@ResponseBody
-	public ResponseEntity<Map<String, Object>> createChatRoom(@RequestParam("roomName") String roomName, HttpSession session) {
-		
+     */
+    @RequestMapping(value = "createChatRoom.ch", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createChatRoom(
+            @RequestParam("chatType") String chatType,
+            @RequestParam(value="roomName", required=false) String roomName, // 1:1 채팅 시 필수가 아님
+            @RequestParam("participants") String participantsStr, // 쉼표로 구분된 문자열로 받음
+            HttpSession session) {
+
         Map<String, Object> response = new HashMap<>();
 
         Employee loginUser = (Employee) session.getAttribute("loginUser");
@@ -185,8 +192,81 @@ public class ChatController {
 
         int creatorEmpNo = loginUser.getEmpNo();
 
+        // 쉼표로 구분된 참여자 문자열을 ArrayList<Integer>로 변환
+        ArrayList<Integer> participants = new ArrayList<>();
+        if (participantsStr != null && !participantsStr.trim().isEmpty()) {
+            try {
+                String[] empNoArray = participantsStr.split(",");
+                for (String empNoStr : empNoArray) {
+                    participants.add(Integer.parseInt(empNoStr.trim()));
+                }
+            } catch (NumberFormatException e) {
+                //console.error("[ERROR] ChatController: Invalid participant number format", e);
+                response.put("success", false);
+                response.put("message", "잘못된 참여자 정보 형식입니다.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // 400 Bad Request
+            }
+        }
+
+        // 참여자 목록에 자신 추가 (프론트에서 자신을 제외하고 보냈을 경우)
+        if (!participants.contains(creatorEmpNo)) {
+             participants.add(creatorEmpNo);
+        }
+
+
+        // 참여자 목록이 비어있는지 다시 한번 체크 (변환 후)
+        if (participants.isEmpty()) {
+             response.put("success", false);
+             response.put("message", "대화 상대를 선택해주세요.");
+             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // 400 Bad Request
+        }
+
+
         try {
-            ChatRoom createdRoom = cService.createChatRoom(roomName, creatorEmpNo);
+            ChatRoom createdRoom = null;
+            if ("oneToOne".equals(chatType)) {
+                // 1:1 채팅 생성 로직
+                if (participants.size() != 2) { // 자신 포함 2명이어야 함
+                     response.put("success", false);
+                     response.put("message", "1:1 채팅은 한 명의 대화 상대만 선택해야 합니다."); // 자신 제외 1명 선택
+                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }
+                // 자신을 제외한 상대방 empNo 찾기
+                int participantEmpNo = (participants.get(0) == creatorEmpNo) ? participants.get(1) : participants.get(0);
+
+                // TODO: 이미 두 사용자 간의 1:1 채팅방이 존재하는지 확인하는 로직 추가 필요
+                 ChatRoom existingRoom = cService.findExistingPrivateChatRoom(creatorEmpNo, participantEmpNo);
+                 if (existingRoom != null) {
+                     response.put("success", false);
+                     response.put("message", "이미 두 사용자 간의 채팅방이 존재합니다.");
+                     response.put("room", existingRoom); // 기존 방 정보 반환 (선택 사항)
+                     return new ResponseEntity<>(response, HttpStatus.CONFLICT); // 409 Conflict 또는 200 OK와 메시지
+                 }
+
+                createdRoom = cService.createPrivateChatRoom(participants, creatorEmpNo); // 1:1 채팅 생성 서비스 호출
+
+            } else if ("group".equals(chatType)) {
+                // 단체 채팅 생성 로직
+                if (roomName == null || roomName.trim().isEmpty()) {
+                     response.put("success", false);
+                     response.put("message", "채팅방 이름을 입력해주세요.");
+                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // 400 Bad Request
+                }
+                 // 단체 채팅은 자신 포함 최소 2명
+                 if (participants.size() < 2) {
+                      response.put("success", false);
+                      response.put("message", "단체 채팅방은 두 명 이상의 대화 상대가 필요합니다.");
+                      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                 }
+
+                createdRoom = cService.createGroupChatRoom(roomName, participants, creatorEmpNo); // 단체 채팅 생성 서비스 호출
+
+            } else {
+                 response.put("success", false);
+                 response.put("message", "잘못된 채팅 유형입니다.");
+                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
 
             if (createdRoom != null) {
                 response.put("success", true);
@@ -198,17 +278,60 @@ public class ChatController {
                 response.put("message", "채팅방 생성에 실패했습니다.");
                 return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR); // 500 Internal Server Error
             }
+        } catch (IllegalArgumentException e) {
+             // 유효하지 않은 인자 예외 처리 (예: 1:1 채팅인데 참여자가 2명이 아님 등)
+             //console.error("[ERROR] ChatController: Invalid arguments for chat creation", e);
+             response.put("success", false);
+             response.put("message", e.getMessage()); // Service에서 던진 메시지 사용
+             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); // 400 Bad Request
         } catch (Exception e) {
             e.printStackTrace();
             response.put("success", false);
-            response.put("message", "채팅방 생성 중 오류가 발생했습니다.");
+            response.put("message", "채팅방 생성 중 오류가 발생했습니다: " + e.getMessage()); // 오류 메시지 포함
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR); // 500 Internal Server Error
         }
-		
-		
-	}
+    }
 	
-	
+    /**
+     * 클라이언트로부터 특정 채팅방의 메시지들을 읽음 처리하라는 요청을 받습니다.
+     * 요청 URL: /chat/markAsRead
+     * HTTP 메소드: POST
+     * 요청 파라미터: roomNo, userId
+     * @param roomNo 클라이언트에서 전송한 채팅방 번호
+     * @param userId 클라이언트에서 전송한 사용자(직원) 번호 (주의: 보안상 서버에서 세션 정보로 가져오는 것이 안전)
+     * @return 처리 결과 (성공/실패)를 담은 ResponseEntity
+     */
+    @PostMapping("/chat/markAsRead")
+    @ResponseBody
+    public ResponseEntity<String> markMessagesAsRead(@RequestParam("roomNo") int roomNo, @RequestParam("userId") int userId) {
+        // @RequestParam("roomNo")는 요청 파라미터 중 이름이 "roomNo"인 값을 int roomNo 변수에 바인딩합니다.
+        // @RequestParam("userId")는 요청 파라미터 중 이름이 "userId"인 값을 int userId 변수에 바인딩합니다.
+
+        // === 중요: 보안상 강화 필요 ===
+        // 클라이언트에서 userId 값을 그대로 받는 것은 보안에 취약합니다.
+        // 요청을 보낸 사용자가 누구인지 서버에서 직접 확인해야 합니다.
+        // 예를 들어, 세션에서 로그인 사용자 정보를 가져오거나, Spring Security Context 등에서 인증된 사용자 ID를 가져와야 합니다.
+        int loggedInUserEmpNo;
+        // TODO: 실제 구현에서는 아래 라인을 삭제하고, 세션 또는 보안 컨텍스트에서 사용자 ID를 가져오는 코드를 작성하세요.
+        loggedInUserEmpNo = userId; // 예시 목적으로 클라이언트 값을 사용 (실제 서비스에서는 절대 이렇게 하면 안 됩니다!)
+
+        try {
+            // 서비스 레이어의 메소드를 호출하여 DB 업데이트를 수행합니다.
+            // 이 메소드 안에서 ChatDAO의 updateLastReadMessageNo 메소드를 호출합니다.
+            cService.markMessagesAsRead(roomNo, loggedInUserEmpNo); // 보안 강화된 userEmpNo 사용
+
+            // DB 업데이트 성공 시 클라이언트에게 성공 응답을 보냅니다.
+            // ResponseEntity.ok()는 HTTP 상태 코드 200 (OK)과 함께 본문을 보냅니다.
+            return ResponseEntity.ok("SUCCESS"); // 클라이언트는 이 "SUCCESS" 문자열을 받게 됩니다.
+
+        } catch (Exception e) {
+            // DB 업데이트 중 오류 발생 시 오류 응답을 보냅니다.
+            // logger.error("채팅방 {} 메시지 읽음 처리 중 오류 발생 (사용자: {})", roomNo, loggedInUserEmpNo, e); // 오류 로그 출력
+
+            // HTTP 상태 코드 500 (Internal Server Error)과 함께 오류 메시지 응답
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("FAILED"); // 클라이언트는 HTTP 500 상태 코드와 "FAILED" 문자열을 받게 됩니다.
+        }
+    }
 	
 
 

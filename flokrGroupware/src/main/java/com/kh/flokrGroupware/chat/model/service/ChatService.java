@@ -11,13 +11,32 @@ public interface ChatService {
     // --- 채팅방 관리 ---
 
     /**
-     * 새로운 채팅방 생성
-     * @param roomName 생성할 채팅방 이름
-     * @param creatorEmpNo 생성자 직원 번호 (Employee의 empNo)
-     * @return 생성된 채팅방 정보 (ChatRoom 객체) 또는 생성된 roomNo (int)
+     * 새로운 채팅방 생성 (RequestParam 방식에 맞게 시그니처 조정)
+     * @param chatType 채팅 유형 ('oneToOne' 또는 'group')
+     * @param roomName 생성할 채팅방 이름 (단체 채팅 시 사용, 1:1 시 null)
+     * @param participants 참여자 직원 번호 목록
+     * @param creatorEmpNo 생성자 직원 번호
+     * @return 생성된 채팅방 정보 (ChatRoom 객체)
      */
     ChatRoom createChatRoom(String roomName, int creatorEmpNo); // 또는 int createChatRoom(...)
+    
+    /**
+     * 1:1 채팅방 생성 (내부 사용 또는 필요시 유지)
+     * @param participants 참여자 직원 번호 목록 (2명)
+     * @param creatorEmpNo 생성자 직원 번호
+     * @return 생성된 채팅방 정보
+     */
+    ChatRoom createPrivateChatRoom(ArrayList<Integer> participants, int creatorEmpNo);
 
+    /**
+     * 단체 채팅방 생성 (내부 사용 또는 필요시 유지)
+     * @param roomName 채팅방 이름
+     * @param participants 참여자 직원 번호 목록 (생성자 포함)
+     * @param creatorEmpNo 생성자 직원 번호
+     * @return 생성된 채팅방 정보
+     */
+    ChatRoom createGroupChatRoom(String roomName, ArrayList<Integer> participants, int creatorEmpNo);
+    
     /**
      * 사용자가 참여하고 있는 채팅방 목록 조회
      * @param empNo 직원 번호
@@ -102,5 +121,21 @@ public interface ChatService {
      * @return 멤버 여부 (boolean 또는 int count)
      */
     boolean isUserInRoom(int roomNo, int empNo); // 또는 int checkUserInRoom(...) 
-
+    
+    /**
+     * 채팅방이 이미 존재하는지 확인하는 메소드
+     * @param emp1
+     * @param emp2
+     * @return
+     */
+    ChatRoom findExistingPrivateChatRoom(int emp1, int emp2);
+    
+    /**
+     * 특정 사용자의 특정 채팅방 마지막 읽은 메시지 번호를 최신 메시지 번호로 업데이트
+     * chat-mapper.xml의 updateLastReadMessageNo 쿼리 호출
+     * @param roomNo 채팅방 번호
+     * @param userEmpNo 사용자(직원) 번호
+     * @return 업데이트된 레코드 수
+     */
+    public void markMessagesAsRead(int roomNo, int userEmpNo);
 }

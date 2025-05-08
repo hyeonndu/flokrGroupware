@@ -14,9 +14,9 @@ import com.kh.flokrGroupware.chat.model.vo.ChatRoomMember;
 @Repository
 public class ChatDao {
 	
-	public ArrayList<ChatRoom> findMyChatRooms(SqlSessionTemplate sqlSession, int empNo) {
+	public ArrayList<ChatRoom> findMyChatRooms(SqlSessionTemplate sqlSession, Map<String, Object> params) {
 		
-		return (ArrayList)sqlSession.selectList("chatMapper.findMyChatRooms", empNo);
+		return (ArrayList)sqlSession.selectList("chatMapper.findMyChatRooms", params);
 
 	}
 	
@@ -58,7 +58,19 @@ public class ChatDao {
      public int insertChatRoomMember(SqlSessionTemplate sqlSession, ChatRoomMember chatRoomMember) {
         return sqlSession.insert("chatMapper.insertChatRoomMember", chatRoomMember);
     }
+     
+     public ChatRoom findExistingPrivateChatRoom(SqlSessionTemplate sqlSession, int emp1, int emp2) {
+         Map<String, Object> params = new HashMap<>();
+         params.put("emp1", emp1);
+         params.put("emp2", emp2);
+         // chatMapper.findExistingPrivateChatRoom 쿼리 실행
+         return sqlSession.selectOne("chatMapper.findExistingPrivateChatRoom", params);
+     }
 	
-	
+
+     public int updateLastReadMessageNo(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+
+         return sqlSession.update("chatMapper.updateLastReadMessageNo", params);
+     }
 
 }

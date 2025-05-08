@@ -1,6 +1,8 @@
 package com.kh.flokrGroupware.chat.model.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,7 @@ public class ChatServiceImpl implements ChatService{
         ChatRoom newRoom = new ChatRoom();
         newRoom.setRoomName(roomName);
         newRoom.setRoomType("G"); // 예: 그룹 채팅방으로 설정
-        newRoom.setCreateByEmpNo(creatorEmpNo);
+        newRoom.setCreatedByEmpNo(creatorEmpNo);
         // createDate와 status는 DB에서 자동 설정 또는 기본값 사용
 
         // 2. DAO를 통해 CHAT_ROOM 테이블에 삽입
@@ -64,7 +66,16 @@ public class ChatServiceImpl implements ChatService{
 
 	@Override
 	public ArrayList<ChatRoom> findMyChatRooms(int empNo) {
-		return cDao.findMyChatRooms(sqlSession, empNo);
+        // --- DAO로 넘길 파라미터 맵 생성 ---
+        Map<String, Object> params = new HashMap<>();
+        params.put("empNo", empNo); // "empNo"라는 키로 empNo 값을 Map에 담습니다.
+
+        // --- ChatDAO의 findMyChatRooms 메소드 호출 ---
+        // SqlSessionTemplate와 파라미터 맵을 DAO 메소드에 전달합니다.
+        ArrayList<ChatRoom> chatRoomList = cDao.findMyChatRooms(sqlSession, params); // <-- 여기 수정
+
+        // 반환 타입에 맞게 형변환하여 반환
+        return chatRoomList;
 	}
 
 	@Override
@@ -159,6 +170,134 @@ public class ChatServiceImpl implements ChatService{
         return count > 0;
 	}
 
+	@Override
+	@Transactional
+	public ChatRoom createPrivateChatRoom(ArrayList<Integer> participants, int creatorEmpNo) {
+        // 1:1 채팅방 생성 로직
+        if (participants == null || participants.size() != 2) {
+            throw new IllegalArgumentException("1:1 채팅방은 정확히 2명의 참여자가 필요합니다.");
+        }
+
+        // 1:1 채팅 상대방 empNo 찾기 (자신을 제외한 나머지 한 명)
+        int participantEmpNo = (participants.get(0) == creatorEmpNo) ? participants.get(1) : participants.get(0);
+
+        // TODO: 이미 존재하는 1:1 채팅방인지 확인하는 로직 활성화
+        // SqlSessionTemplate 객체를 DAO 메소드에 파라미터로 전달하는 방식 대신,
+        // DAO에서 SqlSessionTemplate을 직접 사용하도록 변경했으므로 호출 방식 수정
+        ChatRoom existingRoom = cDao.findExistingPrivateChatRoom(sqlSession, creatorEmpNo, participantEmpNo);
+        if (existingRoom != null) {
+            // 이미 존재하면 기존 방 정보 반환
+            // Controller에서 이 반환 값을 확인하여 적절한 응답을 보낼 수 있습니다.
+            // 예: 이미 존재하는 방이라고 알리거나, 해당 방으로 리다이렉트
+             System.out.println("Service: Existing private chat room found: " + existingRoom.getRoomNo());
+            return existingRoom;
+        }
+
+
+        // 1. ChatRoom 객체 생성 (1:1 채팅)
+        ChatRoom newRoom = new ChatRoom();
+        newRoom.setRoomType("P"); // Private (1:1) 채팅
+        newRoom.setCreatedByEmpNo(creatorEmpNo);
+        // 1:1 채팅방 이름은 참여자 이름 조합 또는 상대방 이름으로 설정 (프론트/백엔드 협의)
+        // 여기서는 일단 null로 두고, 목록 조회 시 이름을 조합해서 보여주도록 함
+        newRoom.setRoomName(null); // 1:1 채팅방 이름은 DB에 저장하지 않거나 null로 설정
+
+        // 2. CHAT_ROOM 테이블에 삽입
+        int roomResult = cDao.insertChatRoom(sqlSession, newRoom);
+
+        if (roomResult <= 0 || newRoom.getRoomNo() == 0) {
+             throw new RuntimeException("1:1 채팅방 생성에 실패했습니다.");
+        }
+
+        // 3. CHAT_ROOM_MEMBER 테이블에 참여자들 추가
+        int memberResultSum = 0;
+        for (Integer empNo : participants) {
+            ChatRoomMember member = new ChatRoomMember();
+            member.setRoomNo(newRoom.getRoomNo()); // selectKey로 받아온 roomNo 사용
+            member.setEmpNo(empNo);
+            member.setIsAdmin(empNo == creatorEmpNo ? "Y" : "N"); // 생성자만 방장
+            // 다른 필드는 기본값 사용
+
+            memberResultSum += cDao.insertChatRoomMember(sqlSession, member);
+        }
+
+        // 참여자 수만큼 멤버가 제대로 추가되었는지 확인
+        if (memberResultSum != participants.size()) {
+             throw new RuntimeException("1:1 채팅방 멤버 추가에 실패했습니다.");
+        }
+
+        // 4. 생성된 ChatRoom 객체 반환 (필요하다면 DB에서 다시 조회하여 완전한 정보 로드)
+        // return cDao.findRoomById(newRoom.getRoomNo()); // 필요시 주석 해제하여 상세 정보 조회
+         return newRoom; // 기본 정보만 반환
+	}
+
+	@Override
+	@Transactional
+	public ChatRoom createGroupChatRoom(String roomName, ArrayList<Integer> participants, int creatorEmpNo) {
+        // 단체 채팅방 생성 로직
+        if (roomName == null || roomName.trim().isEmpty()) {
+            throw new IllegalArgumentException("단체 채팅방 이름은 필수입니다.");
+        }
+        if (participants == null || participants.size() < 2) { // 자신 포함 최소 2명
+             throw new IllegalArgumentException("단체 채팅방은 두 명 이상의 참여자가 필요합니다.");
+        }
+
+        // 1. ChatRoom 객체 생성 (단체 채팅)
+        ChatRoom newRoom = new ChatRoom();
+        newRoom.setRoomName(roomName.trim());
+        newRoom.setRoomType("G"); // Group (단체) 채팅
+        newRoom.setCreatedByEmpNo(creatorEmpNo);
+        // createDate, status는 DB에서 자동 설정
+
+        // 2. CHAT_ROOM 테이블에 삽입
+        int roomResult = cDao.insertChatRoom(sqlSession, newRoom);
+
+        if (roomResult <= 0 || newRoom.getRoomNo() == 0) {
+             throw new RuntimeException("단체 채팅방 생성에 실패했습니다.");
+        }
+
+        // 3. CHAT_ROOM_MEMBER 테이블에 참여자들 추가
+        int memberResultSum = 0;
+        for (Integer empNo : participants) {
+            ChatRoomMember member = new ChatRoomMember();
+            member.setRoomNo(newRoom.getRoomNo()); // selectKey로 받아온 roomNo 사용
+            member.setEmpNo(empNo);
+            member.setIsAdmin(empNo == creatorEmpNo ? "Y" : "N"); // 생성자만 방장
+             // 다른 필드는 기본값 사용
+
+            memberResultSum += cDao.insertChatRoomMember(sqlSession, member);
+        }
+
+        // 참여자 수만큼 멤버가 제대로 추가되었는지 확인
+        if (memberResultSum != participants.size()) {
+             throw new RuntimeException("단체 채팅방 멤버 추가에 실패했습니다.");
+        }
+
+        // 4. 생성된 ChatRoom 객체 반환 (필요하다면 DB에서 다시 조회하여 완전한 정보 로드)
+        // return cDao.findRoomById(sqlSession, newRoom.getRoomNo()); // 필요시 주석 해제하여 상세 정보 조회
+         return newRoom; // 기본 정보만 반환
+	}
+
+	@Override
+	public ChatRoom findExistingPrivateChatRoom(int emp1, int emp2) {
+		return cDao.findExistingPrivateChatRoom(sqlSession, emp1, emp2);
+	}
+
+	@Override
+	@Transactional
+	public void markMessagesAsRead(int roomNo, int userEmpNo) {
+        // --- DAO로 넘길 파라미터 맵 생성 ---
+        Map<String, Object> params = new HashMap<>();
+        params.put("roomNo", roomNo); // "roomNo"라는 키로 roomNo 값을 Map에 담습니다.
+        params.put("userEmpNo", userEmpNo); // "userEmpNo"라는 키로 userEmpNo 값을 Map에 담습니다.
+
+        // --- ChatDAO의 updateLastReadMessageNo 메소드 호출 ---
+        // SqlSessionTemplate와 파라미터 맵을 DAO 메소드에 전달합니다.
+        cDao.updateLastReadMessageNo(sqlSession, params); // <-- 여기 수정
+	}
+
+	
+	
 
 
 }
