@@ -9,6 +9,8 @@
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Employee" alias="employee"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Department" alias="department"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Position" alias="position"/>
+		<typeAlias type="com.kh.flokrGroupware.task.model.vo.Task" alias="Task"/>
+		<typeAlias type="com.kh.flokrGroupware.attachment.model.vo.Attachment" alias="Attachment"/>
 		<typeAlias type="com.kh.flokrGroupware.notice.model.vo.Notice" alias="notice"/>
 		<typeAlias type="com.kh.flokrGroupware.schedule.model.vo.Schedule" alias="schedule"/>
 		<typeAlias type="com.kh.flokrGroupware.schedule.model.vo.ScheduleAttendee" alias="scheduleAttendee"/>		
@@ -24,6 +26,7 @@
 	 <mappers>
 	 	<mapper resource="/mappers/employee-mapper.xml"/>
 	 	<mapper resource="/mappers/chat-mapper.xml"/>
+	 	<mapper resource="/mappers/task-mapper.xml"/>
 	 	<mapper resource="/mappers/notification-mapper.xml"/>
 	 	<mapper resource="/mappers/notice-mapper.xml"/>
 	 	<mapper resource="/mappers/organization-mapper.xml"/>
