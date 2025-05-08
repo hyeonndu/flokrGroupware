@@ -48,7 +48,7 @@ public class TaskController {
 	    Map<String, String> statusColorMap = new HashMap<>();
 	    statusColorMap.put("REQUEST", "gray");
 	    statusColorMap.put("IN_PROGRESS", "blue");
-	    statusColorMap.put("FEEDBACK", "orange");
+	    statusColorMap.put("FEEDBACK", "pink");
 	    statusColorMap.put("HOLD", "yellow");
 	    statusColorMap.put("DONE", "green");
 
@@ -63,9 +63,26 @@ public class TaskController {
 	}
 	
 	@RequestMapping("/detail")
-    public String taskDetail() {
-        return "task/taskDetailView";
-    }
+	public String taskDetail(@RequestParam("taskId") int taskId, Model model) {
+	    Task task = tService.taskDetail(taskId);
+	    Attachment atmt = tService.getAttachment(taskId);
+	    
+	    Map<String, String> statusMap = new HashMap<>();
+	    statusMap.put("REQUEST", "요청");
+	    statusMap.put("IN_PROGRESS", "진행중");
+	    statusMap.put("FEEDBACK", "피드백");
+	    statusMap.put("HOLD", "보류");
+	    statusMap.put("DONE", "완료");
+
+	    String statusKor = statusMap.get(task.getTaskStatus());
+	    
+	    model.addAttribute("task", task);
+	    model.addAttribute("atmt", atmt);
+	    model.addAttribute("statusKor", statusKor);
+
+	    return "task/taskDetailView";
+	}
+
 	
 	@RequestMapping("/insertForm")
     public String taskInsertForm() {
@@ -78,11 +95,6 @@ public class TaskController {
 		Employee loginUser = (Employee) session.getAttribute("loginUser");
 		int empNo = loginUser.getEmpNo();
 		
-		System.out.println("upfile: " + upfile);
-		System.out.println("upfile.getOriginalFilename(): " + (upfile != null ? upfile.getOriginalFilename() : "null"));
-		System.out.println("upfile.isEmpty(): " + (upfile != null ? upfile.isEmpty() : "null"));
-
-		
 		if (upfile != null && !upfile.isEmpty() && upfile.getOriginalFilename() != null && !upfile.getOriginalFilename().trim().equals("")) {
 		    atmt = new Attachment();
 		    String changeName = saveFile(upfile, session);
@@ -92,15 +104,12 @@ public class TaskController {
 		        atmt.setStoredFilepath("resources/uploadFiles/" + changeName);
 		        atmt.setFileExtension(changeName.substring(changeName.lastIndexOf(".")));
 		        atmt.setUploaderEmpNo(empNo);
-		    } else {
-		        System.out.println("파일 저장 실패: changeName is null");
 		    }
+		    
 		} else {
-		    System.out.println("파일 업로드 조건 불충족: 업로드 생략됨");
 		    atmt = null;
 		}
 
-		
 		int result = tService.taskInsert(task, atmt);
 		
 		if(result > 0) {
@@ -141,6 +150,81 @@ public class TaskController {
 	        return true;
 	    }
 	    return false;
+	}
+	
+	@RequestMapping("/updateForm")
+    public String taskUpdateForm(@RequestParam("taskId") int taskId, Model model) {
+		Task task = tService.taskDetail(taskId);
+	    Attachment atmt = tService.getAttachment(taskId);
+	    
+	    Map<String, String> statusMap = new HashMap<>();
+	    statusMap.put("REQUEST", "요청");
+	    statusMap.put("IN_PROGRESS", "진행중");
+	    statusMap.put("FEEDBACK", "피드백");
+	    statusMap.put("HOLD", "보류");
+	    statusMap.put("DONE", "완료");
+
+	    String statusKor = statusMap.get(task.getTaskStatus());
+	    
+	    model.addAttribute("task", task);
+	    model.addAttribute("atmt", atmt);
+	    model.addAttribute("statusKor", statusKor);
+		return "task/taskUpdateForm";
+    }
+	
+	@ResponseBody
+	@RequestMapping("/update")
+	public Map<String, Object> taskUpdate(Task task, Attachment atmt, MultipartFile reUploadfile, HttpSession session, Model model) {
+		
+		Map<String, Object> response = new HashMap<>();
+		
+		Employee loginUser = (Employee) session.getAttribute("loginUser");
+		int empNo = loginUser.getEmpNo();
+		
+		int result = 0;
+		
+		System.out.println("if문 전");
+		
+		// 새로 넘어온 첨부파일이 있을 경우
+		if(atmt != null && atmt.getOriginalFilename() != null && !atmt.getOriginalFilename().isEmpty()) {
+			
+			// 기존에 첨부파일이 있었을 경우 => 기존의 첨부파일 지우기
+			if(atmt.getOriginalFilename() != null) {
+				new File(session.getServletContext().getRealPath(atmt.getStoredFilepath())).delete();
+				result = tService.attachmentDelete(atmt);
+				System.out.println("기존 첨부파일 삭제");
+			}
+			
+			// 새로 넘어온 첨부파일 서버 업로드 시키기
+			String changeName = saveFile(reUploadfile, session);
+			
+			// atmt에 새로 넘어온 첨부파일에 대한 원본명, 저장경로 담기
+			atmt.setOriginalFilename(reUploadfile.getOriginalFilename());
+			atmt.setStoredFilepath("resources/uploadFiles/" + changeName);
+			atmt.setFileExtension(changeName.substring(changeName.lastIndexOf(".")));
+	        atmt.setUploaderEmpNo(empNo);
+	        atmt.setRefNo(task.getTaskNo());
+	        
+	        result = tService.taskAtmtUpdate(task, atmt);
+	        
+	        System.out.println("if문 안");
+	        
+		} else {
+			
+			result = tService.taskUpdate(task);
+			System.out.println("else문 안");
+			
+		}
+		
+		if(result > 0) { // 수정 성공 => 상세페이지
+			session.setAttribute("alertMsg", "업무가 성공적으로 수정되었습니다.");
+			response.put("success", true);
+		}else { // 수정 실패 => 에러페이지
+			session.setAttribute("alertMsg", "업무 수정에 실패하였습니다.");
+			response.put("success", false);
+		}
+		
+		return response;
 	}
 
 }

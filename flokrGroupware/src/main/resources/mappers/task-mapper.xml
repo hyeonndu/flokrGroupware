@@ -14,6 +14,18 @@
 		<result column="task_status" property="taskStatus"/>
 		<result column="emoji" property="emoji"/>
 	</resultMap>
+	
+	<resultMap id="AttachmentResult" type="Attachment">
+		<result column="attachment_no" property="attachmentNo"/>
+		<result column="ref_type" property="refType"/>
+		<result column="ref_no" property="refNo"/>
+		<result column="uploader_emp_no" property="uploaderEmpNo"/>
+		<result column="original_filename" property="originalFilename"/>
+		<result column="stored_filepath" property="storedFilepath"/>
+		<result column="file_extension" property="fileExtension"/>
+		<result column="upload_date" property="uploadDate"/>
+		<result column="status" property="status"/>
+	</resultMap>
 
 	<select id="taskList" resultMap="taskResult">
 		select
@@ -74,6 +86,80 @@
 		    seq_attachment.nextval
 		  , 'TASK'
 		  , seq_task.currval
+		  , #{uploaderEmpNo}
+		  , #{originalFilename}
+		  , #{storedFilepath}
+		  , #{fileExtension}
+		  )
+	</insert>
+	
+	<select id="taskDetail" resultMap="taskResult">
+		select
+		       task_no
+		     , title
+		     , task_content
+		     , category
+		     , creator_emp_no
+		     , to_char(due_date, 'YYYY-MM-DD') as due_date
+		     , create_date
+		     , update_date
+		     , task_status
+		     , emoji
+		  from task
+		 where task_no = #{taskNo}
+	</select>
+	
+	<select id="getAttachment" resultMap="AttachmentResult">
+		select
+		       attachment_no
+		     , ref_type
+		     , ref_no
+		     , uploader_emp_no
+		     , original_filename
+		     , stored_filepath
+		     , file_extension
+		     , upload_date
+		     , status
+		  from attachment
+		 where ref_no = #{taskNo}
+		   and status = 'Y'
+	</select>
+	
+	<update id="attachmentDelete">
+		update attachment
+		   set status = 'N'
+		 where attachment_no = #{attachmentNo}
+	</update>
+	
+	<update id="taskUpdate">
+		update task
+		   set title = #{taskTitle}
+		     , task_content = #{taskContent}
+		     , category = #{category}
+		     , due_date = #{dueDate}
+		     , update_date = SYSDATE
+		     , task_status = #{taskStatus}
+		     , emoji = #{emoji}
+		 where task_no = #{taskNo}
+	</update>
+	
+	<insert id="newAttachment">
+		insert
+		  into attachment
+		  (
+		    attachment_no
+		  , ref_type
+		  , ref_no
+		  , uploader_emp_no
+		  , original_filename
+		  , stored_filepath
+		  , file_extension
+		  )
+		  values
+		  (
+		    seq_attachment.nextval
+		  , 'TASK'
+		  , #{refNo}
 		  , #{uploaderEmpNo}
 		  , #{originalFilename}
 		  , #{storedFilepath}

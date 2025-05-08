@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/taskListView.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/taskDetailView.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/taskInsertForm.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add_circle" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
 
@@ -34,9 +34,9 @@
 					  홈
 					</a>
 					
-					<div class="section-divider"></div>
 					
 					<div class="left-scrollable">
+					<div class="section-divider"></div>
 						<div class="section-title" onclick="toggleSection('in-progress', this)">
 						    진행 중인 업무 목록
 						    <svg class="arrow rotate" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -46,7 +46,7 @@
 						
 						<div class="task-group" id="in-progress">
 							<c:forEach var="list" items="${ list }">
-						    	<div class="task-subitem" data-task-id="${ list.taskNo }">${ list.emoji } ${ list.taskTitle }</div>
+						    	<div class="task-subitem" data-task-id="${list.taskNo}">${ list.emoji } ${ list.taskTitle }</div>
 							</c:forEach>
 						</div>
 						
@@ -115,7 +115,7 @@
 					<div class="task-cards">
 					    <!-- 카드 1 -->
 					    <c:forEach var="list" items="${ list }">
-						    <div class="task-card" onclick="loadTaskDetail(${list.taskNo}, this)">
+						    <div class="task-card" data-task-id="${list.taskNo}">
 						        <div class="task-header">
 						            <span class="task-title">${ list.emoji } ${ list.taskTitle }</span>
 						        </div>
@@ -138,146 +138,244 @@
 				
 				<div id="task-detail-view" style="display:none;"></div>
 				
-				<div id="task-insert-view" style="display:none;"></div> 
+				<div id="task-insert-view" style="display:none;"></div>
+				
+				<div id="task-update-view" style="display:none;"></div> 
 	            
 	        </div>
         </div>
 	</div>
 	
-	<script>
-	  function toggleSection(id, triggerElement) {
-	    const section = document.getElementById(id);
-	    const arrow = triggerElement.querySelector('.arrow');
-	    const isClosed = section.classList.contains('closed');
-	
-	    if (isClosed) {
-	      section.classList.remove('closed');
-	      section.style.maxHeight = section.scrollHeight + 'px';
-	    } else {
-	      section.style.maxHeight = '0px';
-	      section.classList.add('closed');
-	    }
-	
-	    if (arrow) {
-	      arrow.classList.toggle('rotate', isClosed);
-	    }
-	  }
-	</script>
-	
-	<script>
-		function loadTaskDetail(taskId, clickedItem) {
-		  document.getElementById("task-list-view").style.display = "none";
-		  document.getElementById("task-detail-view").style.display = "block";
-		  document.getElementById("task-insert-view").style.display = "none";
+<script>
+  function toggleSection(id, triggerElement) {
+    const section = document.getElementById(id);
+    const arrow = triggerElement.querySelector('.arrow');
+    const isClosed = section.classList.contains('closed');
 
-		  fetch("${pageContext.request.contextPath}/task/detail?taskId=" + taskId)
-		    .then(res => res.text())
-		    .then(html => {
-		      document.getElementById("task-detail-view").innerHTML = html;
-		    });
+    section.classList.toggle('closed', !isClosed);
+    section.style.maxHeight = isClosed ? section.scrollHeight + 'px' : '0px';
+    if (arrow) arrow.classList.toggle('rotate', isClosed);
+  }
 
-		  document.querySelectorAll('.task-subitem').forEach(item => {
-		    item.classList.remove('selected');
-		  });
-		  clickedItem.classList.add('selected');
-		}
-		
-		const taskItems = document.querySelectorAll('.task-subitem');
+  function loadTaskDetail(taskId, clickedItem) {
+	  document.getElementById("task-list-view").style.display = "none";
+	  document.getElementById("task-detail-view").style.display = "block";
+	  document.getElementById("task-insert-view").style.display = "none";
+	  document.getElementById("task-update-view").style.display = "none";
 
-		taskItems.forEach(item => {
-		  item.addEventListener('click', function() {
-		    const taskId = this.dataset.taskId; // data-task-id 가져오기
-		    loadTaskDetail(taskId, this);
-		  });
-		});
+	  fetch("${pageContext.request.contextPath}/task/detail?taskId=" + taskId)
+	    .then(res => res.text())
+	    .then(html => {
+	      document.getElementById("task-detail-view").innerHTML = html;
+	    });
 
-	
-		function loadTaskInsert() {
-			  document.getElementById("task-list-view").style.display = "none";
-			  document.getElementById("task-detail-view").style.display = "none";
-			  document.getElementById("task-insert-view").style.display = "block";
-
-			  fetch("${pageContext.request.contextPath}/task/insertForm")
-			    .then(res => res.text())
-			    .then(html => {
-			      document.getElementById("task-insert-view").innerHTML = html;
-
-			      const emojiButton = document.querySelector('.emoji-btn');
-			      const selectedEmojiInput = document.getElementById('selectedEmoji');
-
-			      if (emojiButton && selectedEmojiInput) {
-			        const picker = new EmojiButton({
-			          position: 'bottom-start',
-			          theme: 'light'
-			        });
-
-			        picker.on('emoji', selection => {
-			          emojiButton.innerText = selection;
-			          selectedEmojiInput.value = selection;
-			        });
-
-			        emojiButton.addEventListener('click', () => {
-			          picker.togglePicker(emojiButton);
-			        });
-			      } else {
-			        console.error('Emoji button or hidden input not found');
-			      }
-			    });
-
-			  document.querySelectorAll('.task-subitem').forEach(item => {
-			    item.classList.remove('selected');
-			  });
-			}
-
-
-	
-	  function backToList() {
-	    document.getElementById("task-detail-view").style.display = "none";
-	    document.getElementById("task-insert-view").style.display = "none";
-	    document.getElementById("task-list-view").style.display = "block";
-	  
-	    document.querySelectorAll('.task-subitem').forEach(item => {
-	        item.classList.remove('selected');
-	      });
-	  }
-	
-	  document.getElementById("add-task-btn").addEventListener("click", function(e) {
-	    e.preventDefault(); // a태그라서 기본 이동 막기
-	    loadTaskInsert();
+	  document.querySelectorAll('.task-subitem').forEach(item => {
+	    item.classList.remove('selected');
 	  });
-	  
-	  function resetInsertForm() {
-	    // 입력된 값 초기화
-	    document.querySelector('.insert-title-input').value = '';
-	    document.querySelector('.insert-content-box').value = '';
-	    document.querySelector('.insert-dropdown').selectedIndex = 0;
-	    document.querySelector('.insert-date-input').value = '';
-	    document.querySelector('#selectedEmoji').value = '';
-	    document.querySelector('.emoji-btn').innerHTML = '<span class="material-symbols-outlined">add_circle</span>';
-	    // 첨부파일 초기화
-	    document.querySelector('.insert-attachment-box input[type="file"]').value = '';
-	  }
 
-	  function submitInsertForm() {
-	    // 추후 폼 제출 처리 (AJAX나 폼 전송 예정)
-	    alert('업무 등록 기능은 아직 연결되지 않았습니다.');
+	  const matchingListItem = document.querySelector('.task-subitem[data-task-id="' + taskId + '"]');
+	  if (matchingListItem) {
+	    matchingListItem.classList.add('selected');
 	  }
-	  
-	  </script>
-	  
-		<script>
-		  window.addEventListener('DOMContentLoaded', function() {
-		    fetch("${pageContext.request.contextPath}/task/checkFailFlag")
-		      .then(res => res.json())
-		      .then(fail => {
-		        if (fail) {
-		          alertify.alert("업무 등록에 실패했습니다. 다시 시도해주세요.", function() {
-		            loadTaskInsert(); // 등록폼 AJAX로 불러오기
-		          });
-		        }
-		      });
+	}
+
+
+  function loadTaskInsert() {
+    document.getElementById("task-list-view").style.display = "none";
+    document.getElementById("task-detail-view").style.display = "none";
+    document.getElementById("task-insert-view").style.display = "block";
+    document.getElementById("task-update-view").style.display = "none";
+
+    fetch("${pageContext.request.contextPath}/task/insertForm")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("task-insert-view").innerHTML = html;
+
+        const emojiButton = document.querySelector('.emoji-btn');
+        const selectedEmojiInput = document.getElementById('selectedEmoji');
+        if (emojiButton && selectedEmojiInput) {
+          const picker = new EmojiButton({
+            position: 'bottom-start',
+            theme: 'light'
+          });
+
+          picker.on('emoji', selection => {
+            emojiButton.innerText = selection;
+            selectedEmojiInput.value = selection;
+          });
+
+          emojiButton.addEventListener('click', () => {
+            picker.togglePicker(emojiButton);
+          });
+        }
+      });
+
+    // 삽입 모드일 땐 좌측 리스트 선택 해제
+    document.querySelectorAll('.task-subitem').forEach(item => {
+      item.classList.remove('selected');
+    });
+  }
+
+  function backToList() {
+    document.getElementById("task-detail-view").style.display = "none";
+    document.getElementById("task-insert-view").style.display = "none";
+    document.getElementById("task-list-view").style.display = "block";
+    document.getElementById("task-update-view").style.display = "none";
+
+    document.querySelectorAll('.task-subitem').forEach(item => {
+      item.classList.remove('selected');
+    });
+  }
+
+  function resetInsertForm() {
+    document.querySelector('.insert-title-input').value = '';
+    document.querySelector('.insert-content-box').value = '';
+    document.querySelector('.insert-dropdown').selectedIndex = 0;
+    document.querySelector('.insert-date-input').value = '';
+    document.querySelector('#selectedEmoji').value = '';
+    document.querySelector('.emoji-btn').innerHTML = '<span class="material-icons">add_circle_outline</span>';
+    document.querySelector('.insert-attachment-box input[type="file"]').value = '';
+  }
+
+  // 새 업무 추가 버튼
+  document.getElementById("add-task-btn").addEventListener("click", function(e) {
+    e.preventDefault();
+    loadTaskInsert();
+  });
+
+  window.addEventListener('DOMContentLoaded', function () {
+	  // ✅ 등록 실패 시 처리
+	  fetch("${pageContext.request.contextPath}/task/checkFailFlag")
+	    .then(res => res.json())
+	    .then(fail => {
+	      if (fail) {
+	        alertify.alert("업무 등록에 실패했습니다. 다시 시도해주세요.", function () {
+	          loadTaskInsert();
+	        });
+	      }
+	    });
+
+	  // ✅ 리스트 클릭 바인딩
+	  document.querySelectorAll('.task-subitem').forEach(item => {
+	    item.addEventListener('click', function () {
+	      const taskId = this.dataset.taskId;
+	      loadTaskDetail(taskId, this);
+	    });
+	  });
+
+	  // ✅ 카드 클릭 바인딩
+	  document.querySelectorAll('.task-card').forEach(item => {
+	    item.addEventListener('click', function () {
+	      const taskId = this.dataset.taskId;
+	      loadTaskDetail(taskId, null);
+	    });
+	  });
+	});
+  
+    function toggleOptions(e) {
+	  e.stopPropagation();
+	  const menu = document.getElementById("actionMenu");
+	  if (menu) {
+	    menu.style.display = menu.style.display === "block" ? "none" : "block";
+	  }
+	}
+
+	// 바깥 클릭 시 닫기
+	document.addEventListener("click", function() {
+	  const menu = document.getElementById("actionMenu");
+	  if (menu) {
+	    menu.style.display = "none";
+	  }
+	});
+	
+	function editTask(taskId) {
+	  // 뷰 상태 변경
+	  document.getElementById("task-list-view").style.display = "none";
+	  document.getElementById("task-detail-view").style.display = "none";
+	  document.getElementById("task-insert-view").style.display = "none";
+	  document.getElementById("task-update-view").style.display = "block";
+
+	  // AJAX로 폼 로딩
+	  fetch(`${pageContext.request.contextPath}/task/updateForm?taskId=` + taskId)
+	    .then(res => res.text())
+	    .then(html => {
+	      document.getElementById("task-update-view").innerHTML = html;
+	      
+	      const emojiButton = document.querySelector('.emoji-btn');
+	        const selectedEmojiInput = document.getElementById('selectedEmoji');
+	        if (emojiButton && selectedEmojiInput) {
+	          const picker = new EmojiButton({
+	            position: 'bottom-start',
+	            theme: 'light'
+	          });
+
+	          picker.on('emoji', selection => {
+	            emojiButton.innerText = selection;
+	            selectedEmojiInput.value = selection;
+	          });
+
+	          emojiButton.addEventListener('click', () => {
+	            picker.togglePicker(emojiButton);
+	          });
+	        }
+	    });
+	}
+
+
+	function deleteTask(taskId) {
+	  if (confirm("정말 삭제하시겠습니까?")) {
+	    location.href = `${pageContext.request.contextPath}/task/delete?taskId=` + taskId;
+	  }
+	}
+	
+	function updateFileName(input) {
+	  const fileNameSpan = document.getElementById("fileName");
+	  const fileName = input.files.length > 0 ? input.files[0].name : "선택된 파일 없음";
+	  fileNameSpan.textContent = fileName;
+	}
+
+	function selectStatus(status, clickedSpan) {
+	  document.getElementById("taskStatus").value = status;
+	  document.querySelectorAll('.status-tags .tag').forEach(tag => tag.classList.remove('active'));
+	  clickedSpan.classList.add('active');
+	}
+	
+	function submitUpdate() {
+		  
+		  const form = document.getElementById("update-task-form");
+		  const formData = new FormData(form);
+
+		  fetch(`${pageContext.request.contextPath}/task/update`, {
+		    method: "POST",
+		    body: formData
+		  })
+		  .then(async res => {
+			  const contentType = res.headers.get("content-type");
+			  if (res.ok && contentType && contentType.includes("application/json")) {
+			    return res.json();
+			  } else {
+			    const text = await res.text();  // 만약 HTML 에러 페이지 같은 게 응답으로 오면 여기서 잡힘
+			    throw new Error("Unexpected response:\n\n" + text);
+			  }
+			})
+		  .then(data => {
+		    if (data.success) {
+		      console.log("업무 수정 성공~");
+		      location.href = `${pageContext.request.contextPath}/task/list`;
+		    } else {
+		      console.log("업무 수정 실패");
+		      location.href = `${pageContext.request.contextPath}/task/list`;
+		    }
+		  })
+		  .catch(err => {
+		    console.error("업데이트 중 오류 발생", err);
+		    alert("서버 오류로 수정에 실패했습니다.");
 		  });
-		</script>
+		}
+
+
+</script>
+
 
 </body>
 </html>

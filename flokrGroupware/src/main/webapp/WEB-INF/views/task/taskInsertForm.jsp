@@ -8,8 +8,8 @@
     <div class="insert-header">
       <div class="insert-title-left">
         <button type="button" class="emoji-btn">
-        	<span class="material-symbols-outlined">
-				add_circle
+        	<span class="material-icons">
+				add_circle_outline
 			</span>
         </button>
         <input type="hidden" name="emoji" id="selectedEmoji" value="" />

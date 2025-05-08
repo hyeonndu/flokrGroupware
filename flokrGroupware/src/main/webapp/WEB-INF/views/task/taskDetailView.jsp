@@ -5,12 +5,28 @@
   <!-- 상단 헤더 -->
   <div class="detail-header">
     <div class="title-left">
-      <span class="emoji">🎨</span>
-      <h2>화면 설계</h2>
+      <span class="emoji">${ task.emoji }</span>
+      <h2>${ task.taskTitle }</h2>
     </div>
     <div class="header-actions">
-      <button class="refresh-btn">⟳</button>
-      <button class="close-btn" onclick="backToList()">✕</button>
+      <button class="refresh-btn" onclick="toggleOptions(event)">
+      	<span class="material-icons">
+			more_horiz
+		</span>
+      </button>
+      
+      <div class="dropdown-options" id="actionMenu" style="display: none;">
+	    <ul>
+	      <li onclick="editTask('${task.taskNo}')">수정하기</li>
+	      <li onclick="deleteTask('${task.taskNo}')">삭제하기</li>
+	    </ul>
+	  </div>
+      
+      <button class="close-btn" onclick="backToList()">
+		<span class="material-icons">
+			close
+		</span>
+      </button>
     </div>
   </div>
 
@@ -20,30 +36,25 @@
 	<div class="left-pane">
 	  <div class="rowLeft">
 	    <label>업무 내용</label>
-	    <div class="content-box">- 사이트맵 만들기  
-	      - 페이지 테마색 정하기  
-	      - 메인 페이지 화면설계  
-	      - 피그마 틀로 보고서 작성 (핵심 화면 캡처 포함)  
-	      - 길어지면  
-	      - 어떻게  
-	      - 되는지  
-	      - 테스트입니다  
-	      - 우와  
-	      - 스크롤뜨나  
-	      - 집가고싶다
-	      - ㅇㅇㅇㅇㅇ
-	      - ㅋㅋㅋㅋ
-	      - ㄹㄹㄹㄹㄹ
-	      - ㅇㄹㄴㅇㄹ
-	      - ㅇㄴㄹㄴㅇㄹㄴㅇ</div>
+	    <div class="content-box">${ task.taskContent }</div>
 	  </div>
 	
-	  <div class="rowLeft">
-	    <label>첨부파일</label>
-	    <div class="attachment-box">
-	      <input type="file" />
-	    </div>
+	<div class="rowLeft">
+	  <label>첨부파일</label>
+	  <div class="attachment-box">
+	    <c:if test="${not empty atmt}">
+	      <a href="${pageContext.request.contextPath}/${atmt.storedFilepath}" 
+	         download="${atmt.originalFilename}" 
+	         class="file-link">
+	         📎 ${atmt.originalFilename}
+	      </a>
+	    </c:if>
+	    <c:if test="${empty atmt}">
+	      <span class="no-file">첨부된 파일이 없습니다</span>
+	    </c:if>
 	  </div>
+	</div>
+
 	</div>
 
 
@@ -52,24 +63,24 @@
       <div class="rowRight">
         <label>카테고리</label>
         <select class="dropdown" disabled>
-          <option selected>디자인</option>
+          <option selected>${ task.category }</option>
         </select>
       </div>
 
       <div class="rowRight">
         <label>상태</label>
         <div class="status-tags">
-          <span class="tag 요청">요청</span>
-          <span class="tag 진행중">진행 중</span>
-          <span class="tag 피드백">피드백</span>
-          <span class="tag 보류">보류</span>
-          <span class="tag 완료">완료</span>
-        </div>
+		  <span class="tag 요청 ${statusKor eq '요청' ? 'active' : ''}">요청</span>
+		  <span class="tag 진행중 ${statusKor eq '진행중' ? 'active' : ''}">진행 중</span>
+		  <span class="tag 피드백 ${statusKor eq '피드백' ? 'active' : ''}">피드백</span>
+		  <span class="tag 보류 ${statusKor eq '보류' ? 'active' : ''}">보류</span>
+		  <span class="tag 완료 ${statusKor eq '완료' ? 'active' : ''}">완료</span>
+		</div>
       </div>
 
       <div class="rowRight">
         <label>마감일</label>
-        <input type="date" value="2025-04-18" disabled class="date-input" />
+        <input type="date" value="${ task.dueDate }" disabled class="date-input" />
       </div>
 
       <div class="rowRight">

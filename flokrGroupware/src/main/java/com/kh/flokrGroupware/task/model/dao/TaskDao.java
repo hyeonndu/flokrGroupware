@@ -22,5 +22,25 @@ public class TaskDao {
 	public int insertAttachment(SqlSessionTemplate sqlSession, Attachment atmt) {
 		return sqlSession.insert("taskMapper.insertAttachment", atmt);
 	}
+	
+	public Task taskDetail(SqlSessionTemplate sqlSession, int taskNo) {
+		return sqlSession.selectOne("taskMapper.taskDetail", taskNo);
+	}
+	
+	public Attachment getAttachment(SqlSessionTemplate sqlSession, int taskNo) {
+		return sqlSession.selectOne("taskMapper.getAttachment", taskNo);
+	}
+	
+	public int attachmentDelete(SqlSessionTemplate sqlSession, Attachment atmt) {
+		return sqlSession.update("taskMapper.attachmentDelete", atmt);
+	}
+	
+	public int taskUpdate(SqlSessionTemplate sqlSession, Task task) {
+		return sqlSession.update("taskMapper.taskUpdate", task);
+	}
+	
+	public int newAttachment(SqlSessionTemplate sqlSession, Attachment atmt) {
+		return sqlSession.insert("taskMapper.newAttachment", atmt);
+	}
 
 }

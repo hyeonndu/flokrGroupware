@@ -15,5 +15,11 @@ public interface TaskService {
 	
 	// 업무 상세조회
 	Task taskDetail(int taskNo);
+	Attachment getAttachment(int taskNo);
+	
+	// 업무 수정
+	int attachmentDelete(Attachment atmt);
+	int taskAtmtUpdate(Task task, Attachment atmt);
+	int taskUpdate(Task task);
 
 }

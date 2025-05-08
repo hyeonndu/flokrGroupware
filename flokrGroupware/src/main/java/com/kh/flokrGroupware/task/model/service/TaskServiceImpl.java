@@ -41,7 +41,34 @@ public class TaskServiceImpl implements TaskService {
 
 	@Override
 	public Task taskDetail(int taskNo) {
-		return null;
+		return tDao.taskDetail(sqlSession, taskNo);
+	}
+
+	@Override
+	public Attachment getAttachment(int taskNo) {
+		return tDao.getAttachment(sqlSession, taskNo);
+	}
+	
+	@Override
+	public int taskAtmtUpdate(Task task, Attachment atmt) {
+		int result1 = tDao.taskUpdate(sqlSession, task);
+	    int result2 = 1;
+
+	    if (atmt != null) {
+	        result2 = tDao.newAttachment(sqlSession, atmt);
+	    }
+
+	    return result1 * result2;
+	}
+
+	@Override
+	public int attachmentDelete(Attachment atmt) {
+		return tDao.attachmentDelete(sqlSession, atmt);
+	}
+
+	@Override
+	public int taskUpdate(Task task) {
+		return tDao.taskUpdate(sqlSession, task);
 	}
 
 }
