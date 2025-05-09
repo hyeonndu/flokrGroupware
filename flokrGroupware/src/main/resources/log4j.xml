@@ -77,7 +77,14 @@
     </logger>
 	<logger name="org.aspectj">
         <level value="INFO" />
+		<!-- <level value="DEBUG" /> -->
     </logger>
+	
+	<!-- 
+	<logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
+     <level value="DEBUG" /> 
+     </logger>
+	 -->
 
 	<!-- Root Logger -->
 	<root>
