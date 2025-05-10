@@ -61,6 +61,9 @@
                       <c:when test="${notification.type eq 'SCHEDULE'}">
                         <i class="fas fa-calendar-alt mr-1"></i> 일정
                       </c:when>
+                      <c:when test="${notification.type eq 'FACILITY'}">
+					    <i class="fas fa-building mr-1"></i> 시설 예약
+					  </c:when>
                       <c:otherwise>${notification.type}</c:otherwise>
                     </c:choose>
                   </span>

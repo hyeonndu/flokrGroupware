@@ -80,6 +80,7 @@
            <option value="TASK">업무</option>
            <option value="CHAT">채팅</option>
            <option value="SCHEDULE">일정</option>
+           <option value="FACILITY">시설 예약</option>
          </select>
        </div>
        
@@ -165,6 +166,7 @@
                        <c:when test="${notification.type eq 'TASK'}">업무</c:when>
                        <c:when test="${notification.type eq 'CHAT'}">채팅</c:when>
                        <c:when test="${notification.type eq 'SCHEDULE'}">일정</c:when>
+                       <c:when test="${notification.type eq 'FACILITY'}">시설 예약</c:when>
                        <c:otherwise>${notification.type}</c:otherwise>
                      </c:choose>
                    </td>
