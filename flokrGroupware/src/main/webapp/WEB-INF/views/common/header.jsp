@@ -74,12 +74,22 @@
                     <c:when test="${not empty loginUser.profileImgPath}"> <%-- loginUser 변수 사용 --%>
                         <img src="${loginUser.profileImgPath}" alt="프로필" class="header-profile-img"> <%-- loginUser 변수 사용 --%>
                     </c:when>
-                    <c:otherwise>
-                        <svg class="header-profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
-                            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
-                        </svg>
-                    </c:otherwise>
+					<c:otherwise>
+					    <%-- 기본적인 색상 배열 (스크립틀릿 사용) --%>
+					    <% 
+					        String[] colors = {"#4285f4", "#34a853", "#ea4335", "#fbbc05", "#9c27b0"};
+					        String empName = ((com.kh.flokrGroupware.employee.model.vo.Employee)session.getAttribute("loginUser")).getEmpName();
+					        char firstChar = empName.charAt(0);
+					        int colorIndex = Math.abs(firstChar) % 5; // char를 int로 자동 변환하여 인덱스 계산
+					        pageContext.setAttribute("bgColor", colors[colorIndex]);
+					        pageContext.setAttribute("firstChar", String.valueOf(firstChar));
+					    %>
+					    
+					    <svg class="header-profile-img" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+					        <circle cx="20" cy="20" r="20" fill="${bgColor}" />
+					        <text x="20" y="22" font-family="Arial, 'Malgun Gothic', sans-serif" font-size="16" fill="white" text-anchor="middle" dominant-baseline="middle">${firstChar}</text>
+					    </svg>
+					</c:otherwise>
                 </c:choose>
                 <div class="header-profile-info">
                     <span class="header-profile-name">${loginUser.empName}님</span>
@@ -199,7 +209,7 @@
                     </svg>
                     전자 결재
                 </a>
-                <a href="${pageContext.request.contextPath}/facility-reservation" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/facilityReservation" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="3" y1="9" x2="21" y2="9"></line>
@@ -241,6 +251,7 @@
 <c:if test="${not empty loginUser}">
     <input type="hidden" id="loginUserId" value="${loginUser.empId}" />
     <input type="hidden" id="userDeptNo" value="${loginUser.deptNo}" />
+    <input type="hidden" id="loginUserIsAdmin" value="${loginUser.isAdmin}">
 </c:if>
 
 <!-- 알림 스크립트 -->
