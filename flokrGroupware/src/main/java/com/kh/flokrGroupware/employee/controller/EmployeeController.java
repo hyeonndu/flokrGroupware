@@ -47,9 +47,8 @@ public class EmployeeController {
     // 루트 페이지 접근 시 로그인 상태 확인
     @RequestMapping("/")
     public String root(HttpSession session) {
-        // 로그인이 되어 있지 않으면 로그인 페이지로
         if(session.getAttribute("loginUser") == null) {
-            return "redirect:/";
+        	return "redirect:/loginForm";
         }
         
         // 로그인 되어 있으면 권한에 따라 다른 메인 페이지로
