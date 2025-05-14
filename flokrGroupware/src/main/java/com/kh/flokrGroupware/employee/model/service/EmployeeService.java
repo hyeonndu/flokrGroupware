@@ -45,4 +45,7 @@ public interface EmployeeService {
     
     // 직원 검색 기능 - 알림 기능에서 사용
     ArrayList<Map<String, Object>> searchEmployee(String keyword);
+    
+    // 모든 활성 상태의 직원 목록 조회 (부서, 직급 정보 포함) - 채팅에서 사용중
+    ArrayList<Employee> findActiveEmployeesWithDeptAndPosition(); // 새로운 메소드 추가
 }

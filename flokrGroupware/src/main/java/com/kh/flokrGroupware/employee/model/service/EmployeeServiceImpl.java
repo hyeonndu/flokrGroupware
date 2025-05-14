@@ -77,4 +77,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public ArrayList<Map<String, Object>> searchEmployee(String keyword) {
         return employeeDao.searchEmployee(keyword);
     }
+
+	@Override
+	public ArrayList<Employee> findActiveEmployeesWithDeptAndPosition() {
+		return employeeDao.selectActiveEmployeesWithDeptAndPosition();
+	}
 }

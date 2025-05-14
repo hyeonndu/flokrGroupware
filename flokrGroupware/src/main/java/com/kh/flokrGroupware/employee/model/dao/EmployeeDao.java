@@ -70,4 +70,8 @@ public class EmployeeDao {
     public ArrayList<Map<String, Object>> searchEmployee(String keyword) {
         return (ArrayList)sqlSession.selectList("employeeMapper.searchEmployee", keyword);
     }
+    
+    public ArrayList<Employee> selectActiveEmployeesWithDeptAndPosition() {
+    	return (ArrayList)sqlSession.selectList("employeeMapper.findAllActiveEmployeesWithDeptAndPosition");
+    }
 }

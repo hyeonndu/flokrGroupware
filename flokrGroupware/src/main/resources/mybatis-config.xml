@@ -9,6 +9,9 @@
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Employee" alias="employee"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Department" alias="department"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Position" alias="position"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatRoom" alias="chatRoom"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatMessage" alias="chatMessage"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatRoomMember" alias="chatRoomMember"/>
 		<typeAlias type="com.kh.flokrGroupware.task.model.vo.Task" alias="Task"/>
 		<typeAlias type="com.kh.flokrGroupware.attachment.model.vo.Attachment" alias="Attachment"/>
 		<typeAlias type="com.kh.flokrGroupware.notice.model.vo.Notice" alias="notice"/>

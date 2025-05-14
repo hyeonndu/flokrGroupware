@@ -2,4 +2,241 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="chatMapper">
 
+	<resultMap id="chatRoomResultMap" type="ChatRoom">
+		<result column="room_no" property="roomNo"/>
+		<result column="room_name" property="roomName"/>
+		<result column="room_type" property="roomType"/>
+		<result column="created_by_emp_no" property="createdByEmpNo"/>
+		<result column="create_date" property="createDate"/>
+		<result column="status" property="status"/>
+		<result column="last_message_content" property="lastMessageContent"/>
+		<result column="last_message_time" property="lastMessageTime"/>
+		<result column="chat_user_img_path" property="chatUserImgPath"/>
+		<result column="member_count" property="memberCount"/>
+		<result column="unread_count" property="unreadCount"/>
+	</resultMap>
+	
+	<resultMap id="chatMessageResultMap" type="ChatMessage">
+		<result column="message_no" property="messageNo"/>
+		<result column="room_no" property="roomNo"/>
+		<result column="sender_emp_no" property="senderEmpNo"/>
+		<result column="chat_content" property="chatContent"/>
+		<result column="message_type" property="messageType"/>
+		<result column="send_date" property="sendDate"/>
+		<result column="status" property="status"/>
+		<result column="sender_name" property="senderName"/>
+		<result column="sender_profile_img_path" property="senderProfileImgPath"/>
+	</resultMap>
+	
+	<resultMap id="chatRoomMemberResultMap" type="ChatRoomMember">
+		<result column="member_no" property="memberNo"/>
+		<result column="room_no" property="roomNo"/>
+		<result column="emp_no" property="empNo"/>
+		<result column="join_date" property="joinDate"/>
+		<result column="last_read_message_no" property="lastReadMessageNo"/>
+		<result column="is_admin" property="isAdmin"/>
+		<result column="notification_enabled" property="notificationEnabled"/>
+		<result column="status" property="status"/>
+	</resultMap>
+	
+	
+	<select id="findMyChatRooms" parameterType="map" resultMap="chatRoomResultMap">
+	    SELECT
+	        CR.ROOM_NO,
+	        CR.ROOM_TYPE,
+	        CR.CREATED_BY_EMP_NO AS create_by_emp_no,
+	        CR.CREATE_DATE,
+	        CR.STATUS,
+	        LM.CHAT_CONTENT AS LAST_MESSAGE_CONTENT,
+	        LM.SEND_DATE AS LAST_MESSAGE_TIME,
+	        MC.MEMBER_COUNT,
+	        /* CASE 문: roomType이 'P'이면 상대방 이름, 'G'이면 방 이름 */
+	        CASE
+	            WHEN CR.ROOM_TYPE = 'P' THEN OTH_EMP.EMP_NAME
+	            ELSE CR.ROOM_NAME
+	        END AS ROOM_NAME,
+	        /* CASE 문: roomType이 'P'이면 상대방 프로필 경로, 'G'이면 NULL */
+	        CASE
+	            WHEN CR.ROOM_TYPE = 'P' THEN OTH_EMP.PROFILE_IMG_PATH
+	            ELSE NULL
+	        END AS CHAT_USER_IMG_PATH,
+	        /* 안 읽은 메시지 수 계산 로직 */
+	        (
+	            SELECT COUNT(CM_UNREAD.MESSAGE_NO)
+	            FROM CHAT_MESSAGE CM_UNREAD
+	            WHERE CM_UNREAD.ROOM_NO = CR.ROOM_NO
+	            AND CM_UNREAD.MESSAGE_NO > (
+	                SELECT NVL(CRM_LAST_READ.LAST_READ_MESSAGE_NO, 0)
+	                FROM CHAT_ROOM_MEMBER CRM_LAST_READ
+	                WHERE CRM_LAST_READ.ROOM_NO = CR.ROOM_NO 
+	                AND CRM_LAST_READ.EMP_NO = #{empNo}
+	            )
+	            AND CM_UNREAD.SENDER_EMP_NO != #{empNo}
+	        ) AS UNREAD_COUNT
+	    FROM
+	        CHAT_ROOM CR
+	    JOIN
+	        CHAT_ROOM_MEMBER CRM_ME ON CR.ROOM_NO = CRM_ME.ROOM_NO AND CRM_ME.EMP_NO = #{empNo}
+	    LEFT JOIN (
+	        SELECT
+	            ROOM_NO, CHAT_CONTENT, SEND_DATE,
+	            ROW_NUMBER() OVER(PARTITION BY ROOM_NO ORDER BY SEND_DATE DESC) as RN
+	        FROM CHAT_MESSAGE WHERE STATUS = 'Y'
+	    ) LM ON CR.ROOM_NO = LM.ROOM_NO AND LM.RN = 1
+	    LEFT JOIN (
+	        SELECT ROOM_NO, COUNT(*) AS MEMBER_COUNT
+	        FROM CHAT_ROOM_MEMBER
+	        WHERE STATUS = 'Y'
+	        GROUP BY ROOM_NO
+	    ) MC ON CR.ROOM_NO = MC.ROOM_NO
+	    LEFT JOIN
+	        CHAT_ROOM_MEMBER CRM_OTHER ON CR.ROOM_NO = CRM_OTHER.ROOM_NO 
+	        AND CRM_OTHER.EMP_NO != #{empNo} AND CR.ROOM_TYPE = 'P'
+	    LEFT JOIN
+	        EMPLOYEE OTH_EMP ON CRM_OTHER.EMP_NO = OTH_EMP.EMP_NO AND CR.ROOM_TYPE = 'P'
+	    WHERE
+	        CR.STATUS = 'Y'
+	    ORDER BY
+	        LM.SEND_DATE DESC NULLS LAST,
+	        CR.CREATE_DATE DESC
+	</select>
+	
+	<select id="checkUserInRoom" resultType="_int">
+	  SELECT
+            COUNT(*)
+        FROM
+            CHAT_ROOM_MEMBER
+        WHERE
+            ROOM_NO = #{roomNo}
+            AND EMP_NO = #{empNo}
+            AND STATUS = 'Y' -- (선택) 현재 활성 상태인 멤버만 확인할 경우
+	</select>
+	<select id="findRoomById" parameterType="int" resultMap="chatRoomResultMap">
+		SELECT ROOM_NO, 
+			   ROOM_NAME, 
+			   ROOM_TYPE, 
+			   CREATED_BY_EMP_NO, 
+			   CREATE_DATE, 
+			   STATUS
+          FROM CHAT_ROOM
+         WHERE ROOM_NO = #{roomNo} 
+           AND STATUS = 'Y'
+	</select>
+	<select id="findMessagesByRoomId" parameterType="int" resultMap="chatMessageResultMap">
+        SELECT
+            m.MESSAGE_NO,
+            m.ROOM_NO,
+            m.SENDER_EMP_NO,
+            e.EMP_NAME as SENDER_NAME,             -- 보낸사람 이름
+            e.PROFILE_IMG_PATH as SENDER_PROFILE_IMG_PATH, -- 보낸사람 프로필 경로
+            m.CHAT_CONTENT,
+            m.MESSAGE_TYPE,
+            m.SEND_DATE,
+            m.STATUS
+        FROM
+            CHAT_MESSAGE m
+        JOIN
+            EMPLOYEE e ON m.SENDER_EMP_NO = e.EMP_NO
+        WHERE
+            m.ROOM_NO = #{roomNo}
+            AND m.STATUS = 'Y' 
+        ORDER BY
+            m.SEND_DATE ASC
+    </select>
+    <insert id="insertChatMessage" parameterType="ChatMessage">
+    		INSERT 
+    		  INTO CHAT_MESSAGE 
+    		     (
+				   MESSAGE_NO, 		
+				   ROOM_NO,			
+				   SENDER_EMP_NO,		
+				   CHAT_CONTENT,		
+				   MESSAGE_TYPE,		
+				   SEND_DATE,			
+				   STATUS				
+				   ) 
+			VALUES 
+				 (
+				   SEQ_CHAT_MESSAGE.NEXTVAL,
+				   #{roomNo},
+				   #{senderEmpNo},			  
+				   #{chatContent},			  
+				   #{messageType, jdbcType=VARCHAR}, 
+				   SYSDATE,				  
+				   'Y'						  
+				   )
+
+		<selectKey keyProperty="messageNo" resultType="_int" order="AFTER">
+			SELECT 
+				   SEQ_CHAT_MESSAGE.CURRVAL 
+			  FROM DUAL 
+		</selectKey>
+    
+    </insert>
+    
+	<insert id="insertChatRoom" parameterType="ChatRoom">
+        INSERT INTO CHAT_ROOM (
+            ROOM_NO,
+            <if test="roomName != null and roomName != ''">ROOM_NAME,</if>
+            ROOM_TYPE,
+            CREATED_BY_EMP_NO,
+            CREATE_DATE,
+            STATUS
+        ) VALUES (
+            SEQ_CHAT_ROOM.NEXTVAL,
+            <if test="roomName != null and roomName != ''">#{roomName},</if>
+            #{roomType},
+            #{createdByEmpNo},
+            SYSDATE,
+            'Y'
+        )
+        <selectKey keyProperty="roomNo" resultType="_int" order="AFTER">
+            SELECT SEQ_CHAT_ROOM.CURRVAL FROM DUAL
+        </selectKey>
+    </insert>
+    
+    <insert id="insertChatRoomMember" parameterType="ChatRoomMember">
+        INSERT INTO CHAT_ROOM_MEMBER (
+            MEMBER_NO,
+            ROOM_NO,
+            EMP_NO,
+            JOIN_DATE,
+            IS_ADMIN, -- 방장 여부
+            STATUS
+        ) VALUES (
+            SEQ_CHAT_ROOM_MEMBER.NEXTVAL,
+            #{roomNo},
+            #{empNo},
+            SYSDATE,
+            #{isAdmin, jdbcType=VARCHAR},
+            'Y'
+        )
+    </insert>
+    
+    <select id="findExistingPrivateChatRoom" parameterType="map" resultMap="chatRoomResultMap">
+        SELECT CR.ROOM_NO, CR.ROOM_NAME, CR.ROOM_TYPE, CR.CREATED_BY_EMP_NO, CR.CREATE_DATE, CR.STATUS
+        FROM CHAT_ROOM CR
+        JOIN CHAT_ROOM_MEMBER CRM1 ON CR.ROOM_NO = CRM1.ROOM_NO
+        JOIN CHAT_ROOM_MEMBER CRM2 ON CR.ROOM_NO = CRM2.ROOM_NO
+        WHERE CR.ROOM_TYPE = 'P'
+          AND CR.STATUS = 'Y'
+          AND CRM1.EMP_NO = #{emp1}
+          AND CRM2.EMP_NO = #{emp2}
+          AND CRM1.STATUS = 'Y' -- 활성 상태인 멤버만 고려
+          AND CRM2.STATUS = 'Y' -- 활성 상태인 멤버만 고려
+          AND CRM1.EMP_NO != CRM2.EMP_NO -- 두 멤버가 다른지 확인
+    </select>
+    
+    <update id="updateLastReadMessageNo" parameterType="map">
+        UPDATE CHAT_ROOM_MEMBER
+        SET LAST_READ_MESSAGE_NO = (
+            SELECT NVL(MAX(MESSAGE_NO), 0) -- 해당 방의 가장 큰 (최신) MESSAGE_NO를 가져옵니다. 메시지가 없으면 0.
+            FROM CHAT_MESSAGE
+            WHERE ROOM_NO = #{roomNo} --  Map에서 "roomNo" 키 값을 참조
+        )
+        WHERE ROOM_NO = #{roomNo} --  Map에서 "roomNo" 키 값을 참조
+          AND EMP_NO = #{userEmpNo} --  Map에서 "userEmpNo" 키 값을 참조
+	</update>
+    
+
 </mapper>
