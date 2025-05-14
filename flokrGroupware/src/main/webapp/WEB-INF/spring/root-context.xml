@@ -37,5 +37,12 @@
 		<property name="maxUploadSize" value="100000000" />
 		<property name="maxInMemorySize" value="100000000" />
 	</bean>
+	
+	<!-- Elasticsearch 클라이언트 빈 등록 -->
+	<bean id="elasticsearchClient" class="org.elasticsearch.client.RestHighLevelClient" factory-bean="elasticsearchClientFactory" factory-method="createClient" />
+	
+	<!-- 클라이언트 생성용 Factory 빈 등록 -->
+	<bean id="elasticsearchClientFactory" class="com.kh.flokrGroupware.common.ElasticsearchClientFactory" />
+	
 
 </beans>

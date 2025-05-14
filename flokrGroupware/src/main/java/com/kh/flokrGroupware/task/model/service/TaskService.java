@@ -1,5 +1,6 @@
 package com.kh.flokrGroupware.task.model.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import com.kh.flokrGroupware.attachment.model.vo.Attachment;
@@ -21,5 +22,5 @@ public interface TaskService {
 	int attachmentDelete(Attachment atmt);
 	int taskAtmtUpdate(Task task, Attachment atmt);
 	int taskUpdate(Task task);
-
+	
 }

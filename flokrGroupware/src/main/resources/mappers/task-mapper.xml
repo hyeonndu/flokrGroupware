@@ -109,6 +109,18 @@
 		 where task_no = #{taskNo}
 	</select>
 	
+	<select id="selectRecentTask" parameterType="Task" resultMap="taskResult">
+	    SELECT *
+	    FROM (
+	        SELECT *
+	        FROM TASK
+	        WHERE TITLE = #{taskTitle}
+	        AND TASK_CONTENT = #{taskContent}
+	        ORDER BY TASK_NO DESC
+	    )
+	    WHERE ROWNUM = 1
+	</select>
+	
 	<select id="getAttachment" resultMap="AttachmentResult">
 		select
 		       attachment_no

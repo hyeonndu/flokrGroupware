@@ -231,6 +231,28 @@
 		    <artifactId>jackson-databind</artifactId>
 		    <version>2.13.3</version> </dependency>
 		
+		<!-- Elasticsearch High Level REST Client -->
+		<dependency>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-high-level-client</artifactId>
+		    <version>7.17.12</version> <!-- ES 서버 버전에 맞춰서 조정 필요 -->
+		</dependency>
+		
+		<!-- Elasticsearch core dependencies -->
+		<dependency>
+		    <groupId>org.elasticsearch</groupId>
+		    <artifactId>elasticsearch</artifactId>
+		    <version>7.17.12</version>
+		</dependency>
+		
+		<!-- JSON 파싱용 (Jackson 필요 시) -->
+		<dependency>
+		    <groupId>com.fasterxml.jackson.core</groupId>
+		    <artifactId>jackson-databind</artifactId>
+		    <version>2.13.4</version>
+		</dependency>
+		
+		
 		
 	</dependencies>
 	
@@ -240,6 +262,7 @@
 			<resource>
 				<directory>src/main/resources</directory>
 					<includes>
+						<include>**/*.xml</include>
 						<include>**/*.properties</include>
 					</includes>
 			</resource>

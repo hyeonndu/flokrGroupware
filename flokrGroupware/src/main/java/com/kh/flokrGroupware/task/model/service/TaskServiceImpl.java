@@ -1,7 +1,15 @@
 package com.kh.flokrGroupware.task.model.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +27,9 @@ public class TaskServiceImpl implements TaskService {
 	
 	@Autowired
 	private SqlSessionTemplate sqlSession;
+	
+	@Autowired
+	private RestHighLevelClient elasticsearchClient;
 
 	@Override
 	public ArrayList<Task> taskList(int empNo) {
@@ -33,6 +44,48 @@ public class TaskServiceImpl implements TaskService {
 
 	    if (atmt != null) {
 	        result2 = tDao.insertAttachment(sqlSession, atmt);
+	    }
+	    
+	    // Elasticsearch에 인덱싱 (업무 등록 성공 시)
+	    if (result1 * result2 > 0) {
+	    	try {
+	    		Task insertedTask = tDao.selectRecentTask(sqlSession, task);
+	            
+	            if (insertedTask != null) {
+	                Map<String, Object> esDoc = new HashMap<>();
+	                esDoc.put("taskNo", insertedTask.getTaskNo());
+	                esDoc.put("taskTitle", insertedTask.getTaskTitle());
+	                esDoc.put("taskContent", insertedTask.getTaskContent());
+	                esDoc.put("category", insertedTask.getCategory());
+	                esDoc.put("taskStatus", insertedTask.getTaskStatus());
+	                
+	                String dueDate = insertedTask.getDueDate();
+	                if (dueDate != null && !dueDate.isEmpty()) {
+	                    // "2025-05-13 00:00:00.0" 형식에서 날짜 부분만 추출
+	                    if (dueDate.contains(" ")) {
+	                        dueDate = dueDate.split(" ")[0]; // "2025-05-13" 부분만 사용
+	                    }
+	                    esDoc.put("dueDate", dueDate);
+	                } else {
+	                    // 날짜가 null이면 필드 자체를 제외
+	                    esDoc.put("dueDate", null);
+	                }
+	                
+	                // 자동완성용 suggest 입력어 분리
+	                List<String> inputs = new ArrayList<>();
+	                inputs.add(insertedTask.getTaskTitle());
+	                inputs.addAll(Arrays.asList(insertedTask.getTaskTitle().split("\\s+")));
+	                esDoc.put("suggest", Map.of("input", inputs));
+	                
+	                // Elasticsearch에 인덱싱
+	                IndexRequest request = new IndexRequest("flokr_task_index").source(esDoc);
+	                elasticsearchClient.index(request, RequestOptions.DEFAULT);
+	            }
+
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            // 실패 시에도 DB 저장은 유지
+	        }
 	    }
 
 	    return result1 * result2;
@@ -70,5 +123,6 @@ public class TaskServiceImpl implements TaskService {
 	public int taskUpdate(Task task) {
 		return tDao.taskUpdate(sqlSession, task);
 	}
+	
 
 }

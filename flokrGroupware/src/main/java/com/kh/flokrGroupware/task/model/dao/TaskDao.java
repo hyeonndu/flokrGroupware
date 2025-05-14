@@ -42,5 +42,9 @@ public class TaskDao {
 	public int newAttachment(SqlSessionTemplate sqlSession, Attachment atmt) {
 		return sqlSession.insert("taskMapper.newAttachment", atmt);
 	}
+	
+	public Task selectRecentTask(SqlSessionTemplate sqlSession, Task task) {
+	    return sqlSession.selectOne("taskMapper.selectRecentTask", task);
+	}
 
 }

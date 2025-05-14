@@ -12,8 +12,8 @@
 				add_circle_outline
 			</span>
         </button>
-        <input type="hidden" name="emoji" id="selectedEmoji" value="" />
-        <input type="text" name="taskTitle" class="insert-title-input" placeholder="제목을 입력하세요" />
+        <input type="hidden" name="emoji" id="selectedEmoji" value=""/>
+        <input type="text" name="taskTitle" class="insert-title-input" placeholder="제목을 입력하세요" required/>
       </div>
       <div class="insert-header-actions">
         <button type="button" class="close-btn" onclick="backToList()">✕</button>
@@ -26,7 +26,7 @@
       <div class="insert-left-pane">
         <div class="insert-rowLeft">
           <label>업무 내용</label>
-          <textarea name="taskContent" class="insert-content-box" placeholder="업무 내용을 입력하세요"></textarea>
+          <textarea name="taskContent" class="insert-content-box" placeholder="업무 내용을 입력하세요" required></textarea>
         </div>
 
         <div class="insert-rowLeft">
@@ -42,16 +42,17 @@
         <div class="insert-rowRight">
           <label>카테고리</label>
           <select name="category" class="insert-dropdown">
-            <option>디자인</option>
-            <option>데이터</option>
-            <option>개발</option>
-            <option>기획</option>
+            <option value="">선택하세요</option>
+            <option value="디자인">디자인</option>
+            <option value="데이터">데이터</option>
+            <option value="개발">개발</option>
+            <option value="기획">기획</option>
           </select>
         </div>
 
         <div class="insert-rowRight">
           <label>마감일</label>
-          <input type="date" name="dueDate" class="insert-date-input" />
+          <input type="date" name="dueDate" class="insert-date-input" required/>
         </div>
 
         <div class="insert-rowRight">
