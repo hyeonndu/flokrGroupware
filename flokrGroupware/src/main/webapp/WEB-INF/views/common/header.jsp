@@ -44,7 +44,7 @@
                 <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span class="header-badge">1</span>
+                <span id="header-chat-badge" class="header-badge" style="display: none;">0</span>
             </div>
         </a>
 
@@ -241,7 +241,11 @@
 <c:if test="${not empty loginUser}">
     <input type="hidden" id="loginUserId" value="${loginUser.empId}" />
     <input type="hidden" id="userDeptNo" value="${loginUser.deptNo}" />
+    <input type="hidden" id="loginUserEmpNo" value="${loginUser.empNo}" />
 </c:if>
 
 <!-- 알림 스크립트 -->
 <script src="${pageContext.request.contextPath}/resources/js/notification.js"></script>
+
+<!-- 채팅 알림 뱃지 스크립트 -->
+<script src="${pageContext.request.contextPath}/resources/js/chatBadge.js"></script>

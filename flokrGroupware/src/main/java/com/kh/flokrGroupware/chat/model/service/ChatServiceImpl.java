@@ -14,6 +14,7 @@ import com.kh.flokrGroupware.chat.model.dao.ChatDao;
 import com.kh.flokrGroupware.chat.model.vo.ChatMessage;
 import com.kh.flokrGroupware.chat.model.vo.ChatRoom;
 import com.kh.flokrGroupware.chat.model.vo.ChatRoomMember;
+import com.kh.flokrGroupware.employee.model.dao.EmployeeDao;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 
 @Service
@@ -28,6 +29,9 @@ public class ChatServiceImpl implements ChatService{
 	@Autowired
 	private SimpMessagingTemplate messagingTemplate; // WebSocket 메시지 전송용 객체 주입
 
+    @Autowired
+    private EmployeeDao empDao; // EmployeeDao 주입
+	
 	@Override
 	@Transactional
 	public ChatRoom createChatRoom(String roomName, int creatorEmpNo) {
@@ -79,10 +83,11 @@ public class ChatServiceImpl implements ChatService{
 	}
 
 	@Override
-	public ChatRoom findChatRoomById(int roomNo) {
-		
-		return cDao.findRoomById(sqlSession, roomNo);
-		
+	public ChatRoom findChatRoomById(int roomNo, int loginUserEmpNo) { // loginUserEmpNo 인자 추가
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("roomNo", roomNo);
+	    params.put("loginUserEmpNo", loginUserEmpNo);
+	    return cDao.findRoomById(sqlSession, params); // 수정된 DAO 메소드 호출
 	}
 
 	@Override
@@ -99,45 +104,71 @@ public class ChatServiceImpl implements ChatService{
 	@Transactional
 	public void processAndSendMessage(ChatMessage message) {
 		
-		System.out.println("Service: Processing message for room " + message.getRoomNo());
-		
-		// 1. (선택 사항) 메시지 내용 보강 (서버 시간, 발신자 정보 등)
-		//    - 클라이언트가 보낸 시간 대신 서버 시간 사용 등
-		// message.setSendDate(new Date()); // ChatMessage의 sendDate 타입이 Date일 경우
+        System.out.println("Service: Processing message for room " + message.getRoomNo());
 
-		//    - 발신자 이름, 프로필 사진 경로 등 추가 (DB 조회 필요)
-		// Employee sender = employeeService.selectEmployee(message.getSenderEmpNo());
-		// if (sender != null) {
-		//     message.setSenderName(sender.getEmpName());
-		//     message.setSenderProfileImgPath(sender.getProfileImgPath());
-		// }
+        // 1. DB에 메시지 저장
+        int result = cDao.insertChatMessage(sqlSession, message); // DAO 호출
 
-		// 2. DB에 메시지 저장
-		try {
-			int result = cDao.insertChatMessage(sqlSession, message); // DAO 호출
-			System.out.println("Service: Message inserted to DB, result: " + result + ", messageNo: " + message.getMessageNo()); // messageNo 확인 (selectKey 사용 시)
+        if (result > 0) {
+            System.out.println("Service: Message inserted to DB, result: " + result + ", messageNo: " + message.getMessageNo());
 
-			if (result > 0) {
-				// 3. 해당 채팅방 구독자들에게 메시지 브로드캐스팅
-				String destination = "/topic/chat/room/" + message.getRoomNo();
-				System.out.println("Service: Broadcasting message to: " + destination);
+            // 2. 해당 채팅방 구독자들에게 메시지 브로드캐스팅 (방으로 메시지 내용 자체를 보냄)
+            String roomDestination = "/topic/chat/room/" + message.getRoomNo();
+            System.out.println("Service: Broadcasting message content to: " + roomDestination);
+            messagingTemplate.convertAndSend(roomDestination, message); // message 객체를 JSON으로 변환하여 전송
 
-				// messagingTemplate을 사용하여 메시지 전송
-				// Spring이 message 객체를 자동으로 JSON으로 변환하여 전송
-				messagingTemplate.convertAndSend(destination, message); // 보강된 message 객체 전송
+            // ★ 3. 해당 채팅방 멤버들에게 '총 안 읽은 채팅 수' 업데이트 알림 ★
+            // 메시지 수신자(본인 제외 모든 멤버)에게 새로운 총 안 읽은 수를 알려야 합니다.
 
-			} else {
-				System.err.println("Service: Failed to insert message into DB.");
-				// DB 저장 실패 시 브로드캐스팅하지 않음
-			}
-		} catch (Exception e) {
-			System.err.println("Service: Error during processAndSendMessage");
-			e.printStackTrace();
-			// 예외 발생 시 @Transactional에 의해 롤백될 수 있음 (설정에 따라 다름)
-			// 여기서 예외를 다시 던져서 Controller에서도 알 수 있게 할 수도 있음
-			// throw new RuntimeException("Error processing chat message", e);
-		}
-		
+            // 3-1. 해당 채팅방 멤버들의 empNo 목록 조회 (자신 제외)
+            // TODO: ChatDao에 특정 방 멤버 empNo 목록 조회 쿼리 및 메소드 추가 필요 (자신 제외)
+            // 임시로 모든 멤버 조회 쿼리를 사용하거나, 메시지 VO에 수신자 목록을 포함시키는 방식 고려
+            // 가장 정확한 방법은 RoomMember 테이블에서 해당 방 멤버를 조회하는 것입니다.
+             ArrayList<Integer> memberEmpNos = cDao.getChatRoomMemberEmpNos(sqlSession, message.getRoomNo());
+
+            if (memberEmpNos != null) {
+                System.out.println("Service: 방 멤버 empNos 조회됨: " + memberEmpNos);
+                for (Integer memberEmpNo : memberEmpNos) {
+                    // 메시지를 보낸 본인에게는 안 읽은 수 알림을 보내지 않음
+                    if (memberEmpNo != message.getSenderEmpNo()) {
+                        try {
+                            // 3-2. 각 멤버의 갱신된 '총 안 읽은 채팅 수' 계산
+                            int newTotalUnreadCount = getTotalUnreadChatCountForUser(memberEmpNo); // 위에서 추가한 서비스 메소드 호출
+
+                            // 3-3. 멤버의 empId 조회 (WebSocket user destination 사용 위함)
+                            // TODO: EmployeeDao에 empNo로 empId 조회하는 쿼리/메소드 추가 필요
+                            Employee member = empDao.selectEmployee(memberEmpNo); // 기존 selectEmployee 활용 가능
+                            String memberEmpId = (member != null) ? member.getEmpId() : null;
+
+                            if (memberEmpId != null) {
+                                // 3-4. 해당 멤버의 개인 큐로 '총 안 읽은 채팅 수' 메시지 전송
+                                String userDestination = "/user/" + memberEmpId + "/queue/chat.unread.total";
+                                System.out.println("Service: '총 안 읽은 수' 알림 전송: 사용자 " + memberEmpId + ", 개수: " + newTotalUnreadCount + ", 토픽: " + userDestination);
+                                messagingTemplate.convertAndSendToUser(
+                                        memberEmpId,
+                                        "/queue/chat.unread.total", // User destination은 /user/{empId}를 제외한 나머지 경로
+                                        String.valueOf(newTotalUnreadCount) // 숫자를 문자열로 변환하여 전송
+                                );
+                            } else {
+                                System.err.println("Service: 멤버 empId를 찾을 수 없어 총 안 읽은 수 알림 전송 실패: empNo=" + memberEmpNo);
+                            }
+
+                        } catch (Exception e) {
+                            System.err.println("Service: 멤버 " + memberEmpNo + " 에게 총 안 읽은 수 알림 전송 중 오류 발생");
+                            e.printStackTrace();
+                            // 특정 멤버 전송 실패가 전체 트랜잭션에 영향을 주지 않도록 여기서 예외를 잡습니다.
+                        }
+                    }
+                }
+            } else {
+                System.err.println("Service: 메시지를 보낸 방의 멤버 목록을 가져오지 못했습니다. 안 읽은 수 알림 전송 불가.");
+            }
+
+
+        } else {
+            System.err.println("Service: Failed to insert message into DB.");
+            // DB 저장 실패 시 브로드캐스팅하지 않음
+        }
 		
 		
 	}
@@ -153,9 +184,44 @@ public class ChatServiceImpl implements ChatService{
 	}
 
 	@Override
-	public int leaveChatRoom(int roomNo, int empNo) {
-		return 0;
-	}
+    @Transactional // 여러 DB 작업을 하므로 트랜잭션 처리
+    public boolean leaveChatRoom(int roomNo, int empNo) {
+        // 1. 사용자가 해당 채팅방 멤버인지 확인 (선택사항, DAO에서 처리 가능)
+        //    이미 isUserInRoom 메소드가 있다면 활용 가능
+        if (!isUserInRoom(roomNo, empNo)) {
+            System.out.println("Service: 사용자가 방 멤버가 아님 (roomNo: " + roomNo + ", empNo: " + empNo + ")");
+            return false; // 멤버가 아니면 실패 처리
+        }
+
+        // 2. 현재 채팅방의 활성 멤버 수 확인
+        int activeMemberCount = cDao.getActiveChatRoomMemberCount(sqlSession, roomNo);
+        System.out.println("Service: 채팅방 (roomNo: " + roomNo + ") 현재 활성 멤버 수: " + activeMemberCount);
+
+
+        // 3. CHAT_ROOM_MEMBER 테이블에서 해당 사용자의 STATUS를 'N'으로 변경
+        int memberUpdateResult = cDao.updateChatRoomMemberStatus(sqlSession, roomNo, empNo, "N");
+
+        if (memberUpdateResult > 0) {
+            // 4. 만약 나가는 사용자가 마지막 1명이었다면 (즉, 나가기 전 멤버 수가 1명이었다면)
+            if (activeMemberCount == 1) {
+                // CHAT_ROOM 테이블의 해당 채팅방 STATUS를 'N'으로 변경
+                int roomUpdateResult = cDao.updateChatRoomStatus(sqlSession, roomNo, "N");
+                if (roomUpdateResult > 0) {
+                    System.out.println("Service: 채팅방 (roomNo: " + roomNo + ") 상태를 'N'으로 변경 (마지막 멤버 나감)");
+                    return true;
+                } else {
+                    System.err.println("Service: 채팅방 상태 변경 실패 (roomNo: " + roomNo + ")");
+                    // 트랜잭션 롤백을 위해 예외 발생 또는 false 반환 후 Controller에서 처리
+                    throw new RuntimeException("채팅방 상태 변경에 실패했습니다."); 
+                }
+            }
+            System.out.println("Service: 채팅방 멤버 (empNo: " + empNo + ") 상태를 'N'으로 변경 (roomNo: " + roomNo + ")");
+            return true; // 멤버 상태만 변경 성공
+        } else {
+            System.err.println("Service: 채팅방 멤버 상태 변경 실패 (roomNo: " + roomNo + ", empNo: " + empNo + ")");
+            return false; // 멤버 상태 변경 실패
+        }
+    }
 
 	@Override
 	public ArrayList<Employee> findChatRoomMembers(int roomNo) {
@@ -294,6 +360,11 @@ public class ChatServiceImpl implements ChatService{
         // --- ChatDAO의 updateLastReadMessageNo 메소드 호출 ---
         // SqlSessionTemplate와 파라미터 맵을 DAO 메소드에 전달합니다.
         cDao.updateLastReadMessageNo(sqlSession, params); // <-- 여기 수정
+	}
+
+	@Override
+	public int getTotalUnreadChatCountForUser(int empNo) {
+		return cDao.getTotalUnreadChatCountForUser(sqlSession, empNo);
 	}
 
 	
