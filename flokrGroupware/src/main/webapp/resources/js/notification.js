@@ -604,6 +604,16 @@ function getNotificationUrl(refType, refNo) {
             return contextPath + '/task/detail/' + refNo;
         case 'schedule':
             return contextPath + '/schedule/detail/' + refNo;
+        case 'facility':
+            // 관리자인 경우 관리자 페이지로, 일반 사용자는 예약 페이지로 이동
+            const isAdmin = $('#loginUserIsAdmin').val() === 'Y';
+            if (isAdmin) {
+                // 관리자는 예약 관리 탭으로 이동
+                return contextPath + '/adminFacility?tab=reservationList';
+            } else {
+                // 일반 사용자는 내 예약 탭으로 이동
+                return contextPath + '/facilityReservation?tab=myReservations';
+            }
         default:
             return contextPath + '/notificationAll';
     }

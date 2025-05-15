@@ -49,7 +49,7 @@ public interface ChatService {
      * @param roomNo 채팅방 번호
      * @return 채팅방 상세 정보
      */
-    ChatRoom findChatRoomById(int roomNo);
+    ChatRoom findChatRoomById(int roomNo, int loginUserEmpNo);
 
     /**
      * 채팅방 이름 변경 (선택 사항)
@@ -103,9 +103,9 @@ public interface ChatService {
      * 사용자가 채팅방 나가기
      * @param roomNo 나갈 채팅방 번호
      * @param empNo 나가는 직원 번호
-     * @return 성공 여부 (int)
+     * @return 성공 여부 (boolean)
      */
-    int leaveChatRoom(int roomNo, int empNo);
+    boolean leaveChatRoom(int roomNo, int empNo);
 
     /**
      * 특정 채팅방의 참여자 목록 조회
@@ -138,4 +138,13 @@ public interface ChatService {
      * @return 업데이트된 레코드 수
      */
     public void markMessagesAsRead(int roomNo, int userEmpNo);
+    
+    /**
+     * 특정 사용자의 총 안 읽은 채팅 수를 조회
+     * @param empNo 사용자 직원 번호
+     * @return 총 안 읽은 메시지 수
+     */
+    int getTotalUnreadChatCountForUser(int empNo);
+    
+    
 }

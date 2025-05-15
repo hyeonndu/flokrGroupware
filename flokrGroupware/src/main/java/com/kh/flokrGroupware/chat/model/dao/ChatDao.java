@@ -36,9 +36,11 @@ public class ChatDao {
         return (count != null) ? count.intValue() : 0;
 	}
 	
-	public ChatRoom findRoomById(SqlSessionTemplate sqlSession, int roomNo) {
-		return sqlSession.selectOne("chatMapper.findRoomById", roomNo);
-	}
+    public ChatRoom findRoomById(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+        // selectOne 메소드는 단일 객체를 반환할 때 사용합니다.
+        // 파라미터로 Map 객체를 전달합니다.
+        return sqlSession.selectOne("chatMapper.findRoomById", params);
+    }
 	
 	public ArrayList<ChatMessage> findMessagesByRoomId(SqlSessionTemplate sqlSession, int roomNo) {
 		
@@ -72,5 +74,82 @@ public class ChatDao {
 
          return sqlSession.update("chatMapper.updateLastReadMessageNo", params);
      }
+     
+     /**
+      * 특정 사용자의 총 안 읽은 채팅 수를 조회
+      * @param sqlSession
+      * @param empNo 사용자 직원 번호
+      * @return 총 안 읽은 메시지 수
+      */
+     public int getTotalUnreadChatCountForUser(SqlSessionTemplate sqlSession, int empNo) {
+         return sqlSession.selectOne("chatMapper.getTotalUnreadChatCountForUser", empNo);
+     }
+     
+     /**
+      * 특정 채팅방의 모든 활성 멤버의 직원 번호(empNo) 목록을 조회합니다.
+      * @param roomNo 채팅방 번호
+      * @return 멤버 empNo 목록
+      */
+     public ArrayList<Integer> getChatRoomMemberEmpNos(SqlSessionTemplate sqlSession, int roomNo) {
+         // chatMapper.getChatRoomMemberEmpNos 쿼리를 실행합니다.
+         // 결과 타입이 단일 Integer 목록이므로 resultType="_int"를 사용하고,
+         // selectList는 해당 타입의 List를 반환합니다.
+         return (ArrayList)sqlSession.selectList("chatMapper.getChatRoomMemberEmpNos", roomNo);
+     }
+     
+     /**
+      * 특정 채팅방의 활성 멤버 수를 조회합니다.
+      * @param sqlSession SqlSessionTemplate 객체
+      * @param roomNo 조회할 채팅방 번호
+      * @return 활성 멤버 수
+      */
+     public int getActiveChatRoomMemberCount(SqlSessionTemplate sqlSession, int roomNo) {
+         Integer count = sqlSession.selectOne("chatMapper.getActiveChatRoomMemberCount", roomNo);
+         return (count != null) ? count.intValue() : 0;
+     }
+
+     /**
+      * 특정 채팅방 멤버의 상태를 업데이트합니다.
+      * @param sqlSession SqlSessionTemplate 객체
+      * @param roomNo 채팅방 번호
+      * @param empNo 직원 번호
+      * @param status 변경할 상태 ('Y' 또는 'N')
+      * @return 업데이트된 행의 수
+      */
+     public int updateChatRoomMemberStatus(SqlSessionTemplate sqlSession, int roomNo, int empNo, String status) {
+         Map<String, Object> params = new HashMap<>();
+         params.put("roomNo", roomNo);
+         params.put("empNo", empNo);
+         params.put("status", status);
+         return sqlSession.update("chatMapper.updateChatRoomMemberStatus", params);
+     }
+
+     /**
+      * 특정 채팅방의 상태를 업데이트합니다.
+      * @param sqlSession SqlSessionTemplate 객체
+      * @param roomNo 채팅방 번호
+      * @param status 변경할 상태 ('Y' 또는 'N')
+      * @return 업데이트된 행의 수
+      */
+     public int updateChatRoomStatus(SqlSessionTemplate sqlSession, int roomNo, String status) {
+         Map<String, Object> params = new HashMap<>();
+         params.put("roomNo", roomNo);
+         params.put("status", status);
+         return sqlSession.update("chatMapper.updateChatRoomStatus", params);
+     }
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
 }

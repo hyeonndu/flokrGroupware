@@ -56,6 +56,19 @@ public class ChatController {
             return mv;
         }
         
+        // --- 이 부분에 로그 추가 ---
+        System.out.println("--- ChatController에서 loginUser 디버깅 정보 ---");
+        System.out.println("loginUser 객체 자체: " + loginUser); // 객체 전체 정보 출력 (롬복 @ToString 사용 시)
+        if (loginUser != null) {
+            System.out.println("  사번 (EmpNo): " + loginUser.getEmpNo());
+            System.out.println("  사원 ID (EmpId): " + loginUser.getEmpId());
+            System.out.println("  이름 (EmpName): " + loginUser.getEmpName());
+            System.out.println("  관리자 여부 (IsAdmin): " + loginUser.getIsAdmin());
+            // Employee 객체에 다른 중요한 필드가 있다면 여기에 추가하여 확인
+        }
+        System.out.println("---------------------------------------------");
+        // 
+        
         // 3. 로그인한 사용자의 empNo 가져오기
         int empNo = loginUser.getEmpNo();
 
@@ -66,7 +79,8 @@ public class ChatController {
         
 
         // 5. 조회된 목록을 ModelAndView 에 담기
-        mv.addObject("chatRoomList", chatRoomList); // JSTL 등에서 사용할 이름 지정
+        mv.addObject("chatRoomList", chatRoomList);
+        mv.addObject("loginUser", loginUser); // loginUser 객체 전체를 넘김
 
         // 6. 보여줄 View(JSP) 경로 설정
         mv.setViewName("chat/chatList"); // 예시 경로: /WEB-INF/views/chat/chatListView.jsp
@@ -108,13 +122,13 @@ public class ChatController {
 	         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
 	    }
 
-		
+	    int loginUserEmpNo = loginUser.getEmpNo(); // 로그인한 사용자의 empNo 가져오기
 		
 		try {
             // 1. 채팅방 정보 조회 (헤더 업데이트용)
             //    findChatRoomById는 방 정보 외에 상대방 정보 등 필요한 값을 같이 반환하도록 수정될 수 있음
 			System.out.println("ChatController: chatService.findChatRoomById 호출 전");
-			ChatRoom roomInfo = cService.findChatRoomById(roomNo);
+			ChatRoom roomInfo = cService.findChatRoomById(roomNo, loginUserEmpNo);
 			System.out.println("ChatController: chatService.findChatRoomById 호출 후, roomInfo: " + roomInfo); // 추가 (roomInfo가 null인지 확인)
 			
             // 2. 메시지 목록 조회
@@ -303,7 +317,7 @@ public class ChatController {
      */
     @PostMapping("/chat/markAsRead")
     @ResponseBody
-    public ResponseEntity<String> markMessagesAsRead(@RequestParam("roomNo") int roomNo, @RequestParam("userId") int userId) {
+    public ResponseEntity<Map<String, Object>> markMessagesAsRead(@RequestParam("roomNo") int roomNo, HttpSession session) {
         // @RequestParam("roomNo")는 요청 파라미터 중 이름이 "roomNo"인 값을 int roomNo 변수에 바인딩합니다.
         // @RequestParam("userId")는 요청 파라미터 중 이름이 "userId"인 값을 int userId 변수에 바인딩합니다.
 
@@ -311,28 +325,129 @@ public class ChatController {
         // 클라이언트에서 userId 값을 그대로 받는 것은 보안에 취약합니다.
         // 요청을 보낸 사용자가 누구인지 서버에서 직접 확인해야 합니다.
         // 예를 들어, 세션에서 로그인 사용자 정보를 가져오거나, Spring Security Context 등에서 인증된 사용자 ID를 가져와야 합니다.
-        int loggedInUserEmpNo;
-        // TODO: 실제 구현에서는 아래 라인을 삭제하고, 세션 또는 보안 컨텍스트에서 사용자 ID를 가져오는 코드를 작성하세요.
-        loggedInUserEmpNo = userId; // 예시 목적으로 클라이언트 값을 사용 (실제 서비스에서는 절대 이렇게 하면 안 됩니다!)
+        // --- 메소드 내부 ---
+        // 세션에서 로그인 사용자 정보를 가져와 empNo를 얻는 로직이 필요합니다.
+        Employee loginUser = (Employee) session.getAttribute("loginUser");
 
+        if (loginUser == null) {
+            // 로그인 정보가 없으면 처리 거부
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "로그인이 필요한 서비스입니다.");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED); // 401 Unauthorized 또는 400 Bad Request
+        }
+
+        int loggedInUserEmpNo = loginUser.getEmpNo(); // 세션에서 안전하게 가져온 사용자 번호
+
+        
+        
         try {
-            // 서비스 레이어의 메소드를 호출하여 DB 업데이트를 수행합니다.
-            // 이 메소드 안에서 ChatDAO의 updateLastReadMessageNo 메소드를 호출합니다.
-            cService.markMessagesAsRead(roomNo, loggedInUserEmpNo); // 보안 강화된 userEmpNo 사용
+            // 서비스 호출: 메시지 읽음 처리
+            cService.markMessagesAsRead(roomNo, loggedInUserEmpNo);
 
-            // DB 업데이트 성공 시 클라이언트에게 성공 응답을 보냅니다.
-            // ResponseEntity.ok()는 HTTP 상태 코드 200 (OK)과 함께 본문을 보냅니다.
-            return ResponseEntity.ok("SUCCESS"); // 클라이언트는 이 "SUCCESS" 문자열을 받게 됩니다.
+            // 갱신된 총 안 읽은 수 조회 (헤더 배지 업데이트용)
+            // 이 부분은 이전 논의에서 추가하기로 했던 로직입니다.
+            int newTotalUnreadCount = cService.getTotalUnreadChatCountForUser(loggedInUserEmpNo); // ChatService/DAO/Mapper 구현 필요
+
+            // 성공 응답 (JSON 형태로 클라이언트에 반환)
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "메시지가 읽음 처리되었습니다.");
+            response.put("totalUnreadCount", newTotalUnreadCount); // 갱신된 총 개수 포함
+
+            return ResponseEntity.ok(response); // 200 OK 상태와 함께 response Map을 JSON으로 반환
+
 
         } catch (Exception e) {
-            // DB 업데이트 중 오류 발생 시 오류 응답을 보냅니다.
-            // logger.error("채팅방 {} 메시지 읽음 처리 중 오류 발생 (사용자: {})", roomNo, loggedInUserEmpNo, e); // 오류 로그 출력
-
+            // 오류 발생 시 500 응답 (JSON 형태로 클라이언트에 반환)
+            e.printStackTrace(); // 서버 로그에 예외 출력
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "메시지 읽음 처리 중 오류 발생: " + e.getMessage());
             // HTTP 상태 코드 500 (Internal Server Error)과 함께 오류 메시지 응답
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("FAILED"); // 클라이언트는 HTTP 500 상태 코드와 "FAILED" 문자열을 받게 됩니다.
+        	return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 	
 
+    /**
+     * 특정 사용자의 총 안 읽은 채팅 수를 조회하는 REST API
+     * 페이지 로드 시 또는 다른 페이지에서 채팅 아이콘 배지 업데이트에 사용
+     * @param session
+     * @return JSON 응답 ({ "totalUnreadCount": 5 })
+     */
+    @RequestMapping(value = "/chat/unreadCount", method = RequestMethod.GET)
+    @ResponseBody // JSON/Plain Text 응답을 위해 필요
+    public ResponseEntity<Map<String, Object>> getUnreadChatCount(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        Employee loginUser = (Employee) session.getAttribute("loginUser");
+
+        if (loginUser == null) {
+            System.out.println("[ERROR] ChatController: 로그인 사용자 정보 없음! 안 읽은 채팅 수 조회 거부.");
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            // response.put("totalUnreadCount", 0); // 로그인 안 했으면 0
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED); // 401 Unauthorized
+        }
+
+        int empNo = loginUser.getEmpNo();
+        try {
+            // 서비스 메소드 호출하여 총 안 읽은 수 조회
+            int totalUnreadCount = cService.getTotalUnreadChatCountForUser(empNo);
+
+            response.put("success", true);
+            response.put("totalUnreadCount", totalUnreadCount);
+            System.out.println("ChatController: 안 읽은 채팅 수 조회 성공, 사용자: " + empNo + ", 개수: " + totalUnreadCount);
+            return ResponseEntity.ok(response); // 200 OK
+        } catch (Exception e) {
+            System.err.println("[ERROR] ChatController: 안 읽은 채팅 수 조회 중 오류 발생!");
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "안 읽은 채팅 수 조회 중 오류 발생: " + e.getMessage());
+            response.put("totalUnreadCount", 0); // 오류 발생 시 0
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR); // 500 Internal Server Error
+        }
+    }
+    
+    /**
+     * 채팅방 나가기 요청 처리
+     * @param roomNo 나갈 채팅방 번호
+     * @param session 현재 사용자 정보를 얻기 위한 세션 객체
+     * @return 처리 결과 (JSON 응답)
+     */
+    @PostMapping("/chat/leaveRoom") // AJAX 요청을 받을 경로
+    @ResponseBody // JSON 응답을 위해 사용
+    public ResponseEntity<Map<String, Object>> leaveChatRoom(@RequestParam("roomNo") int roomNo, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        Employee loginUser = (Employee) session.getAttribute("loginUser");
+
+        if (loginUser == null) {
+            response.put("success", false);
+            response.put("message", "로그인이 필요한 서비스입니다.");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        int empNo = loginUser.getEmpNo();
+
+        try {
+            boolean success = cService.leaveChatRoom(roomNo, empNo); // 서비스 호출
+            if (success) {
+                response.put("success", true);
+                response.put("message", "채팅방에서 나갔습니다.");
+                // TODO: 채팅방 나간 후 필요한 추가 알림 (예: 다른 멤버에게 알림)이 있다면 여기서 처리
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "채팅방 나가기에 실패했습니다. 해당 채팅방의 멤버가 아니거나 오류가 발생했습니다.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "채팅방 나가기 처리 중 오류가 발생했습니다: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
 
 }

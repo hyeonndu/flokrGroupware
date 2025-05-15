@@ -262,18 +262,6 @@
   gap: 5px; /* 점/아이콘과 텍스트 간격 */
 }
 
-/* 온라인 상태 점 스타일 */
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #ccc; /* 기본(오프라인) 색상 */
-}
-.status-dot.online {
-  background-color: #28a745; /* 온라인 색상 */
-}
-
 /* 단체 채팅 인원수 아이콘 스타일 (Font Awesome 사용 시) */
 .chat-header-subtitle i {
   font-size: 11px; /* 아이콘 크기 */
@@ -494,11 +482,11 @@
   max-width: 500px;
 }
 
-#createChatModal .modal-content {
+#createChatModal .modal-content, #leaveChatRoomModal .modal-content {
   border-radius: 8px;
 }
 
-#createChatModal .modal-header {
+#createChatModal .modal-header, #leaveChatRoomModal .modal-header {
   border-bottom: 1px solid #dee2e6;
   background-color: #f8f9fa;
 }
@@ -652,4 +640,52 @@
   min-width: 20px; /* 숫자가 하나일 때 최소 너비 */
   text-align: center;
   z-index: 1; /* 다른 요소 위에 표시되도록 (필요시) */
+}
+
+.chat-main-header .header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e0e0e0; /* 기본 배경 (이미지 로드 전) */
+  margin-right: 10px;
+  display: flex; /* 아이콘 중앙 정렬 위해 */
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* 이미지가 div를 벗어나지 않도록 */
+}
+
+.chat-main-header .header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chat-main-header .header-avatar .material-icons { /* 아이콘 스타일 */
+  font-size: 24px; /* 아이콘 크기 */
+  color: #a0a0a0;  /* 아이콘 색상 */
+}
+
+
+.chat-header-info {
+  /* 기존 스타일 유지 */
+}
+
+.chat-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+
+}
+
+.chat-header-subtitle {
+  font-size: 12px;
+  color: #888;
+  display: flex; /* 아이콘과 텍스트 가로 정렬 */
+  align-items: center; /* 세로 중앙 정렬 */
+  gap: 4px; /* 아이콘과 텍스트 사이 간격 */
+  margin-top: 2px; /* 제목과의 간격 */
+}
+
+.chat-header-subtitle i.material-icons {
+  font-size: 14px; /* 아이콘 크기 */
 }
