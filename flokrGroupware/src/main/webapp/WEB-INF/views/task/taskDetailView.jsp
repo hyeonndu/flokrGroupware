@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <div class="detail-wrapper">
   <!-- 상단 헤더 -->
@@ -84,14 +85,53 @@
       </div>
 
       <div class="rowRight">
-        <label>담당자</label>
-        <div class="assignees">
-          <div class="avatar">👤</div>
-          <div class="avatar red">👩</div>
-          <div class="avatar gray">A</div>
-          <div class="avatar empty">+3</div>
-        </div>
-      </div>
+		  <label>담당자</label>
+		  <div class="detail-assignees">
+		    <c:choose>
+		      <c:when test="${not empty assignees}">
+		        <!-- 처음 3명만 표시 -->
+		        <c:forEach var="assignee" items="${assignees}" varStatus="status">
+		          <c:if test="${status.index < 3}">
+		            <!-- 랜덤 색상 클래스 -->
+		            <c:set var="colorClasses" value="red,blue,green,purple,orange,teal" />
+		            <c:set var="colorArray" value="${fn:split(colorClasses, ',')}" />
+		            <c:set var="randomColorIndex" value="${status.index % fn:length(colorArray)}" />
+		            <c:set var="randomColor" value="${colorArray[randomColorIndex]}" />
+		            
+		            <!-- 이름 첫 글자 가져오기 -->
+		            <c:set var="initial" value="${fn:substring(assignee.empName, 0, 1)}" />
+		            
+		            <div class="detail-avatar ${randomColor}" title="${assignee.empName}" data-emp-name="${assignee.empName}" data-emp-no="${assignee.assigneeEmpNo}" data-phone="${assignee.phone}" data-email="${assignee.email}" data-dept="${assignee.deptName}" data-position="${assignee.positionName}">
+		              ${initial}
+		              
+		              <!-- 사원 정보 카드 (기본적으로 숨겨짐) -->
+		              <div class="employee-card">
+		                <div class="card-avatar">${initial}</div>
+		                <div class="card-info">
+		                  <div class="emp-name">${assignee.empName}</div>
+		                  <div class="emp-position">${assignee.deptName} (${assignee.positionName})</div>
+		                  <div class="emp-phone">${assignee.phone}</div>
+		                  <div class="emp-email">${assignee.email}</div>
+		                </div>
+		              </div>
+		            </div>
+		          </c:if>
+		        </c:forEach>
+		        
+		        <!-- 3명 초과인 경우 +N 표시 -->
+		        <c:if test="${fn:length(assignees) > 3}">
+		          <div class="detail-avatar empty" title="추가 담당자">
+		            +${fn:length(assignees) - 3}
+		          </div>
+		        </c:if>
+		      </c:when>
+		      <c:otherwise>
+		        <!-- 담당자가 없는 경우 -->
+		        <div class="detail-avatar empty">없음</div>
+		      </c:otherwise>
+		    </c:choose>
+		  </div>
+		</div>
     </div>
   </div>
 

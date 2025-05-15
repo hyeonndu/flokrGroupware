@@ -94,16 +94,6 @@
           <input type="date" name="dueDate" class="insert-date-input" value="${ task.dueDate }"/>
         </div>
 
-        <div class="update-rowRight-end">
-          <label>담당자</label>
-          <div class="assignees">
-            <div class="avatar">👤</div>
-            <div class="avatar red">👩</div>
-            <div class="avatar gray">A</div>
-            <div class="avatar empty">+3</div>
-          </div>
-        </div>
-
         <div class="insert-btn-group">
           <button type="button" onclick="submitUpdate()" class="red-btn">등록</button>
         </div>

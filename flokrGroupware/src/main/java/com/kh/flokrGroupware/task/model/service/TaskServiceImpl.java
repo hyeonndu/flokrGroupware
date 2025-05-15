@@ -16,8 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.flokrGroupware.attachment.model.vo.Attachment;
+import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.task.model.dao.TaskDao;
 import com.kh.flokrGroupware.task.model.vo.Task;
+import com.kh.flokrGroupware.task.model.vo.TaskAssignee;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -39,15 +41,46 @@ public class TaskServiceImpl implements TaskService {
 	@Override
 	@Transactional
 	public int taskInsert(Task task, Attachment atmt) {
+	    // 담당자 목록이 null인 새 메소드 호출
+	    return taskInsert(task, atmt, null);
+	}
+	
+	@Override
+	@Transactional
+	public int taskInsert(Task task, Attachment atmt, List<Integer> assigneeList) {
+	    // 업무 먼저 등록
 	    int result1 = tDao.taskInsert(sqlSession, task);
 	    int result2 = 1;
+	    int result3 = 1;
 
+	    // 첨부파일이 있으면 등록
 	    if (atmt != null) {
 	        result2 = tDao.insertAttachment(sqlSession, atmt);
 	    }
 	    
-	    // Elasticsearch에 인덱싱 (업무 등록 성공 시)
-	    if (result1 * result2 > 0) {
+	    // 담당자가 있으면 등록
+	    if (assigneeList != null && !assigneeList.isEmpty() && result1 > 0) {
+	        Task insertedTask = tDao.selectRecentTask(sqlSession, task);
+	        if (insertedTask != null) {
+	            int taskNo = insertedTask.getTaskNo();
+	            for (Integer assigneeEmpNo : assigneeList) {
+	                TaskAssignee assignee = new TaskAssignee();
+	                assignee.setTaskNo(taskNo);
+	                assignee.setAssigneeEmpNo(assigneeEmpNo);
+	                
+	                int assignResult = tDao.insertTaskAssignee(sqlSession, assignee);
+	                if (assignResult <= 0) {
+	                    result3 = 0;
+	                    break;
+	                }
+	            }
+	        } else {
+	            result3 = 0;
+	        }
+	    }
+	    
+	    // Elasticsearch 인덱싱 (기존 코드)
+	    if (result1 * result2 * result3 > 0) {
 	    	try {
 	    		Task insertedTask = tDao.selectRecentTask(sqlSession, task);
 	            
@@ -58,6 +91,8 @@ public class TaskServiceImpl implements TaskService {
 	                esDoc.put("taskContent", insertedTask.getTaskContent());
 	                esDoc.put("category", insertedTask.getCategory());
 	                esDoc.put("taskStatus", insertedTask.getTaskStatus());
+	                esDoc.put("emoji", task.getEmoji());
+
 	                
 	                String dueDate = insertedTask.getDueDate();
 	                if (dueDate != null && !dueDate.isEmpty()) {
@@ -88,9 +123,8 @@ public class TaskServiceImpl implements TaskService {
 	        }
 	    }
 
-	    return result1 * result2;
+	    return result1 * result2 * result3;
 	}
-
 
 	@Override
 	public Task taskDetail(int taskNo) {
@@ -123,6 +157,15 @@ public class TaskServiceImpl implements TaskService {
 	public int taskUpdate(Task task) {
 		return tDao.taskUpdate(sqlSession, task);
 	}
+
+	@Override
+	public List<Employee> getAllEmployees(int empNo) {
+		return tDao.getAllEmployees(sqlSession, empNo);
+	}
 	
+	@Override
+	public List<TaskAssignee> getTaskAssignees(int taskNo) {
+		return tDao.getTaskAssignees(sqlSession, taskNo);
+	}
 
 }
