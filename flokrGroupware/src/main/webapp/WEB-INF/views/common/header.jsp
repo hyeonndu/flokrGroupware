@@ -153,7 +153,7 @@
                     </svg>
                     사용자 정보 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/facility" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/adminFacility" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="3" y1="9" x2="21" y2="9"></line>
