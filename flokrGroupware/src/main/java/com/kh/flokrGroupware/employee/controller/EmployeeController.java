@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.kh.flokrGroupware.common.model.vo.PageInfo;
 import com.kh.flokrGroupware.common.template.Pagination;
 import com.kh.flokrGroupware.employee.model.service.EmployeeService;
+import com.kh.flokrGroupware.employee.model.vo.Department;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 
 // SLF4J 사용
@@ -617,6 +620,30 @@ public class EmployeeController {
             return "redirect:/";
         }
         
+        // 통계 데이터 조회
+        try {
+            // 총 직원 수
+            int totalEmployeeCount = employeeService.getEmployeeCount(new Employee());
+            
+            // 부서 수
+            ArrayList<Department> departments = employeeService.selectDepartmentList();
+            int departmentCount = departments.size();
+            
+            // 현재 접속자 수 - 세션 관리자를 통해 조회하거나 임시 데이터 사용
+            int activeUserCount = 3; // 임시 데이터, 실제로는 sessionManager.getActiveUsers().size();
+            
+            // 공지사항 수 - 공지사항 서비스를 통해 조회하거나 임시 데이터 사용
+            int noticeCount = 5; // 임시 데이터, 실제로는 noticeService.getNoticeCount();
+            
+            // 모델에 데이터 추가
+            model.addAttribute("totalEmployeeCount", totalEmployeeCount);
+            model.addAttribute("departmentCount", departmentCount);
+            model.addAttribute("activeUserCount", activeUserCount);
+            model.addAttribute("noticeCount", noticeCount);
+        } catch (Exception e) {
+            logger.error("관리자 대시보드 통계 데이터 조회 중 오류 발생: " + e.getMessage(), e);
+        }
+        
         logger.info("관리자 메인 페이지 접근 - 관리자: " + loginUser.getEmpId());
         return "adminMain";
     }
@@ -674,6 +701,39 @@ public class EmployeeController {
         logger.info("직원 검색 결과 - 키워드: " + keyword + ", 결과 수: " + results.size());
         
         return results;
+    }
+    
+    
+    /**
+     * 모든 활성 상태의 직원 목록을 부서 및 직급 정보와 함께 JSON 형태로 반환
+     * 채팅방 생성 모달에서 사용될 예정
+     * @param session 현재 사용자 정보를 얻기 위한 세션 객체 (로그인 체크용)
+     * @return 부서 및 직급 정보가 포함된 직원 목록 (JSON)
+     */
+    @RequestMapping("employeesByDepartment")
+    @ResponseBody
+    public ResponseEntity<ArrayList<Employee>> getEmployeesByDepartment(HttpSession session) {
+    	
+        // 로그인 여부 체크
+        Employee loginUser = (Employee)session.getAttribute("loginUser");
+        if(loginUser == null) {
+            // 로그인되지 않은 경우 401 Unauthorized 응답
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            // Service 호출하여 모든 활성 직원 목록 조회
+            ArrayList<Employee> employeeList = employeeService.findActiveEmployeesWithDeptAndPosition();
+
+            // 성공 시 직원 목록과 함께 200 OK 응답 반환
+            return ResponseEntity.ok(employeeList);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 오류 발생 시 500 Internal Server Error 응답
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    	
     }
 
 }

@@ -40,7 +40,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 클라이언트가 WebSocket 연결을 시작할 주소
         registry.addEndpoint("/ws-stomp") // 예: ws://localhost:8008/flokrGroupware/ws-stomp
-                .setAllowedOriginPatterns("*") // CORS 설정
+                .setAllowedOrigins("http://localhost:8008")   // 모든 Origin 허용 (개발용(*). 실제 운영 시에는 필요한 도메인만 명시)
+                // .setAllowedOriginPatterns("*") // CORS 설정
                 .addInterceptors(handshakeInterceptor()) // 세션 정보 전달 인터셉터 추가
                 .withSockJS()  // WebSocket 미지원 브라우저 위한 SockJS fallback 활성화
                 .setDisconnectDelay(30 * 1000) // 연결 종료 후 세션 유지 시간 (30초)

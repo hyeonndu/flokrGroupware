@@ -1,0 +1,234 @@
+.detail-wrapper {
+  max-width: 1100px;
+  margin: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 20px 30px 30px 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
+  padding-bottom: 12px;        /* 아래 여백 조정 */
+  margin-bottom: 20px;         /* 본문과 간격 */
+  border-bottom: 1px solid #e9ecef;  /* 구분선 */
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+}
+.title-left .emoji {
+  font-size: 24px;
+  margin-right: 10px;
+}
+.header-actions {
+  position: relative;
+}
+
+.header-actions button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.detail-body {
+  display: flex;
+  gap: 40px;
+  flex-grow: 1;
+  margin-top: 10px;
+}
+
+.left-pane {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.left-pane h4 {
+  margin-bottom: 5px;  /* 기존보다 좁혀줌 */
+}
+
+
+.content-box {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  min-height: 200px;
+  max-height: 350px;
+  overflow-y: auto;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+.content-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content-box::-webkit-scrollbar-thumb {
+  background: #c0c0c0;      /* 실제 스크롤바 색상 */
+  border-radius: 10px;
+}
+
+.content-box::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;      /* hover 시 색상 */
+}
+
+
+.right-pane {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rowLeft label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.rowRight label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.rowLeft {
+  margin-bottom: 24px;  /* ← 이게 전체 row 간격 */
+}
+
+.rowRight {
+  margin-bottom: 40px;  /* ← 이게 전체 row 간격 */
+}
+
+
+.dropdown, .date-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.status-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 6px 10px;
+  border-radius: 20px;
+  background-color: #eee;
+  font-size: 13px;
+  color: white;
+  opacity: 0.2;  /* 기본은 흐리게 표시 */
+  cursor: default;
+  margin-right: 6px;
+  transition: opacity 0.3s, background-color 0.3s;
+}
+
+.status-tags .tag.active {
+  opacity: 1; /* 강조 */
+  color: black;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.요청    { background: #b0bec5; }
+.진행중  { background: #90caf9; }
+.피드백  { background: #f8bbd0; }
+.보류    { background: #ffe082; }
+.완료    { background: #a5d6a7; }
+
+.assignees {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.avatar {
+  width: 34px;
+  height: 34px;
+  background: #dee2e6;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 34px;
+  font-size: 14px;
+}
+.avatar.red { background: #f03e3e; color: white; }
+.avatar.gray { background: #868e96; color: white; }
+.avatar.empty { background: #f1f3f5; color: #333; }
+
+.btn-group {
+  margin-top: 25px;
+  text-align: right;
+}
+.gray-btn, .red-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
+.gray-btn {
+  background: #ced4da;
+  color: #212529;
+}
+.red-btn {
+  background: #fa5252;
+  color: white;
+}
+
+.file-link {
+  color: #3366cc;
+  text-decoration: underline;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.no-file {
+  color: #999;
+  font-size: 14px;
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  width: 120px;
+}
+
+.dropdown-options ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-options li {
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-options li:last-child {
+  border-bottom: none;
+}
+
+.dropdown-options li:hover {
+  background-color: #f5f5f5;
+}

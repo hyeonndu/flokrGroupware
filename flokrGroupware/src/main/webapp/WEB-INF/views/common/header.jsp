@@ -39,12 +39,12 @@
     </div>
 
     <div class="header-right-section">
-        <a href="chat.ch">
+        <a href="chatList.ch">
             <div class="header-icon-badge">
                 <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span class="header-badge">1</span>
+                <span id="header-chat-badge" class="header-badge" style="display: none;">0</span>
             </div>
         </a>
 
@@ -110,7 +110,7 @@
                     </svg>
                     Home
                 </a>
-                <a href="${pageContext.request.contextPath}/organization" class="header-nav-item ${currentMenu eq 'organization' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/adminOrganization" class="header-nav-item ${currentMenu eq 'organization' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -137,7 +137,7 @@
                     </svg>
                     사내 공지 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/online-users" class="header-nav-item ${currentMenu eq 'onlineUsers' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/adminOnlineEmployee" class="header-nav-item ${currentMenu eq 'onlineUsers' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                         <circle cx="9" cy="7" r="4"></circle>
@@ -146,7 +146,7 @@
                     </svg>
                     접속 사용자 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/users" class="header-nav-item ${currentMenu eq 'users' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/adminEmployeeManagement" class="header-nav-item ${currentMenu eq 'users' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
@@ -169,7 +169,7 @@
                     </svg>
                     Home
                 </a>
-                <a href="${pageContext.request.contextPath}/task" class="header-nav-item ${currentMenu eq 'task' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/task/list" class="header-nav-item ${currentMenu eq 'task' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -179,7 +179,7 @@
                     </svg>
                     업무 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/schedule" class="header-nav-item ${currentMenu eq 'schedule' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/calendar.sc" class="header-nav-item ${currentPage eq 'schedule' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -251,8 +251,12 @@
 <c:if test="${not empty loginUser}">
     <input type="hidden" id="loginUserId" value="${loginUser.empId}" />
     <input type="hidden" id="userDeptNo" value="${loginUser.deptNo}" />
+    <input type="hidden" id="loginUserEmpNo" value="${loginUser.empNo}" />
     <input type="hidden" id="loginUserIsAdmin" value="${loginUser.isAdmin}">
 </c:if>
 
 <!-- 알림 스크립트 -->
 <script src="${pageContext.request.contextPath}/resources/js/notification.js"></script>
+
+<!-- 채팅 알림 뱃지 스크립트 -->
+<script src="${pageContext.request.contextPath}/resources/js/chatBadge.js"></script>
