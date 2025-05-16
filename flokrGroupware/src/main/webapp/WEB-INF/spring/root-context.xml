@@ -18,7 +18,9 @@
 	<!-- 
 	운영환경용 설정 파일 (WAR 파일로 배포 시 사용)
 	배포 전에 아래 주석을 해제하고 위의 개발용 설정은 주석 처리할 것
-	<context:property-placeholder location="classpath:application-prod.properties" /> -->
+	<context:property-placeholder location="classpath:application-prod.properties,
+                                       classpath:application-${spring.profiles.active:deploy}.properties" 
+                             ignore-unresolvable="true" ignore-resource-not-found="true" /> -->
 
 	<!-- 2. DB 커넥션 설정: 값은 .properties에서 불러오기 -->
 	<bean class="org.apache.commons.dbcp.BasicDataSource" id="dataSource" destroy-method="close">

@@ -38,10 +38,23 @@
     </resultMap>
 
     <select id="loginEmployee" parameterType="employee" resultMap="employeeResultMap">
-        SELECT *
-        FROM EMPLOYEE
-        WHERE EMP_ID = #{empId}
-        AND STATUS = 'Y'
+        SELECT
+	        E.EMP_NO, E.EMP_NAME, E.EMP_ID, E.EMAIL, E.PHONE,
+	        E.PROFILE_IMG_PATH, E.SIGNATURE_IMG_PATH, E.HIRE_DATE,
+	        E.IS_ADMIN, E.LAST_LOGIN_DATE,
+	        E.CREATE_DATE, E.UPDATE_DATE, E.STATUS,
+	        E.DEPT_NO, D.DEPT_NAME,
+	        E.POSITION_NO, P.POSITION_NAME,
+	        E.PASSWORD_HASH
+	    FROM
+	        EMPLOYEE E
+	    LEFT JOIN
+	        DEPARTMENT D ON E.DEPT_NO = D.DEPT_NO
+	    LEFT JOIN
+	        POSITION P ON E.POSITION_NO = P.POSITION_NO
+	    WHERE 
+	        E.EMP_ID = #{empId}
+	        AND E.STATUS = 'Y'
     </select>
 
     <select id="selectDepartmentList" resultMap="departmentResultMap">

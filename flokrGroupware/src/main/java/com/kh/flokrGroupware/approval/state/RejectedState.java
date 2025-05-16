@@ -31,7 +31,7 @@ public class RejectedState implements DocumentState {
 	public void submit(ApprovalDoc document) {
 		// 반려된 문서 재제출 로직
 		document.setDocStatus("REQUESTED");
-		document.setRequestDate(new Date());
+		document.setRequestedDate(new Date());
 		document.setCompletedDate(null);
 		document.setUpdateDate(new Date());
 		document.setVersion(document.getVersion() + 1); // 버전 증가

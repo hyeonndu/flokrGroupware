@@ -41,7 +41,7 @@ public class RequestedState implements DocumentState {
 		aService.updateApprovalLine(currentLine);
 		
 		// 다음 결재자가 있는지 확인
-		ArrayList<ApprovalLine> lineList = aService.getApprovalLinesByDocNo(document.getDocNo());
+		ArrayList<ApprovalLine> lineList = aService.selectApprovalLineByDocNo(document.getDocNo());
 		
 		boolean nextApprover = false;
 		for(ApprovalLine line : lineList) {
@@ -56,7 +56,7 @@ public class RequestedState implements DocumentState {
 		
 		if(!nextApprover) {
 			// 다음 결재자가 없으면 문서를 승인완료 상태로 변경
-			document.setDocStatus("Approved");
+			document.setDocStatus("APPROVED");
 			document.setCompletedDate(new Date());
 			document.setUpdateDate(new Date());
 			aService.updateDocument(document);

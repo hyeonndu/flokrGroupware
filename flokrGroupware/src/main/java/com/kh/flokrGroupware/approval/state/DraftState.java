@@ -31,7 +31,7 @@ public class DraftState implements DocumentState{
 	public void submit(ApprovalDoc document) {
 		// 임시저장 -> 결재요청 상태로 변경
 		document.setDocStatus("REQUESTED");
-		document.setRequestDate(new Date());
+		document.setRequestedDate(new Date());
 		document.setUpdateDate(new Date());
 		aService.updateDocument(document);
 		

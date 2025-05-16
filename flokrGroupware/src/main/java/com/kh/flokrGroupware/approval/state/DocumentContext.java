@@ -25,9 +25,12 @@ public class DocumentContext {
 	public DocumentContext(ApprovalDoc document, ApprovalService aService) {
 		this.document = document;
 		this.aService = aService;
-		
+		updateStateFromDocument();
+	}
+	
 		// 문서 상태에 따라 적절한 상태 객체 설정
-		switch(document.getDocStatus()) {
+		private void updateStateFromDocument() {
+			switch(document.getDocStatus()) {
 			case "DRAFT": // 임시저장
 				this.state = new DraftState(aService);
 				break;
@@ -43,9 +46,10 @@ public class DocumentContext {
 			default:
 				this.state = new DraftState(aService);
 				break;
+			}
+			
 		}
-	}
-	
+		
 	/**
 	 * 상태 변경 메소드
 	 * @param state 새 상태
@@ -59,6 +63,7 @@ public class DocumentContext {
 	 */
 	public void save() {
 		state.save(document);
+		updateStateFromDocument();
 	}
 	
 	/**
@@ -66,6 +71,7 @@ public class DocumentContext {
 	 */
 	public void submit() {
 		state.submit(document);
+		updateStateFromDocument();
 	}
 	
 	/**
@@ -74,6 +80,8 @@ public class DocumentContext {
 	 */
 	public void approve(ApprovalLine currentLine) {
 		state.approve(document, currentLine);
+		document = aService.selectDocumentByNo(document.getDocNo());
+		updateStateFromDocument();
 	}
 	
 	/**
@@ -82,6 +90,7 @@ public class DocumentContext {
 	 */
 	public void reject(ApprovalLine currentLine) {
 		state.reject(document, currentLine);
+		updateStateFromDocument();
 	}
 	
 	/**

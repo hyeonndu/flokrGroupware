@@ -12,7 +12,7 @@
 		</param-value>		
 	</context-param>
 	
-	<!-- Redis 프로파일 설정 추가 (개발 환경에서는 dev, 서버에 배포할 때는 이 값을 prod로 변경하면 됨) -->
+	<!-- Redis 프로파일 설정 추가 (개발 환경에서는 dev, 서버에 배포할 때는 이 값을 deploy로 변경하면 됨) -->
 	<context-param>
 		<param-name>spring.profiles.active</param-name>
     	<param-value>dev</param-value>

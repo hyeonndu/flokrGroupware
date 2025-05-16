@@ -21,7 +21,7 @@ public class ApprovalDoc implements Serializable {
 	private int drafterEmpNo; 		// 기안자 번호
 	private String title; 			// 문서제목
 	private String docContent; 		// 문서내용
-	private Date requestDate; 		// 결제 요청일
+	private Date requestedDate; 		// 결제 요청일
 	private Date completedDate;		// 결제 완료일
 	private int version;			// 문서버전
 	private Date createDate; 		// 생성일
