@@ -140,7 +140,24 @@
 								</div>
 								<div class="task-meta">
 									<div>
-										<strong>업무 담당자:</strong> 👤 A, B 외
+										<strong>업무 담당자:</strong> 
+										<c:choose>
+								            <c:when test="${empty list.assignees}">
+								                담당자 없음
+								            </c:when>
+								            <c:otherwise>
+								                <c:set var="count" value="0" />
+								                <c:forEach var="assignee" items="${list.assignees}" varStatus="status">
+								                    <c:if test="${count < 3}">
+								                        ${assignee.empName}<c:if test="${!status.last && count < 2 && fn:length(list.assignees) > count+1}">, </c:if>
+								                        <c:set var="count" value="${count + 1}" />
+								                    </c:if>
+								                </c:forEach>
+								                <c:if test="${fn:length(list.assignees) > 3}">
+								                    외 ${fn:length(list.assignees) - 3}명
+								                </c:if>
+								            </c:otherwise>
+								        </c:choose>
 									</div>
 									<div>
 										<strong>카테고리:</strong> ${ list.category }

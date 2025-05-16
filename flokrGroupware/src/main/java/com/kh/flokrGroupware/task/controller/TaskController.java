@@ -59,6 +59,11 @@ public class TaskController {
 
 		ArrayList<Task> list = tService.taskList(empNo);
 		
+		for(Task task : list) {
+	        List<TaskAssignee> assignees = tService.getTaskAssignees(task.getTaskNo());
+	        task.setAssignees(assignees); // Task 클래스에 담당자 목록을 저장할 속성 필요
+	    }
+		
 		mv.addObject("list", list)
 		  .addObject("statusNameMap", statusNameMap)
 		  .addObject("statusColorMap", statusColorMap)

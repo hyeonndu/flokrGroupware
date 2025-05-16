@@ -1,5 +1,7 @@
 package com.kh.flokrGroupware.task.model.vo;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,5 +25,6 @@ public class Task {
 	private String updateDate;
 	private String taskStatus;
 	private String emoji;
+	private List<TaskAssignee> assignees;
 
 }
