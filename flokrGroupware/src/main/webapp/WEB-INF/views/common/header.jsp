@@ -179,7 +179,7 @@
                     </svg>
                     업무 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/calendar.sc" class="header-nav-item ${currentPage eq 'schedule' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/calendar.sc" class="header-nav-item ${currentMenu eq 'schedule' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -202,7 +202,7 @@
                     </svg>
                     주소록
                 </a>
-                <a href="${pageContext.request.contextPath}/approval" class="header-nav-item ${currentMenu eq 'approval' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/main.ap" class="header-nav-item ${currentMenu eq 'approval' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 11 12 14 22 4"></polyline>
                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
