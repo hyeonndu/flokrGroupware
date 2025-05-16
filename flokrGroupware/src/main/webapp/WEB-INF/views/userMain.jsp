@@ -1,5 +1,8 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="now" class="java.util.Date" />
+<c:set var="today" value="${now}" />
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,7 +11,7 @@
 <%-- FullCalendar CSS --%>
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/main.min.css' rel='stylesheet' />
 <!-- main CSS -->
-<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/main.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/userMain.css">
 <!-- Material Icons 추가 -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">
 </head>
@@ -21,19 +24,40 @@
         <div class="s01">
             <div class="section part01">
                 <div id="p01-profile">
-                    <div class="profile-image-container">
-                        <img src="placeholder-profile.png" alt="프로필 사진" class="profile-image"> <%-- 실제 이미지 경로 필요 --%>
-                        <span class="status-indicator online"></span>
-                    </div>
-                    <p class="profile-name">Full name</p> <%-- 실제 이름 필요 --%>
-                    <p class="profile-title">Professional title</p> <%-- 실제 직책 필요 --%>
+                    <div class="profile-image-container" style="display: flex; justify-content: center; align-items: center;">
+				        <c:choose>
+						    <c:when test="${not empty loginUser.profileImgPath}">
+								<div style="width: 100%; height: 100%; border-radius: 50%; overflow: hidden;">
+								    <!--<img src="${loginUser.profileImgPath}" alt="프로필" style="width: 100%; height: 100%; object-fit: cover;">-->
+								</div>
+					        </c:when>
+				            <c:otherwise>
+				                <%-- 스크립틀릿으로 색상 계산 --%>
+				                <% 
+				                    String[] colors = {"#4285f4", "#34a853", "#ea4335", "#fbbc05", "#9c27b0"};
+				                    String empName = ((com.kh.flokrGroupware.employee.model.vo.Employee)session.getAttribute("loginUser")).getEmpName();
+				                    char firstChar = empName.charAt(0);
+				                    int colorIndex = Math.abs(firstChar) % 5;
+				                    pageContext.setAttribute("bgColor", colors[colorIndex]);
+				                    pageContext.setAttribute("firstChar", String.valueOf(firstChar));
+				                %>
+				                
+				                <div style="width: 90px; height: 90px; border-radius: 50%; background-color: ${bgColor}; display: flex; justify-content: center; align-items: center; border: 1px solid #eee;">
+				                    <span style="color: white; font-size: 36px; font-family: 'Noto Sans KR', sans-serif;">${firstChar}</span>
+				                </div>
+				            </c:otherwise>
+				        </c:choose>
+				        <span class="status-indicator online"></span>
+				    </div>
+				    <p class="profile-name">${loginUser.empName}</p>
+				    <p class="profile-title">${loginUser.deptName}	${loginUser.positionName}</p>
                     <div class="profile-buttons">
                         <button class="btn-small btn-home">HOME</button>
                         <button class="btn-small btn-office active">OFFICE</button>
                     </div>
                 </div>
                 <div id="p01-onoffbtn">
-                    <p class="current-date">2025년 05월 19일</p> <%-- 실제 날짜 필요 --%>
+                    <p class="current-date"><fmt:formatDate value="${today}" pattern="yyyy년 MM월 dd일" /></p>
                     <div class="time-info-box">
                         <div class="time-section">
                             <span class="time-label">출근 시간</span>
@@ -105,31 +129,16 @@
                 <div class="sub-title">회사 공지</div>
                 <div id="notice-list">
                      <table>
-                        <thead>
-                            <tr>
-                                <th width="60%">TITLE</th> <%-- 제목 컬럼명 수정 --%>
-                                <th width="20%">WRITER</th>
-                                <th width="20%">DATE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%-- 공지사항 데이터 (예시) --%>
-                            <tr>
-                                <td>새로운 그룹웨어 사용 안내</td>
-                                <td>관리자</td>
-                                <td>04/25/2025</td>
-                            </tr>
-                            <tr>
-                                <td>정기 서버 점검 안내 (5/1)</td>
-                                <td>관리자</td>
-                                <td>04/24/2025</td>
-                            </tr>
-                             <tr>
-                                <td>[필독] 보안 강화 관련 협조 요청</td>
-                                <td>관리자</td>
-                                <td>04/23/2025</td>
-                            </tr>
-                        </tbody>
+			            <thead>
+			                <tr>
+			                    <th width="60%">TITLE</th> <%-- 제목 컬럼명 수정 --%>
+			                    <th width="20%">WRITER</th>
+			                    <th width="20%">DATE</th>
+			                </tr>
+			            </thead>
+			            <tbody id="notice-list-body">
+			                <%-- 공지사항 데이터가 여기에 동적으로 로드됩니다 --%>
+			            </tbody>
                     </table>
                 </div>
             </div>
@@ -862,7 +871,63 @@
       }, 500); // 0.5초 지연
     });
     </script>
-            
-
+    <!-- 공지사항 AJAX 호출을 위한 스크립트 추가 -->
+	<script>
+	$(document).ready(function() {
+	    // 최근 공지사항 가져오기
+	    $.ajax({
+	        url: "${pageContext.request.contextPath}/recentNotices",
+	        type: "GET",
+	        data: { limit: 3 }, // 표시할 공지사항 수 (필요에 따라 조정)
+	        success: function(notices) {
+	            // 결과를 받아서 테이블에 표시
+	            var tbody = $("#notice-list-body");
+	            tbody.empty(); // 기존 내용 제거
+	
+	            if (notices && notices.length > 0) {
+	                // 공지사항이 있는 경우
+	                $.each(notices, function(index, notice) {
+	                    var row = $("<tr>");
+	                    
+	                    // 제목 (링크 포함)
+	                    var titleCell = $("<td>");
+	                    var titleLink = $("<a>").attr("href", "${pageContext.request.contextPath}/noticeDetail/" + notice.noticeNo)
+	                                         .text(notice.noticeTitle)
+	                                         .css("color", "#333")
+	                                         .css("text-decoration", "none");
+	                    titleCell.append(titleLink);
+	                    
+	                    // 작성자
+	                    var writerCell = $("<td>").text(notice.empName || "관리자");
+	                    
+	                    // 날짜 (yyyy-mm-dd 형식으로 변환)
+	                    var date = new Date(notice.createDate);
+	                    var dateStr = date.getFullYear() + "-" + 
+	                                 padZero(date.getMonth() + 1) + "-" + 
+	                                 padZero(date.getDate());
+	                    var dateCell = $("<td>").text(dateStr);
+	                    
+	                    // 행에 셀 추가
+	                    row.append(titleCell).append(writerCell).append(dateCell);
+	                    tbody.append(row);
+	                });
+	            } else {
+	                // 공지사항이 없는 경우
+	                tbody.html('<tr><td colspan="3" class="text-center">등록된 공지사항이 없습니다.</td></tr>');
+	            }
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("공지사항 불러오기 오류:", error);
+	            var tbody = $("#notice-list-body");
+	            tbody.html('<tr><td colspan="3" class="text-center">공지사항을 불러오는 중 오류가 발생했습니다.</td></tr>');
+	        }
+	    });
+	    
+	    // 날짜 포맷팅용 함수 (1 -> 01)
+	    function padZero(num) {
+	        return num < 10 ? "0" + num : num;
+	    }
+	});
+	</script>
 </body>
 </html>

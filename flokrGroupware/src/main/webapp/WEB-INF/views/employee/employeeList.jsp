@@ -99,18 +99,27 @@
                             <c:forEach var="emp" items="${employeeList}">
                                 <tr>
                                     <td class="profile-cell">
-										<c:choose>
-										    <c:when test="${not empty emp.profileImgPath}">
-										        <img src="${emp.profileImgPath}" alt="프로필" class="profile-img">
-										    </c:when>
-										    <c:otherwise>
-										        <svg class="profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-										            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
-										            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
-										        </svg>
-										    </c:otherwise>
-										</c:choose>
-                                    </td>
+									    <c:choose>
+									        <c:when test="${not empty emp.profileImgPath}">
+									            <img src="${pageContext.request.contextPath}${emp.profileImgPath}" alt="프로필" class="profile-img">
+									        </c:when>
+									        <c:otherwise>
+									            <%-- 스크립틀릿으로 색상 계산 --%>
+									            <% 
+									                String[] colors = {"#4285f4", "#34a853", "#ea4335", "#fbbc05", "#9c27b0"};
+									                String empName = ((com.kh.flokrGroupware.employee.model.vo.Employee)pageContext.getAttribute("emp")).getEmpName();
+									                char firstChar = empName.charAt(0);
+									                int colorIndex = Math.abs(firstChar) % 5;
+									                pageContext.setAttribute("bgColor", colors[colorIndex]);
+									                pageContext.setAttribute("firstChar", String.valueOf(firstChar));
+									            %>
+									            
+									            <div style="width: 40px; height: 40px; border-radius: 50%; background-color: ${bgColor}; display: flex; justify-content: center; align-items: center; border: 1px solid #eee;">
+									                <span style="color: white; font-size: 16px; font-family: 'Noto Sans KR', sans-serif;">${firstChar}</span>
+									            </div>
+									        </c:otherwise>
+									    </c:choose>
+									</td>
                                     <td>${emp.empId}</td>
                                     <td>${emp.empName}</td>
                                     <td>${emp.deptName}</td>

@@ -25,7 +25,10 @@
                         <img src="${employee.profileImgPath}" alt="프로필 이미지" class="profile-image">
                     </c:when>
                     <c:otherwise>
-                        <img src="${pageContext.request.contextPath}/resources/images/default-profile.png" alt="기본 프로필" class="profile-image">
+                        <svg class="profile-image" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+				            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
+				            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
+				        </svg>
                     </c:otherwise>
                 </c:choose>
                 

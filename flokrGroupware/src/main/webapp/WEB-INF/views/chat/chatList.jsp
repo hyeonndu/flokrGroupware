@@ -9,6 +9,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Flokr</title>
+<c:if test="${not empty loginUser}">
+    <%-- chatBadge.js에서 $("#loginUserId").val()를 사용하므로, 이 ID를 가진 요소에 empId를 설정 --%>
+    <input type="hidden" id="loginUserId" value="${loginUser.empId}">
+    <%-- 자바 코드의 오류 메시지에서 loginUserEmpId를 참조하므로, empNo도 필요한 경우 추가 --%>
+    <input type="hidden" id="loginUserEmpNo" value="${loginUser.empNo}">
+    <%-- WebSocket Handshake Interceptor에서 empNo도 사용하므로 일관성을 위해 empNo도 전달 --%>
+</c:if>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/chatList.css">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,7 +23,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-
 <style>
     /* 모달 내 참여자 목록 스타일 */
     .participant-item {
@@ -164,25 +170,19 @@
                                 <%-- 아바타 이미지가 로드될 곳 --%>
                             </div>
                             <div class="chat-header-info">
-                                <%-- 채팅방 이름 또는 상대방 이름 표시될 곳 --%>
-                                <span class="chat-header-title"></span>
-                                <%-- 상태(온라인/오프라인) 또는 인원수 표시될 곳 --%>
-                                <span class="chat-header-subtitle">
-                                    <%-- 1:1 채팅 시 온라인 상태 표시 (초록색 점) --%>
-                                    <%-- <span class="status-dot online"></span> 온라인 --%>
-                                    <%-- 단체 채팅 시 인원수 표시 (예: 아이콘 + 숫자) --%>
-                                    <%-- <i class="fas fa-users"></i> 3 --%>
-                                </span>
+                                <span class="chat-header-title"></span> <span class="chat-header-subtitle">
+                                    <i class="material-icons">group</i> <span class="member-count-display"></span> </span>
                             </div>
                         </div>
                         <div class="chat-header-right">
                             <%-- 오른쪽 아이콘 버튼들 --%>
-                            <button type="button" class="material-icons">call</button>
-                            <button type="button" class="material-icons">search</button>
-                            <button type="button" class="material-icons">more_vert</button>
+
+                            <button type="button" class="material-icons" id="chatRoom-out-icon">logout</button>
                         </div>
                     </div>
                     <%-- ========= 채팅방 메인 헤더 추가 끝 =========== --%>
+
+
 
                     <div class="message-list">
                         </div>
@@ -194,6 +194,26 @@
                     </div>
 
                 </div>
+
+                <div class="modal fade" id="leaveChatRoomModal" tabindex="-1" aria-labelledby="leaveChatRoomModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content"> 
+                            <div class="modal-header"> 
+                                <h5 class="modal-title" id="leaveChatRoomModalLabel">채팅방 나가기</h5>
+                                
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                정말로 채팅방을 나가시겠습니까?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">아니오</button>
+                                <button type="button" class="btn btn-danger" id="confirmLeaveChatRoomBtn">예</button> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
 
         </div>
 
@@ -252,16 +272,16 @@
         </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
+    
 
     <script>
         // JSP 변수를 JavaScript 변수로 가져오기 (스크립트 상단에 위치)
         const contextPath = "${contextPathJsp}"; // JSP 변수 값을 JavaScript 변수에 할당
-        const currentUserId = "${loginUserEmpNoJsp}"; // JSP 변수 값을 JavaScript 변수에 할당
+        //<!-- 기존: const currentUserId = "${loginUserEmpNoJsp}"; // JSP 변수에서 empNo를 가져와 currentUserId로 사용했었음-->
 
-        // 안전하게 값 가져오기 (JSP 변수가 없을 경우 또는 빈 값일 경우 대비)
-        // const contextPath = (typeof contextPathJsp !== 'undefined' && contextPathJsp != null && contextPathJsp.trim() !== '') ? contextPathJsp : '';
-        // const currentUserId = (typeof loginUserEmpNoJsp !== 'undefined' && loginUserEmpNoJsp != null && String(loginUserEmpNoJsp).trim() !== '') ? String(loginUserEmpNoJsp) : '';
+        // 안전하게 값 가져오기
+        // const loginUserEmpId = $("#loginUserEmpId").val() || '';
+        // const loginUserEmpNo = $("#loginUserEmpNo").val() || '';
 
 
         // $(document).ready() 블록 안으로 모든 전역 변수 및 함수 정의 이동
@@ -286,9 +306,18 @@
             let currentRoomSubscription = null; // 현재 구독 중인 채팅방 토픽 구독 객체
             let selectedRoomNo = null; // 현재 사용자가 선택/보고 있는 채팅방 번호
 
+            // ★ 수정: empId는 WebSocket user destination용으로, empNo는 API 호출 및 로직용으로 분리 사용 ★
+            const loginUserEmpId = $("#loginUserId").val(); // 새로 추가한 hidden input에서 empId 가져오기
+            const loginUserEmpNo = $("#loginUserEmpNo").val(); // 새로 추가한 hidden input에서 empNo 가져오기
+
+            // 디버깅을 위해 $(document).ready() 안에서 다시 값을 출력해 보세요.
+            console.log('Context Path:', contextPath);
+            console.log('Current User ID (within ready):', loginUserEmpId);
+            console.log('Current User EmpNo (within ready):', loginUserEmpNo);
+
             // --- 초기 값 확인 (디버깅용) ---
             console.log('Context Path:', contextPath);
-            console.log('Current User ID:', currentUserId);
+            console.log('Current User ID:', loginUserEmpId);
 
 
             // --- WebSocket 연결 함수 정의 ---
@@ -308,30 +337,31 @@
                     // TODO: 연결 성공 시 필요한 초기 구독 (예: 개인 알림 채널 구독)
 
                     // --- 사용자별 안 읽은 메시지 알림 토픽 구독 ---
-                    // 백엔드에서 이 토픽으로 해당 사용자에게 안 읽은 메시지 수를 보낸다고 가정
-                    // 토픽 경로는 백엔드 구현에 따라 달라질 수 있습니다.
-                    const unreadTopic = '/topic/user/unreadNotification/' + currentUserId; // 예시 토픽
-                    console.log('Subscribing to unread notification topic:', unreadTopic);
+                    // 이 구독은 백엔드에서 '총 안 읽은 채팅 수' 변화 알림을 보낼 때 사용합니다.
+                    // 토픽 경로는 백엔드 구현과 일치해야 합니다.
+                    // 이전 계획에서 '/user/{userId}/queue/chat.unread.total' 를 사용하기로 했습니다.
+                    if (loginUserEmpId) {
+                        const totalUnreadTopic = '/user/' + loginUserEmpId + '/queue/chat.unread.total';
+                        if (!chatBadgeSubscription) { // 중복 구독 방지
+                            console.log('Subscribing to total unread chat count topic:', totalUnreadTopic);
+                            try {
+                                // handleTotalUnreadChatCountUpdate 함수를 구독 콜백으로 연결
+                                chatBadgeSubscription = stompClient.subscribe(totalUnreadTopic, handleTotalUnreadChatCountUpdate);
+                                console.log('Subscription successful:', totalUnreadTopic);
 
-                    stompClient.subscribe(unreadTopic, function (notificationMessage) {
-                        console.log('Unread notification received:', notificationMessage.body);
-                        try {
-                            // 백엔드에서 보낸 메시지 (JSON 형태)를 파싱
-                            // 예시: { "roomNo": 123, "unreadCount": 5 }
-                            const notification = JSON.parse(notificationMessage.body);
-
-                            // 파싱된 알림 데이터 처리 함수 호출
-                            handleUnreadNotification(notification);
-
-                        } catch (e) {
-                            console.error("Error processing unread notification message:", e, notificationMessage.body);
+                            } catch (e) {
+                                console.error('Failed to subscribe to total unread chat count topic:', totalUnreadTopic, e);
+                                chatBadgeSubscription = null;
+                            }
+                        } else {
+                            console.log('Already subscribed to total unread chat count topic.');
                         }
-                    });
-                    // --- 안 읽은 메시지 알림 구독 끝 ---
 
-                    // TODO: 연결 성공 시 필요한 다른 초기 구독 (예: 개인 알림 채널 구독 - 필요시)
-                    // 예: stompClient.subscribe('/topic/user/' + currentUserId + '/generalNotifications', function(msg){...});
+                        // TODO: 만약 백엔드에서 '/topic/user/unreadNotification/' 토픽으로도 뭔가 다른 알림을 보낸다면,
+                        // 기존 handleUnreadNotification 함수를 이 토픽에 그대로 연결하여 사용할 수 있습니다.
+                        // stompClient.subscribe('/topic/user/unreadNotification/' + userId, handleUnreadNotification); // 필요시 주석 해제하고 사용
 
+                    }
                 }, function(error) {
                     console.error('STOMP connection error:', error);
                     // 연결 실패 시 사용자에게 알림
@@ -339,6 +369,75 @@
                     // 연결 재시도 로직 등을 추가할 수 있습니다.
                 });
             }
+
+            // --- 새로운 함수: 페이지 로드 시 초기 안 읽은 채팅 개수 가져오기 (REST API 활용) ---
+            /**
+             * 페이지 로드 시 초기 안 읽은 채팅 개수 가져와 헤더 배지 업데이트
+             */
+            function fetchUnreadChatCountViaREST() {
+                const contextPath = $("#contextPath").val() || '';
+                const loginUserEmpNo = $("#loginUserEmpNo").val(); // 로그인 사용자 empNo (REST API용)
+
+                if (!loginUserEmpNo) {
+                    console.warn('로그인 사용자 empNo를 찾을 수 없어 초기 안 읽은 채팅 수 가져오기를 건너뜜니다.');
+                    updateUnreadChatCount(0); // ID 없으면 0으로 표시 (기본 숨김)
+                    return;
+                }
+
+                $.ajax({
+                    url: contextPath + '/chat/unreadCount', // 백엔드에 구현한 API 경로
+                    type: 'GET',
+                    dataType: 'json', // 응답이 JSON ({ "success": true, "totalUnreadCount": 5 })
+                    timeout: 5000,
+                    success: function(response) {
+                        console.log('REST API 응답: 전체 안 읽은 채팅 수', response);
+                        if (response.success) {
+                            const totalCount = response.totalUnreadCount || 0;
+                            // ★ 헤더 배지 업데이트 ★
+                            updateUnreadChatCount(totalCount);
+
+                            // 초기 목록 표시 (채팅 목록 데이터 사용) - 필요시
+                            // initializeChatListDisplay(chatRoomListFromJsp); // 만약 목록 그리는 로직이 JS에 있다면
+
+                        } else {
+                            console.error('초기 안 읽은 채팅 수 요청 실패 (API 응답 오류):', response.message);
+                            updateUnreadChatCount(0);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('초기 안 읽은 채팅 수 요청 실패 (AJAX 오류):', status, error);
+                        updateUnreadChatCount(0);
+                    }
+                });
+            }
+
+
+
+            // --- 새로운 함수: 총 안 읽은 채팅 수 업데이트 메시지 처리 ---
+            // 서버에서 '/user/{userId}/queue/chat.unread.total' 토픽으로 보낸 메시지를 수신합니다.
+            // 이 함수는 handleUnreadNotification 함수와 역할이 다릅니다.
+            function handleTotalUnreadChatCountUpdate(message) {
+                try {
+                    console.log('채팅 배지 WS: 총 안 읽은 채팅 수 업데이트 메시지 수신:', message.body);
+                    // 메시지 본문은 새로운 전체 안 읽은 채팅 수 (숫자)
+                    const newTotalCount = parseInt(message.body || '0');
+
+                    // ★ 헤더 배지 업데이트 함수 호출 ★
+                    updateUnreadChatCount(newTotalCount);
+
+                    // ★ 선택 사항: 채팅 목록 페이지인 경우 각 방의 안 읽은 수 업데이트 로직 ★
+                    // 이 메시지만으로는 어떤 방의 수가 줄었는지 알 수 없으므로,
+                    // 현재 페이지가 chatList.ch라면, chatList UI를 갱신하기 위한 로직이 필요할 수 있습니다.
+                    // 예를 들어, 백엔드에서 { totalUnreadCount: 5, roomUpdates: [ { roomNo: 123, unreadCount: 0 }, ... ] }
+                    // 와 같은 형태로 데이터를 더 상세하게 보내주면 이 함수에서 처리할 수 있습니다.
+                    // 현재는 total count만 받으므로, 목록 업데이트는 별도 처리 필요
+
+                } catch (e) {
+                    console.error("채팅 배지 WS: 총 안 읽은 채팅 수 업데이트 처리 중 오류 발생", e);
+                }
+            }
+
+
 
             // --- 새로운 함수: 안 읽은 메시지 알림 처리 ---
             // 백엔드로부터 받은 안 읽은 메시지 수 업데이트 알림을 처리하고 UI에 반영합니다.
@@ -508,112 +607,97 @@
             }
 
             // --- 채팅방 헤더 업데이트 함수 정의 ---
-            // 채팅방 정보 (이름, 아바타, 상태/인원수 등)를 화면에 표시합니다.
+            // roomInfo: 서버에서 받은 채팅방 객체 (roomName, roomType, chatUserImgPath, memberCount 등 포함)
+            // listItemMemberCount: 채팅 목록에서 직접 가져온 인원수 (실시간 업데이트 전 임시 값으로 사용 가능)
             function updateChatHeader(roomInfo, listItemMemberCount = null) {
-                const path = contextPath;
 
-                let headerTitle = '채팅방'; // 기본값 (혹시 모를 다른 타입 대비)
+                    // ★★★★★ 이 부분을 추가해주세요 ★★★★★
+                    console.log("--- updateChatHeader 시작 ---");
+                    console.log("받은 roomInfo 객체:", JSON.stringify(roomInfo, null, 2));
+                    console.log("받은 listItemMemberCount:", listItemMemberCount);
+                    // ★★★★★★★★★★★★★★★★★★★★★★★
 
-                if (roomInfo) { // roomInfo 객체가 유효한 경우에만 처리
-                    if (roomInfo.roomType === 'G') {
-                        // 단체 채팅인 경우: roomName을 사용하고, 없으면 '단체 채팅방' 등으로 표시
-                        headerTitle = roomInfo.roomName || '단체 채팅방'; // 기본값 '단체 채팅방' 등 원하는 문자열로 변경 가능
-                    } else if (roomInfo.roomType === 'P') {
-                        // 1:1 채팅인 경우:
-                        if (roomInfo.roomName) {
-                            // 만약 1:1 채팅인데 roomName이 명시적으로 설정되어 있다면 그 이름을 사용
-                            headerTitle = roomInfo.roomName;
-                        } else {
-                            // roomName이 설정되지 않은 1:1 채팅이라면, 상대방의 이름을 사용
-                            // roomInfo.chatUserName는 백엔드에서 1:1 상대방 이름 정보를 담아준다고 가정한 필드명입니다.
-                            // 실제 필드명이 다르다면 해당 필드명으로 수정해주세요.
-                            headerTitle = roomInfo.chatUserName || '1:1 채팅방'; // 상대방 이름이 없을 경우 '1:1 채팅방' 기본값
-                        }
-                    }
-                    // 다른 roomType이 있다면 초기값 '채팅방'이 사용됩니다.
+
+                const path = contextPath; // JSP에서 설정된 전역 변수
+
+                // 헤더의 각 요소 jQuery 객체로 가져오기 (JSP 구조에 맞게)
+                const $avatarDiv = $('.chat-main-header .header-avatar');
+                const $titleSpan = $('.chat-main-header .chat-header-title');
+                const $subtitleSpan = $('.chat-main-header .chat-header-subtitle'); // 인원수 전체를 감싸는 span
+                const $memberIcon = $subtitleSpan.find('i.material-icons'); // 인원수 아이콘
+                const $memberCountDisplaySpan = $subtitleSpan.find('span.member-count-display'); // 인원수 텍스트 span
+
+                if (!roomInfo) { // roomInfo가 null이면 헤더 초기화 또는 기본 상태로
+                    $titleSpan.text('채팅');
+                    $avatarDiv.empty().hide(); // 아바타 비우고 숨김
+                    $memberIcon.hide();
+                    $memberCountDisplaySpan.text('');
+                    $subtitleSpan.hide(); // 부제목 영역 전체 숨김
+                    return;
                 }
 
-                // 최종 결정된 헤더 타이틀을 화면에 표시
-                $chatHeaderTitle.text(headerTitle);
+                // 1. 채팅방 이름 설정 (roomInfo.roomName 사용)
+                // 서버에서 1:1 채팅 시 roomName에 상대방 이름을, 그룹 채팅 시 그룹방 이름을 넣어준다고 가정
+                $titleSpan.text(roomInfo.roomName || '채팅방');
+                console.log("채팅방 제목 설정:", $titleSpan.text());
 
-
-                // --- 부제목 (상태 또는 인원수) 및 아바타 업데이트 ---
-                let subtitleHTML = '';
-                $chatHeaderAvatarArea.empty(); // 기존 아바타 비우기
-
-                if (roomInfo && roomInfo.roomType === 'P') { // 1:1 채팅
-                    // TODO: 1:1 채팅 상대방의 온라인 상태 정보를 받아와서 표시해야 함 (WebSocket 또는 별도 API 필요)
-                    const isOnline = false; // 임시로 false 설정 (실제 상태 로직 필요)
-                    subtitleHTML = '<span class="status-dot ' + (isOnline ? 'online' : '') + '"></span> ' + (isOnline ? '온라인' : '오프라인');
-
-                    // 1:1 채팅 상대방 프로필 이미지 표시
-                    // roomInfo.chatUserImgPath는 ChatRoom VO에 추가된 필드 (Mapper에서 조회)
-                    const profileImgSrc = (roomInfo.chatUserImgPath && roomInfo.chatUserImgPath !== 'null') ? path + '/' + roomInfo.chatUserImgPath : path + '/resources/images/default_profile.PNG';
-                    $chatHeaderAvatarArea.html('<img src="' + profileImgSrc + '" alt="'+ (roomInfo.roomName || '상대방') +'" onerror="this.onerror=null; this.src=\''+ path + '/resources/images/default_profile.PNG\'">');
-
-                } else if (roomInfo && roomInfo.roomType === 'G') { // 단체 채팅
-                    // ** 인원수 표시 로직 수정 **
-                    // 1. 서버에서 받은 roomInfo.memberCount 값이 있다면 그 값을 사용
-                    // 2. 서버 값이 없다면 (또는 AJAX 성공 전에 임시로 표시하고 싶다면),
-                    //    클릭 이벤트에서 넘어온 listItemMemberCount 값을 사용
-                    // 3. 둘 다 없다면 기본값 0을 사용
-
-                    const memberCountToDisplay = (listItemMemberCount !== null && !isNaN(listItemMemberCount))
-                                 ? listItemMemberCount // 1. 클릭 이벤트에서 가져온 목록 인원수(숫자이고 유효한 경우)를 최우선 사용
-                                : ((roomInfo && roomInfo.memberCount !== undefined && roomInfo.memberCount !== null)
-                                ? roomInfo.memberCount // 2. 목록 값이 없으면 서버에서 받은 roomInfo.memberCount 값이 있는지 확인하고 사용
-                                : 0); // 3. 둘 다 없으면 기본값 0 사용
-
-                    console.log("Update header - Using member count:", memberCountToDisplay, "(Server:", roomInfo?.memberCount, "List:", listItemMemberCount, ")");
-
-
-                    // roomInfo.memberCount는 ChatRoom VO에 추가된 필드 (Mapper에서 조회)
-                    subtitleHTML = '<span class="material-icons" id="roomList-icon" style="font-size: 17px;">person</span> ' + memberCountToDisplay; // 가져온 값을 사용
-
-                    // ... (그룹 아바타 로직) ...
-                    // 단체 채팅 기본 아이콘
-                    $chatHeaderAvatarArea.html('<span class="material-icons" id="roomList-icon">groups</span>'); // HTML 구조에 맞춰 icon 변경
-                    // 아이콘 스타일 조정 (CSS 파일에 추가하는 것이 더 좋지만, 여기서도 가능)
-                    // $chatHeaderAvatarArea.find('i').css({ 'font-size': '1.5em', 'color': '#ccc' }); // 기존 Font Awesome i 태그 스타일
-                    $chatHeaderAvatarArea.find('.material-icons').css({ 'font-size': '1.5em', 'color': '#ccc' }); // Material Icons 스타일
-
-
-                } else { // 기타 유형 (필요시)
-                    subtitleHTML = '';
-                    // ... (기타 아바타 로직) ...
-                    $chatHeaderAvatarArea.html('<span class="material-icons">comment</span>'); // HTML 구조에 맞춰 icon 변경
-                    $chatHeaderAvatarArea.find('.material-icons').css({ 'font-size': '1.5em', 'color': '#ccc' });
-
-                }
-                // 최종 결정된 부제목 HTML을 화면에 표시
-                $chatHeaderSubtitle.html(subtitleHTML); // <-- 여기 수정
-
-                // Placeholder 숨기고 채팅 메인 영역 표시
-                // roomInfo가 유효한 경우에만 채팅 메인 영역 표시
-                if (roomInfo) {
-                    $placeholderArea.hide();
-                    $chatMainArea.removeClass('hidden');
+                // 2. 프로필 사진 설정
+                $avatarDiv.empty(); // 기존 이미지 제거
+                if (roomInfo.roomType === 'P') { // 1:1 채팅
+                if (roomInfo.chatUserImgPath && roomInfo.chatUserImgPath !== 'null' && roomInfo.chatUserImgPath.trim() !== '') {
+                    const profileImgSrc = path + '/' + roomInfo.chatUserImgPath;
+                    $avatarDiv.html('<img src="' + profileImgSrc + '" alt="프로필" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" onerror="this.onerror=null; this.src=\''+ path + '/resources/images/default_profile.PNG\'">');
                 } else {
-                    // roomInfo가 null인 경우 (예: 오류 발생 시), placeholder 유지
-                    $placeholderArea.show();
-                    $chatMainArea.addClass('hidden');
+                    $avatarDiv.html('<span class="material-icons" style="font-size: 36px; color: #777;">person</span>'); // 기본 person 아이콘
                 }
+                $avatarDiv.show();
+            } else if (roomInfo.roomType === 'G') { // 단체 채팅
+                $avatarDiv.html('<span class="material-icons" style="font-size: 36px; color: #777;">groups</span>'); // 기본 groups 아이콘
+                $avatarDiv.show();
+            } else {
+                console.warn("알 수 없는 roomType:", roomInfo.roomType);
+                $avatarDiv.hide(); // 알 수 없는 타입이면 아바타 영역 숨김
+            }
+
+                // 3. 온/오프라인 유무 표시는 HTML에서 완전히 제거되었으므로 JavaScript에서 처리할 필요 없음.
+
+                // 4. 모든 채팅방에 인원수 표시 (roomInfo.memberCount가 핵심)
+                if (roomInfo.memberCount !== undefined && roomInfo.memberCount !== null && Number(roomInfo.memberCount) > 0) {
+                    $memberCountDisplaySpan.text(Number(roomInfo.memberCount) + '명');
+                    $memberIcon.css('display', 'inline-block'); // 아이콘 보이도록 (JSP에 이미 있으므로 스타일 변경)
+                    $subtitleSpan.css('display', 'flex');    // 부제목 영역(아이콘 + 인원수) 보이도록
+                    console.log("인원수 표시:", Number(roomInfo.memberCount) + '명');
+                } else {
+                    // 인원수 정보가 없거나 0명이면 관련 UI 숨김
+                    $memberCountDisplaySpan.text('');
+                    $memberIcon.hide();
+                    $subtitleSpan.hide(); // 부제목 영역 전체 숨김
+                    console.log("인원수 정보가 없거나 0명이므로 숨김 처리. roomInfo.memberCount:", roomInfo.memberCount);
+                }
+
+                // 나가기 버튼에 현재 roomNo 설정 (모달에서 사용하기 위함)
+                $('#chatRoom-out-icon').data('roomno', roomInfo.roomNo);
+
+
+                // 채팅방이 선택되었으므로 Placeholder 숨기고 채팅 메인 영역 표시
+                $placeholderArea.hide();
+                $chatMainArea.removeClass('hidden');
             }
 
 
             // --- 개별 메시지를 화면에 표시하는 함수 정의 ---
             function displayChatMessage(message) {
                 const path = contextPath;
-                const currentUserIdString = currentUserId; // JSP 변수에서 가져온 사용자 ID
+                
 
                 // 메시지 데이터 및 사용자 정보 유효성 검사
-                if (!message || message.senderEmpNo == null || !currentUserIdString) {
+                if (!message || message.senderEmpNo == null || !loginUserEmpNo) {
                     console.error("Cannot display message, data missing or invalid:", message);
                     return;
                 }
 
                 // 현재 로그인한 사용자의 메시지인지 확인
-                const isUserMessage = String(message.senderEmpNo) === currentUserIdString;
+                const isUserMessage = String(message.senderEmpNo) === String(loginUserEmpNo);
 
                 // 메시지 시간 포맷팅
                 const formattedTime = formatMessageTime(message.sendDate);
@@ -701,6 +785,12 @@
             function sendMessage() {
                 const messageContent = $messageInput.val().trim(); // 입력 필드 값 가져오기
 
+                // ★★★ 이 로그를 추가하여 값 확인 ★★★
+                console.log("sendMessage 함수 실행 시 loginUserEmpId:", loginUserEmpId);
+                console.log("sendMessage 함수 실행 시 loginUserEmpNo:", loginUserEmpNo);
+                // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+
                 // 메시지 내용 또는 전송 가능 상태 유효성 검사
                 if (!messageContent) {
                     console.warn('Message content is empty. Cannot send.');
@@ -717,17 +807,21 @@
                     alert("메시지를 보낼 채팅방을 선택해주세요."); // 사용자에게 알림
                     return;
                 }
-                if (!currentUserId || isNaN(parseInt(currentUserId))) { // 사용자 ID가 유효한 숫자인지 확인
-                    console.error('Current user ID is missing or invalid. Cannot send message.');
-                    alert("사용자 정보가 없습니다. 다시 로그인해주세요."); // 사용자에게 알림
+                // ★★★ 이 유효성 검사 부분을 다음과 같이 수정합니다 ★★★
+                // !loginUserEmpNo: loginUserEmpNo가 null, undefined, 0, "" 등 falsy 값인지 확인
+                // isNaN(parseInt(loginUserEmpNo)): loginUserEmpNo가 숫자로 변환될 수 있는지 확인
+                if (!loginUserEmpNo || isNaN(parseInt(loginUserEmpNo))) {
+                    console.error('Current user EmpNo is missing or invalid. Cannot send message.');
+                    alert("사용자 정보가 없습니다. 다시 로그인해주세요.");
                     return;
-                }
+                    }
+                // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
 
                 // 서버로 보낼 메시지 객체 생성 (ChatController의 handleChatMessage 메서드가 받을 형태)
                 const chatMessage = {
                     roomNo: parseInt(selectedRoomNo), // 백엔드에서 int로 기대하면 숫자로 변환
-                    senderEmpNo: parseInt(currentUserId), // 백엔드에서 int로 기대하면 숫자로 변환
+                    senderEmpNo: parseInt(loginUserEmpNo), // 백엔드에서 int로 기대하면 숫자로 변환
                     chatContent: messageContent,
                     messageType: 'TEXT' // 메시지 타입 (TEXT, FILE 등 필요에 따라 확장)
                     // sendDate는 서버에서 설정 (클라이언트에서 보내도 서버 시간을 우선하는 것이 일반적)
@@ -947,7 +1041,7 @@
                 // 참여자 목록 (empNo 배열)에 현재 사용자(로그인 사용자)의 empNo를 추가
                 // 백엔드에서도 이 로직이 있지만, 클라이언트에서도 추가하여 일관성 유지 및 유효성 검사 용이
                 const participantEmpNos = [...selectedEmployees]; // 배열 복사
-                const currentEmpNo = parseInt(currentUserId);
+                const currentEmpNo = parseInt(loginUserEmpNo);
                 if (!participantEmpNos.includes(currentEmpNo)) {
                     participantEmpNos.push(currentEmpNo);
                 }
@@ -1143,28 +1237,106 @@
             });
 
             // ** 메시지를 읽음 상태로 표시하도록 백엔드에 요청 **
+            // --- markMessagesAsRead 함수 수정 ---
+            // 성공 응답에서 갱신된 총 안 읽은 수를 받아 헤더 배지를 업데이트하도록 수정합니다.
             function markMessagesAsRead(roomNo) {
                 const path = contextPath;
-                const userId = currentUserId; // 현재 로그인한 사용자 ID (백엔드에 전달 필요)
+                //const loginUserEmpNo = $("#loginUserEmpNo").val(); // 로그인 사용자 empNo
 
-                // 백엔드의 메시지 읽음 처리 엔드포인트로 AJAX 요청
-                // 엔드포인트 URL과 HTTP 메소드 (POST/PUT 등), 보내는 데이터 형식은 백엔드 구현에 따라 달라집니다.
+                if (!loginUserEmpNo) {
+                    console.warn('로그인 사용자 empNo가 없어 채팅 메시지 읽음 처리를 건너뜜니다.');
+                    return;
+                }
+
                 $.ajax({
-                    url: path + '/chat/markAsRead', // 예시 URL: 실제 백엔드 엔드포인트로 변경하세요.
-                    method: 'POST', // 예시 메소드
-                    data: { roomNo: roomNo, userId: userId }, // 채팅방 번호와 사용자 ID 전달
+                    url: path + '/chat/markAsRead', // 백엔드 API 경로 (총 안 읽은 수 반환하도록 수정 필요)
+                    method: 'POST',
+                    data: { roomNo: roomNo, userEmpNo: loginUserEmpNo }, // userEmpNo 파라미터로 전달 (또는 백엔드에서 세션 사용)
+                    dataType: 'json', // 서버에서 JSON 응답 기대 ({ "success": true, "totalUnreadCount": 5 })
                     success: function(response) {
                         console.log('Room', roomNo, 'messages marked as read. Response:', response);
-                        // 백엔드에서 성공 응답을 보냈을 때 추가적인 처리 (필요시)
+                        if (response.success) {
+                            console.log('채팅 메시지 읽음 처리 성공');
+                            // ★ 백엔드에서 갱신된 총 안 읽은 채팅 수를 응답으로 받음 ★
+                            const newTotalUnreadCount = response.totalUnreadCount || 0;
+                            // ★ 헤더 배지 업데이트 ★
+                            updateUnreadChatCount(newTotalUnreadCount);
+
+                            // 해당 방 목록 항목의 안 읽은 메시지 수 0으로 업데이트 (클릭 시 이미 처리했지만, 응답으로 다시 확인)
+                            const roomElement = $('.chat-item[data-roomno="' + roomNo + '"]'); // jQuery 사용
+                            if (roomElement.length > 0) {
+                                let unreadBadge = roomElement.find('.unread-count');
+                                if (unreadBadge.length > 0) {
+                                    unreadBadge.text('0');
+                                    unreadBadge.hide();
+                                }
+                            }
+
+                        } else {
+                            console.error('채팅 메시지 읽음 처리 실패:', response.message);
+                            // 실패 알림 등 표시
+                        }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.error('Error marking room', roomNo, 'messages as read:', textStatus, errorThrown);
-                        // 오류 처리 (사용자에게 알림 등)
+                        console.log('Response text:', jqXHR.responseText);
+
+                        // 오류 발생 시 헤더 배지 상태를 정확히 알 수 없으므로 REST API로 다시 가져오는 것을 고려
+                        fetchUnreadChatCountViaREST(); // 오류 발생 시 강제로 총 개수 새로고침
+
+                        // 오류 알림 등 표시
                     }
                 });
-                // 참고: UI 업데이트 (뱃지 제거)는 사용성 향상을 위해 요청 결과와 상관없이 클릭 즉시 처리합니다.
-                // 만약 백엔드 처리 실패 시 UI를 되돌려야 한다면 더 복잡한 로직이 필요합니다.
             }
+
+            let currentRoomNoToLeave = null; // 현재 나가려는 채팅방 번호를 저장할 변수
+
+            // 채팅방 나가기 아이콘 클릭 이벤트
+            // 동적으로 생성되는 버튼일 수 있으므로 이벤트 위임 방식을 사용할 수 있습니다.
+            // 정적 버튼이라면 $('#chatRoom-out-icon').click(...) 사용 가능
+            $(document).on('click', '#chatRoom-out-icon', function() {
+                currentRoomNoToLeave = $(this).data('roomno'); // data-roomno 속성에서 채팅방 번호 가져오기
+                if (currentRoomNoToLeave) {
+                    $('#leaveChatRoomModal').modal('show');
+                } else {
+                    console.error('채팅방 번호를 가져올 수 없습니다.');
+                    alert('오류가 발생했습니다. 다시 시도해주세요.');
+                }
+            });
+
+            // 모달의 '예' 버튼 클릭 이벤트
+            $('#confirmLeaveChatRoomBtn').click(function() {
+                if (currentRoomNoToLeave) {
+                    $.ajax({
+                        url: contextPath + '/chat/leaveRoom', // Controller에 생성할 요청 경로
+                        type: 'POST',
+                        data: {
+                            roomNo: currentRoomNoToLeave
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.message || '채팅방을 나갔습니다.');
+                                $('#leaveChatRoomModal').modal('hide');
+                                // 채팅방 목록 새로고침 또는 해당 채팅방 UI에서 제거
+                                // 예: location.reload(); 또는 특정 DOM 요소 제거
+                                // 만약 chatList.js에서 이 함수를 호출한다면, 채팅 목록 업데이트 함수를 직접 호출할 수 있습니다.
+                                // 예: fetchMyChatRooms(); 
+                                window.location.reload(); // 간단하게 페이지 새로고침
+                            } else {
+                                alert(response.message || '채팅방 나가기에 실패했습니다.');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('채팅방 나가기 요청 실패:', error);
+                            alert('채팅방 나가기 중 오류가 발생했습니다.');
+                        }
+                    });
+                }
+            });
+
+
+
+
 
 
 
