@@ -21,7 +21,7 @@
 	<properties>
 		<java-version>11</java-version>
 		<org.springframework-version>5.3.14</org.springframework-version>
-		<org.aspectj-version>1.6.10</org.aspectj-version>
+		<org.aspectj-version>1.9.6</org.aspectj-version>
 		<org.slf4j-version>1.6.6</org.slf4j-version>
 	</properties>
 	
@@ -230,7 +230,53 @@
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-databind</artifactId>
 		    <version>2.13.3</version> </dependency>
+		    
+		<!-- Redis캐싱 관련 라이브러리 -->
+		<dependency>
+		    <groupId>org.springframework.data</groupId>
+		    <artifactId>spring-data-redis</artifactId>
+		    <version>2.6.2</version>
+		</dependency>
+		<dependency>
+		    <groupId>redis.clients</groupId>
+		    <artifactId>jedis</artifactId>
+		    <version>3.7.0</version>
+		</dependency>
 		
+		<!-- AOP 관련 추가 의존성 -->
+		<dependency>
+		    <groupId>org.aspectj</groupId>
+		    <artifactId>aspectjweaver</artifactId>
+		    <version>${org.aspectj-version}</version>
+		</dependency>
+		
+		<!-- Spring AOP (테스트를 위한거라 나중에 삭제하기) -->
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-aop</artifactId>
+		    <version>${org.springframework-version}</version>
+		</dependency>
+		
+		<!-- 캐싱 지원을 위한 의존성 -->
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-context-support</artifactId>
+		    <version>${org.springframework-version}</version>
+		</dependency>
+		
+		<!-- 프록시 생성을 위한 CGLIB (선택적) -->
+		<dependency>
+		    <groupId>cglib</groupId>
+		    <artifactId>cglib</artifactId>
+		    <version>3.3.0</version>
+		</dependency>
+		
+		<!-- gson 라이브러리 -->
+		<dependency>
+		    <groupId>com.google.code.gson</groupId>
+		    <artifactId>gson</artifactId>
+		    <version>2.10.1</version>
+		</dependency>
 		<!-- Elasticsearch High Level REST Client -->
 		<dependency>
 		    <groupId>org.elasticsearch.client</groupId>
