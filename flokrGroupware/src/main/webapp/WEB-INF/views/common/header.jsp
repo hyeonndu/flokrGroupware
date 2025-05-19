@@ -39,12 +39,12 @@
     </div>
 
     <div class="header-right-section">
-        <a href="chat.ch">
+        <a href="chatList.ch">
             <div class="header-icon-badge">
                 <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span class="header-badge">1</span>
+                <span id="header-chat-badge" class="header-badge" style="display: none;">0</span>
             </div>
         </a>
 
@@ -74,12 +74,22 @@
                     <c:when test="${not empty loginUser.profileImgPath}"> <%-- loginUser 변수 사용 --%>
                         <img src="${loginUser.profileImgPath}" alt="프로필" class="header-profile-img"> <%-- loginUser 변수 사용 --%>
                     </c:when>
-                    <c:otherwise>
-                        <svg class="header-profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
-                            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
-                        </svg>
-                    </c:otherwise>
+					<c:otherwise>
+					    <%-- 기본적인 색상 배열 (스크립틀릿 사용) --%>
+					    <% 
+					        String[] colors = {"#4285f4", "#34a853", "#ea4335", "#fbbc05", "#9c27b0"};
+					        String empName = ((com.kh.flokrGroupware.employee.model.vo.Employee)session.getAttribute("loginUser")).getEmpName();
+					        char firstChar = empName.charAt(0);
+					        int colorIndex = Math.abs(firstChar) % 5; // char를 int로 자동 변환하여 인덱스 계산
+					        pageContext.setAttribute("bgColor", colors[colorIndex]);
+					        pageContext.setAttribute("firstChar", String.valueOf(firstChar));
+					    %>
+					    
+					    <svg class="header-profile-img" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+					        <circle cx="20" cy="20" r="20" fill="${bgColor}" />
+					        <text x="20" y="22" font-family="Arial, 'Malgun Gothic', sans-serif" font-size="16" fill="white" text-anchor="middle" dominant-baseline="middle">${firstChar}</text>
+					    </svg>
+					</c:otherwise>
                 </c:choose>
                 <div class="header-profile-info">
                     <span class="header-profile-name">${loginUser.empName}님</span>
@@ -143,7 +153,7 @@
                     </svg>
                     사용자 정보 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/facility" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/adminFacility" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="3" y1="9" x2="21" y2="9"></line>
@@ -169,7 +179,7 @@
                     </svg>
                     업무 관리
                 </a>
-                <a href="${pageContext.request.contextPath}/calendar.sc" class="header-nav-item ${currentPage eq 'schedule' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/calendar.sc" class="header-nav-item ${currentMenu eq 'schedule' ? 'active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -192,14 +202,14 @@
                     </svg>
                     주소록
                 </a>
-                <a href="${pageContext.request.contextPath}/approval" class="header-nav-item ${currentMenu eq 'approval' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/main.ap" class="header-nav-item ${currentMenu eq 'approval' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 11 12 14 22 4"></polyline>
                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                     </svg>
                     전자 결재
                 </a>
-                <a href="${pageContext.request.contextPath}/facility-reservation" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
+                <a href="${pageContext.request.contextPath}/facilityReservation" class="header-nav-item ${currentMenu eq 'facility' ? 'header-active' : ''}">
                     <svg class="header-nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="3" y1="9" x2="21" y2="9"></line>
@@ -241,7 +251,12 @@
 <c:if test="${not empty loginUser}">
     <input type="hidden" id="loginUserId" value="${loginUser.empId}" />
     <input type="hidden" id="userDeptNo" value="${loginUser.deptNo}" />
+    <input type="hidden" id="loginUserEmpNo" value="${loginUser.empNo}" />
+    <input type="hidden" id="loginUserIsAdmin" value="${loginUser.isAdmin}">
 </c:if>
 
 <!-- 알림 스크립트 -->
 <script src="${pageContext.request.contextPath}/resources/js/notification.js"></script>
+
+<!-- 채팅 알림 뱃지 스크립트 -->
+<script src="${pageContext.request.contextPath}/resources/js/chatBadge.js"></script>

@@ -9,11 +9,19 @@
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Employee" alias="employee"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Department" alias="department"/>
 		<typeAlias type="com.kh.flokrGroupware.employee.model.vo.Position" alias="position"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatRoom" alias="chatRoom"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatMessage" alias="chatMessage"/>
+		<typeAlias type="com.kh.flokrGroupware.chat.model.vo.ChatRoomMember" alias="chatRoomMember"/>
 		<typeAlias type="com.kh.flokrGroupware.task.model.vo.Task" alias="Task"/>
 		<typeAlias type="com.kh.flokrGroupware.attachment.model.vo.Attachment" alias="Attachment"/>
 		<typeAlias type="com.kh.flokrGroupware.notice.model.vo.Notice" alias="notice"/>
 		<typeAlias type="com.kh.flokrGroupware.schedule.model.vo.Schedule" alias="schedule"/>
 		<typeAlias type="com.kh.flokrGroupware.schedule.model.vo.ScheduleAttendee" alias="scheduleAttendee"/>		
+		<typeAlias type="com.kh.flokrGroupware.facility.model.vo.Facility" alias="facility"/>
+		<typeAlias type="com.kh.flokrGroupware.facility.model.vo.Reservation" alias="reservation"/>
+		<typeAlias type="com.kh.flokrGroupware.approval.model.vo.ApprovalDoc" alias="approvalDoc"/>		
+		<typeAlias type="com.kh.flokrGroupware.approval.model.vo.ApprovalForm" alias="approvalForm"/>		
+		<typeAlias type="com.kh.flokrGroupware.approval.model.vo.ApprovalLine" alias="approvalLine"/>		
 	</typeAliases>
 	<!-- 유의사항 : 미리 등록해두려면 해당 클래스가 진짜 존재하고 있는 상태여야됨 -->
 	
@@ -31,6 +39,8 @@
 	 	<mapper resource="/mappers/notice-mapper.xml"/>
 	 	<mapper resource="/mappers/organization-mapper.xml"/>
 	 	<mapper resource="/mappers/schedule-mapper.xml"/>
+	 	<mapper resource="/mappers/facility-mapper.xml"/>
+	 	<mapper resource="/mappers/approval-mapper.xml"/>
 	 </mappers>
 	 <!-- 유의사항 : 미리 등록해두려면 해당 mapper파일이 진짜 존재하고 있는 상태여야됨(뿐만 아니라 namespace 까지도 지정되어 있어야 함) -->
 </configuration>

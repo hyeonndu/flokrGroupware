@@ -26,7 +26,7 @@ public class ChatMessage {
 	// 추가 
 	
 	private String senderName;
-	
+	private String senderProfileImgPath;
 	
 	public int getMessageNo() {
 		return messageNo;
@@ -63,6 +63,24 @@ public class ChatMessage {
 	}
 	public void setSenderName(String senderName) {
 		this.senderName = senderName;
+	}
+	public String getSendDate() {
+		return sendDate;
+	}
+	public void setSendDate(String sendDate) {
+		this.sendDate = sendDate;
+	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	public String getSenderProfileImgPath() {
+		return senderProfileImgPath;
+	}
+	public void setSenderProfileImgPath(String senderProfileImgPath) {
+		this.senderProfileImgPath = senderProfileImgPath;
 	}
 	
 	

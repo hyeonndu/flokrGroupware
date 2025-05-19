@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -698,6 +700,39 @@ public class EmployeeController {
         logger.info("직원 검색 결과 - 키워드: " + keyword + ", 결과 수: " + results.size());
         
         return results;
+    }
+    
+    
+    /**
+     * 모든 활성 상태의 직원 목록을 부서 및 직급 정보와 함께 JSON 형태로 반환
+     * 채팅방 생성 모달에서 사용될 예정
+     * @param session 현재 사용자 정보를 얻기 위한 세션 객체 (로그인 체크용)
+     * @return 부서 및 직급 정보가 포함된 직원 목록 (JSON)
+     */
+    @RequestMapping("employeesByDepartment")
+    @ResponseBody
+    public ResponseEntity<ArrayList<Employee>> getEmployeesByDepartment(HttpSession session) {
+    	
+        // 로그인 여부 체크
+        Employee loginUser = (Employee)session.getAttribute("loginUser");
+        if(loginUser == null) {
+            // 로그인되지 않은 경우 401 Unauthorized 응답
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            // Service 호출하여 모든 활성 직원 목록 조회
+            ArrayList<Employee> employeeList = employeeService.findActiveEmployeesWithDeptAndPosition();
+
+            // 성공 시 직원 목록과 함께 200 OK 응답 반환
+            return ResponseEntity.ok(employeeList);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 오류 발생 시 500 Internal Server Error 응답
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    	
     }
 
 }

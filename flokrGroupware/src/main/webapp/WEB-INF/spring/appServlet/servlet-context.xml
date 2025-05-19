@@ -21,7 +21,13 @@
         <beans:property name="suffix" value=".jsp" />
     </beans:bean>
     
-    <context:component-scan base-package="com.kh.flokrGroupware" />
+    
+    <!-- 웹소켓 + 캐싱 잘되는 버전 -->
+    <context:component-scan base-package="com.kh.flokrGroupware" use-default-filters="false">
+    <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+    
+    <!-- <context:component-scan base-package="com.kh.flokrGroupware" use-default-filters="false"/> -->
     
 	<!-- 기존 WebSocket 설정 주석 처리 -->
 	<!-- 

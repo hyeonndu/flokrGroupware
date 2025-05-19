@@ -161,30 +161,30 @@
         WHERE NOTICE_NO = #{noticeNo}
     </update>
     
-    <!-- 최근 공지사항 조회 (메인 페이지용) -->
-    <select id="selectRecentNotices" parameterType="int" resultMap="noticeResultMap">
-        SELECT 
-            N.NOTICE_NO, 
-            N.AUTHOR_EMP_NO, 
-            N.NOTICE_TITLE, 
-            N.IS_MANDATORY, 
-            N.CATEGORY, 
-            N.VIEW_COUNT, 
-            N.CREATE_DATE,
-            E.EMP_NAME
-        FROM 
-            NOTICE N
-        LEFT JOIN 
-            EMPLOYEE E ON N.AUTHOR_EMP_NO = E.EMP_NO
-        WHERE 
-            N.STATUS = 'Y'
-        ORDER BY 
-            N.IS_MANDATORY DESC, 
-            N.CREATE_DATE DESC
-        <if test="value != null">
-            <![CDATA[ AND ROWNUM <= #{value} ]]>
-        </if>
-    </select>
+	<!-- 최근 공지사항 조회 (메인 페이지용) -->
+	<select id="selectRecentNotices" parameterType="int" resultMap="noticeResultMap">
+	    SELECT 
+	        N.NOTICE_NO, 
+	        N.AUTHOR_EMP_NO, 
+	        N.NOTICE_TITLE, 
+	        N.IS_MANDATORY, 
+	        N.CATEGORY, 
+	        N.VIEW_COUNT, 
+	        N.CREATE_DATE,
+	        E.EMP_NAME
+	    FROM 
+	        NOTICE N
+	    LEFT JOIN 
+	        EMPLOYEE E ON N.AUTHOR_EMP_NO = E.EMP_NO
+	    WHERE 
+	        N.STATUS = 'Y'
+	        <if test="value != null">
+	            <![CDATA[ AND ROWNUM <= #{value} ]]>
+	        </if>
+	    ORDER BY 
+	        N.IS_MANDATORY DESC, 
+	        N.CREATE_DATE DESC
+	</select>
     
     <!-- 필독 공지사항 조회 -->
     <select id="selectMandatoryNotices" resultMap="noticeResultMap">

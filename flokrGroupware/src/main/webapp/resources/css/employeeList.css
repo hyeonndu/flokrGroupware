@@ -32,7 +32,7 @@ body {
 
 /* 검색 필터 스타일 */
 .search-filter {
-    background-color: #f8fbff;
+    background-color: #f5f7fb;
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
@@ -60,7 +60,7 @@ body {
 }
 
 .employee-table th {
-    background-color: #f1f5f9;
+    background-color: #f5f7fb;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem;
@@ -75,7 +75,7 @@ body {
 }
 
 .employee-table tr:hover {
-    background-color: #f8fafc;
+    background-color: #f5f7fb;
 }
 
 /* 상태 배지 */

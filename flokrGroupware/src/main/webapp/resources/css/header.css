@@ -309,17 +309,38 @@
 
 .header-notification-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: 4px;
+    right: -1px;
     background-color: #ff4757;
     color: white;
     border-radius: 50%;
     min-width: 18px;
     height: 18px;
     font-size: 11px;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 4px;
     box-sizing: border-box;
+    z-index: 1;
+}
+
+.header-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #0d6efd; /* 파란색 계열 (채팅과 연관) */
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 11px;
+    font-weight: bold; /* 굵게 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    z-index: 1; /* 아이콘 위에 오도록 z-index 설정 */
 }

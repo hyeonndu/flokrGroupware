@@ -136,7 +136,7 @@
           회의실, 공용 장비 등 사내 시설을 관리합니다.
         </p>
         <div class="feature-actions">
-          <a href="${pageContext.request.contextPath}/facility" class="feature-btn primary">시설 현황</a>
+          <a href="${pageContext.request.contextPath}/adminFacility" class="feature-btn primary">시설 현황</a>
           <a href="${pageContext.request.contextPath}/facilityReservation" class="feature-btn">예약 관리</a>
         </div>
       </div>
