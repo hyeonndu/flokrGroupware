@@ -799,14 +799,21 @@ public class ApprovalController {
      * @return 결재선 설정 모달
      */
     @RequestMapping("approvalLineModal.ap")
-    public String approvalLineModal(Model model) {
+    public String approvalLineModal(HttpSession session, Model model) {
+        Employee loginUser = (Employee)session.getAttribute("loginUser");
         ArrayList<Employee> employeeList = aService.selectEmployeesForApprovalLine();
+        
+        // 로그인한 사용자 제외
+        if (loginUser != null) {
+            employeeList.removeIf(emp -> emp.getEmpNo() == loginUser.getEmpNo());
+        }
         
         // 부서 목록을 중복 없이 가져오기
         ArrayList<HashMap<String, Object>> departments = aService.selectAllDepartments();
         
         model.addAttribute("employeeList", employeeList);
         model.addAttribute("departments", departments);
+        model.addAttribute("loginUser", loginUser); // 로그인 사용자 정보도 전달
         return "approval/approvalLineListModal";
     }
     
@@ -817,8 +824,15 @@ public class ApprovalController {
      */
     @RequestMapping("searchEmployees.ap")
     @ResponseBody
-    public String searchEmployees(@RequestParam("keyword") String keyword) {
+    public String searchEmployees(@RequestParam("keyword") String keyword, HttpSession session) {
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
         ArrayList<Employee> employees = aService.searchEmployeesForApprovalLine(keyword);
+        
+        // 로그인한 사용자 제외
+        if (loginUser != null) {
+            employees.removeIf(emp -> emp.getEmpNo() == loginUser.getEmpNo());
+        }
+        
         return new Gson().toJson(employees);
     }
     
@@ -856,7 +870,8 @@ public class ApprovalController {
      */
     @RequestMapping(value="selectEmployeesByDept.ap", produces="application/json; charset=utf-8")
     @ResponseBody
-    public String selectEmployeesByDept(@RequestParam(value = "deptNo", defaultValue = "ALL") String deptNo) {
+    public String selectEmployeesByDept(@RequestParam(value = "deptNo", defaultValue = "ALL") String deptNo, HttpSession session) {
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
         ArrayList<Employee> employees;
         
         // 전체 조회 또는 특정 부서 직원 조회
@@ -869,6 +884,11 @@ public class ApprovalController {
             } catch (NumberFormatException e) {
                 employees = new ArrayList<>(); // 오류 시 빈 목록 반환
             }
+        }
+        
+        // 로그인한 사용자 제외
+        if (loginUser != null) {
+            employees.removeIf(emp -> emp.getEmpNo() == loginUser.getEmpNo());
         }
         
         return new Gson().toJson(employees);
