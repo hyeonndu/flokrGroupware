@@ -45,21 +45,23 @@
             </div>
             
             <div class="apline-emp-list">
-                <div class="apline-emp-grid" id="apline-employee-grid">
-                    <c:forEach var="emp" items="${employeeList}">
-                        <div class="apline-emp-card" onclick="selectEmployee(${emp.empNo}, '${emp.empName}', '${emp.deptName}', '${emp.positionName}')">
-                            <div class="apline-emp-info">
-                                <div class="apline-emp-avatar">
-                                    ${emp.empName.substring(0, 1)}
-                                </div>
-                                <div class="apline-emp-details">
-                                    <div class="apline-emp-name">${emp.empName}</div>
-                                    <div class="apline-emp-position">${emp.deptName} · ${emp.positionName}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </c:forEach>
-                </div>
+			    <div class="apline-emp-grid" id="apline-employee-grid">
+			        <c:forEach var="emp" items="${employeeList}">
+			            <c:if test="${emp.empNo != loginUser.empNo}"> <!-- 로그인한 사용자 제외 -->
+			                <div class="apline-emp-card" onclick="selectEmployee(${emp.empNo}, '${emp.empName}', '${emp.deptName}', '${emp.positionName}')">
+			                    <div class="apline-emp-info">
+			                        <div class="apline-emp-avatar">
+			                            ${emp.empName.substring(0, 1)}
+			                        </div>
+			                        <div class="apline-emp-details">
+			                            <div class="apline-emp-name">${emp.empName}</div>
+			                            <div class="apline-emp-position">${emp.deptName} · ${emp.positionName}</div>
+			                        </div>
+			                    </div>
+			                </div>
+			            </c:if>
+			        </c:forEach>
+			    </div>
                 
                 <div class="apline-recent-section">
 				    <div class="apline-recent-title">최근 선택한 결재자</div>

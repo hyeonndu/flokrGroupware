@@ -10,9 +10,9 @@
 	       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
 	       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
-	<!-- 개발환경용 설정 파일 (로컬에서 개발 및 테스트 시 사용, Redis 프로파일 처리) -->
+	<!-- 개발환경용 설정 파일 (로컬에서 개발 및 테스트 시 사용, Redis 프로파일 처리) dev/deploy-->
 	<context:property-placeholder location="classpath:application.properties,
-											classpath:application-${spring.profiles.active:dev}.properties" 
+											classpath:application-${spring.profiles.active:deploy}.properties" 
 								  ignore-unresolvable="true" ignore-resource-not-found="true" />
 								  
 	<!-- 

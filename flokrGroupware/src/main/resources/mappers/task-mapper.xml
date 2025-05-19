@@ -171,6 +171,7 @@
 		  from attachment
 		 where ref_no = #{taskNo}
 		   and status = 'Y'
+		   and ref_type = 'TASK'
 	</select>
 	
 	<update id="attachmentDelete">
