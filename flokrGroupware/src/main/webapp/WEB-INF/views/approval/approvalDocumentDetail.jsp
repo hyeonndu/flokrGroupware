@@ -114,7 +114,7 @@
                            <td>${line.approverName}</td>
                            <td>${line.deptName}/${line.positionName}</td>
                            <td>
-                               <div class="apdetail-approval-signature 
+                               <div class="apdetail-approval-signature
                                    <c:choose>
                                        <c:when test="${line.lineStatus == 'APPROVED'}">approved</c:when>
                                        <c:when test="${line.lineStatus == 'REJECTED'}">rejected</c:when>

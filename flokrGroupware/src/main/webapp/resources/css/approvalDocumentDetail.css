@@ -158,6 +158,8 @@
             border-radius: 4px;
             display: inline-block;
             position: relative;
+            text-align: center;     /* 가로 중앙 정렬 */
+    		line-height: 40px;      /* 높이와 동일한 line-height로 세로 중앙 정렬 */
         }
         
         .apdetail-approval-signature.approved {

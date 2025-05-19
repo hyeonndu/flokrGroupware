@@ -776,5 +776,373 @@ function submitDocumentDirect() {
  <script src="${pageContext.request.contextPath}/resources/js/expenseForm.js"></script>
  <script src="${pageContext.request.contextPath}/resources/js/remoteWorkForm.js"></script>
  <script src="${pageContext.request.contextPath}/resources/js/businessTripForm.js"></script>
+ <script>
+// 페이지 로드 시 한 번만 실행
+(function() {
+    // 각 양식별 데이터 수집 및 유효성 검증 함수를 안전하게 감싸는 래퍼
+    // 이미 문서가 로드된 후에 실행되므로 DOMContentLoaded 이벤트는 필요 없음
+    
+    // 기존 함수 백업
+    const originalUpdateDraft = window.updateDraft;
+    const originalSubmitDocumentDirect = window.submitDocumentDirect;
+    
+    // updateDraft 함수 래핑 (임시저장용)
+    window.updateDraft = function() {
+        try {
+            // 제목 유효성 검증
+            const title = document.querySelector('input[name="title"]').value.trim();
+            if (!title) {
+                alert('문서 제목을 입력해주세요.');
+                return;
+            }
+            
+            // 양식별 데이터 수집 - 기존 함수 호출 시 발생하는 오류 처리
+            try {
+                collectDocumentData();
+                document.getElementById('apupdate-action').value = 'save';
+                document.getElementById('apupdate-document-form').submit();
+            } catch (error) {
+                console.error('데이터 수집 중 오류 발생:', error);
+                
+                // 오류 발생 시 안전한 대체 방법 사용
+                safeCollectDocumentData();
+                document.getElementById('apupdate-action').value = 'save';
+                document.getElementById('apupdate-document-form').submit();
+            }
+        } catch (error) {
+            console.error('임시저장 처리 중 오류:', error);
+            alert('임시저장 중 오류가 발생했습니다. 필요한 정보를 확인하세요.');
+        }
+    };
+    
+    // submitDocumentDirect 함수 래핑 (결재요청용)
+    window.submitDocumentDirect = function() {
+        try {
+            // 제목 유효성 검증
+            const title = document.querySelector('input[name="title"]').value.trim();
+            if (!title) {
+                alert('문서 제목을 입력해주세요.');
+                return;
+            }
+            
+            // 결재선 확인
+            if (approvalLines.length === 0) {
+                alert('결재선을 설정해주세요.');
+                return;
+            }
+            
+            // 양식별 데이터 수집 - 기존 함수 호출 시 발생하는 오류 처리
+            try {
+                collectDocumentData();
+                document.getElementById('apupdate-action').value = 'submit';
+                document.getElementById('apupdate-document-form').submit();
+            } catch (error) {
+                console.error('데이터 수집 중 오류 발생:', error);
+                
+                // 오류 발생 시 안전한 대체 방법 사용
+                safeCollectDocumentData();
+                document.getElementById('apupdate-action').value = 'submit';
+                document.getElementById('apupdate-document-form').submit();
+            }
+        } catch (error) {
+            console.error('결재요청 처리 중 오류:', error);
+            alert('결재요청 중 오류가 발생했습니다. 필요한 정보를 확인하세요.');
+        }
+    };
+    
+    // 안전한 데이터 수집 함수 (기존 함수가 실패할 경우 대체용)
+    function safeCollectDocumentData() {
+        const formNo = ${document.formNo}; // JSP EL을 통해 양식 번호 가져오기
+        let documentData = {};
+        
+        // 양식별 데이터 수집
+        switch (formNo) {
+            case 1: // 휴가신청서
+                documentData = collectSafeVacationData();
+                break;
+            case 2: // 지출결의서
+                documentData = collectSafeExpenseData();
+                break;
+            case 3: // 재택근무신청서
+                documentData = collectSafeRemoteWorkData();
+                break;
+            case 4: // 출장신청서
+                documentData = collectSafeBusinessTripData();
+                break;
+            default:
+                // 기본 에디터
+                const contentEditor = document.getElementById('doc-content-editor');
+                if (contentEditor) {
+                    const content = contentEditor.innerHTML;
+                    if (content === '<span class="placeholder">문서 내용을 입력하세요</span>') {
+                        documentData = { content: '' };
+                    } else {
+                        documentData = { content: content };
+                    }
+                }
+        }
+        
+        // 데이터 저장
+        document.getElementById('docContent-hidden').value = JSON.stringify(documentData);
+    }
+    
+    // 안전한 휴가신청서 데이터 수집 함수
+    function collectSafeVacationData() {
+        // 값을 안전하게 가져오는 헬퍼 함수
+        function getValue(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.value : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        function getText(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.textContent : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        // 휴가 유형 가져오기
+        let vacationType = '';
+        try {
+            const checkedRadio = document.querySelector('input[name="vacationType"]:checked');
+            if (checkedRadio) vacationType = checkedRadio.value;
+        } catch (e) {
+            console.error('휴가 유형 가져오기 오류:', e);
+        }
+        
+        return {
+            formType: "vacation",
+            data: {
+                vacationType: vacationType,
+                startDate: getValue('#vacation-start-date', ''),
+                endDate: getValue('#vacation-end-date', ''),
+                days: getText('#vacation-days', '0').replace(/[()총일]/g, '').trim(),
+                totalDays: getValue('#total-days', '0'),
+                usedDays: getValue('#used-days', '0'),
+                remainingDays: getText('#remaining-days', '0'),
+                reason: getValue('#vacation-reason', ''),
+                emergencyContact: getValue('#emergency-contact', ''),
+                drafterInfo: {
+                    empName: loginUser.empName || '',
+                    deptName: loginUser.deptName || '',
+                    positionName: loginUser.positionName || ''
+                }
+            }
+        };
+    }
+    
+    // 안전한 지출결의서 데이터 수집 함수
+    function collectSafeExpenseData() {
+        // 값을 안전하게 가져오는 헬퍼 함수
+        function getValue(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.value : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        function getText(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.textContent : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        // 지출 유형 가져오기
+        let expenseType = '';
+        try {
+            const checkedRadio = document.querySelector('input[name="expenseType"]:checked');
+            if (checkedRadio) expenseType = checkedRadio.value;
+        } catch (e) {
+            console.error('지출 유형 가져오기 오류:', e);
+        }
+        
+        // 지출 내역 수집 (안전하게)
+        const expenses = [];
+        try {
+            const rows = document.querySelectorAll('#expense-body tr');
+            if (rows && rows.length > 0) {
+                rows.forEach(row => {
+                    try {
+                        const dateInput = row.querySelector('.expense-date');
+                        const detailInput = row.querySelector('.expense-detail');
+                        const amountInput = row.querySelector('.expense-amount');
+                        
+                        if (dateInput && detailInput && amountInput) {
+                            expenses.push({
+                                date: dateInput.value || '',
+                                detail: detailInput.value || '',
+                                amount: amountInput.value || '0'
+                            });
+                        }
+                    } catch (e) {
+                        console.error('지출항목 데이터 수집 오류:', e);
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('지출 내역 수집 오류:', e);
+        }
+        
+        return {
+            formType: "expense",
+            data: {
+                expenseType: expenseType,
+                accountInfo: getValue('#account-info', ''),
+                expenses: expenses,
+                total: getText('#expense-total', '0').replace(/,/g, ''),
+                description: getValue('#expense-description', ''),
+                drafterInfo: {
+                    empName: loginUser.empName || '',
+                    deptName: loginUser.deptName || '',
+                    positionName: loginUser.positionName || ''
+                }
+            }
+        };
+    }
+    
+    // 안전한 재택근무신청서 데이터 수집 함수
+    function collectSafeRemoteWorkData() {
+        // 값을 안전하게 가져오는 헬퍼 함수
+        function getValue(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.value : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        function getText(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.textContent : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        // 재택근무 유형 가져오기
+        let workType = '';
+        try {
+            const checkedRadio = document.querySelector('input[name="workType"]:checked');
+            if (checkedRadio) workType = checkedRadio.value;
+        } catch (e) {
+            console.error('재택근무 유형 가져오기 오류:', e);
+        }
+        
+        // 근무 환경 가져오기
+        const workEnv = [];
+        try {
+            const checkedBoxes = document.querySelectorAll('input[name="workEnv[]"]:checked');
+            if (checkedBoxes && checkedBoxes.length > 0) {
+                checkedBoxes.forEach(checkbox => {
+                    if (checkbox && checkbox.value) workEnv.push(checkbox.value);
+                });
+            }
+        } catch (e) {
+            console.error('근무 환경 가져오기 오류:', e);
+        }
+        
+        return {
+            formType: "remoteWork",
+            data: {
+                workType: workType,
+                startDate: getValue('#startDate', ''),
+                endDate: getValue('#endDate', ''),
+                days: getText('#dayCount', '0').replace(/[()총일]/g, '').trim(),
+                reason: getValue('#reason', ''),
+                workPlan: getValue('#workPlan', ''),
+                workEnvironments: workEnv.join(', '),
+                contact: getValue('#contact', ''),
+                drafterInfo: {
+                    empName: loginUser.empName || '',
+                    deptName: loginUser.deptName || '',
+                    positionName: loginUser.positionName || ''
+                }
+            }
+        };
+    }
+    
+    // 안전한 출장신청서 데이터 수집 함수
+    function collectSafeBusinessTripData() {
+        // 값을 안전하게 가져오는 헬퍼 함수
+        function getValue(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.value : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        function getText(selector, defaultValue) {
+            try {
+                const element = document.querySelector(selector);
+                return element ? element.textContent : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        
+        // 출장 유형 가져오기
+        let tripType = '';
+        try {
+            const checkedRadio = document.querySelector('input[name="tripType"]:checked');
+            if (checkedRadio) tripType = checkedRadio.value;
+        } catch (e) {
+            console.error('출장 유형 가져오기 오류:', e);
+        }
+        
+        // 출장자 정보 수집
+        const tripMembers = [];
+        try {
+            const memberInputs = document.querySelectorAll('.trip-member-input');
+            if (memberInputs && memberInputs.length > 0) {
+                memberInputs.forEach(input => {
+                    if (input && input.value) {
+                        const parts = input.value.split(',');
+                        tripMembers.push({
+                            name: parts[0] || '',
+                            dept: parts[1] || ''
+                        });
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('출장자 정보 수집 오류:', e);
+        }
+        
+        return {
+            formType: "businessTrip",
+            data: {
+                purpose: getValue('#trip-purpose', ''),
+                tripType: tripType,
+                location: getValue('#trip-location', ''),
+                startDate: getValue('#trip-start-date', ''),
+                endDate: getValue('#trip-end-date', ''),
+                days: getText('#trip-days', '0').replace(/[()총일]/g, '').trim(),
+                members: tripMembers,
+                emergencyContact: getValue('#emergency-contact', ''),
+                drafterInfo: {
+                    empName: loginUser.empName || '',
+                    deptName: loginUser.deptName || '',
+                    positionName: loginUser.positionName || ''
+                }
+            }
+        };
+    }
+})();
+</script>
  </body>
  </html>
