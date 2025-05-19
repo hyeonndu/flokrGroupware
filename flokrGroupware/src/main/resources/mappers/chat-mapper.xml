@@ -255,30 +255,30 @@
     </select>
     
     <update id="updateLastReadMessageNo" parameterType="map">
-        UPDATE CHAT_ROOM_MEMBER
-        SET LAST_READ_MESSAGE_NO = (
-            SELECT NVL(MAX(MESSAGE_NO), 0) -- 해당 방의 가장 큰 (최신) MESSAGE_NO를 가져옵니다. 메시지가 없으면 0.
-            FROM CHAT_MESSAGE
-            WHERE ROOM_NO = #{roomNo} --  Map에서 "roomNo" 키 값을 참조
-        )
-        WHERE ROOM_NO = #{roomNo} --  Map에서 "roomNo" 키 값을 참조
-          AND EMP_NO = #{userEmpNo} --  Map에서 "userEmpNo" 키 값을 참조
+    UPDATE CHAT_ROOM_MEMBER
+    SET LAST_READ_MESSAGE_NO = (
+        SELECT MAX(MESSAGE_NO) -- NVL(..., 0) 제거, 메시지 없으면 NULL 반환
+        FROM CHAT_MESSAGE
+        WHERE ROOM_NO = #{roomNo}
+    )
+    WHERE ROOM_NO = #{roomNo}
+      AND EMP_NO = #{userEmpNo}
 	</update>
 	
 	<select id="getTotalUnreadChatCountForUser" parameterType="_int" resultType="_int">
-        SELECT NVL(SUM(CM_UNREAD.MESSAGE_COUNT), 0)
-        FROM (
-            SELECT COUNT(CM.MESSAGE_NO) AS MESSAGE_COUNT
-            FROM CHAT_ROOM CR
-            JOIN CHAT_ROOM_MEMBER CRM ON CR.ROOM_NO = CRM.ROOM_NO
-            JOIN CHAT_MESSAGE CM ON CR.ROOM_NO = CM.ROOM_NO
-            WHERE CRM.EMP_NO = #{empNo} -- 해당 사용자
-            AND CM.MESSAGE_NO > CRM.LAST_READ_MESSAGE_NO -- 마지막 읽은 메시지 이후의 메시지
-            AND CM.SENDER_EMP_NO != #{empNo} -- 본인이 보낸 메시지는 안 읽은 수에 포함 안 함
-            AND CR.STATUS = 'Y' -- 활성화된 채팅방만 고려
-            GROUP BY CR.ROOM_NO -- 방별로 그룹화 (각 방의 안 읽은 수)
-        ) CM_UNREAD
-    </select>
+    SELECT NVL(SUM(CM_UNREAD.MESSAGE_COUNT), 0)
+    FROM (
+        SELECT COUNT(CM.MESSAGE_NO) AS MESSAGE_COUNT
+        FROM CHAT_ROOM CR
+        JOIN CHAT_ROOM_MEMBER CRM ON CR.ROOM_NO = CRM.ROOM_NO
+        JOIN CHAT_MESSAGE CM ON CR.ROOM_NO = CM.ROOM_NO
+        WHERE CRM.EMP_NO = #{empNo}
+        AND CM.MESSAGE_NO > NVL(CRM.LAST_READ_MESSAGE_NO, 0) -- 여기! NVL 사용
+        AND CM.SENDER_EMP_NO != #{empNo}
+        AND CR.STATUS = 'Y'
+        GROUP BY CR.ROOM_NO
+    ) CM_UNREAD
+</select>
     
     <select id="getChatRoomMemberEmpNos" parameterType="_int" resultType="_int">
         SELECT EMP_NO

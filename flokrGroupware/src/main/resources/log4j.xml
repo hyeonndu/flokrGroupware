@@ -79,6 +79,20 @@
         <level value="INFO" />
 		<!-- <level value="DEBUG" /> -->
     </logger>
+    
+    <logger name="org.springframework.web.socket">
+    <level value="DEBUG" />
+	</logger>
+	<logger name="org.springframework.messaging">
+	    <level value="DEBUG" />
+	</logger>
+	<logger name="org.apache.tomcat.websocket">
+    <level value="DEBUG" />
+	</logger>
+	<logger name="com.kh.flokrGroupware.chat.controller">
+	    <level value="DEBUG" /> </logger>
+	<logger name="com.kh.flokrGroupware.chat.service">
+	    <level value="DEBUG" /> </logger>
 	
 	<!-- 
 	<logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
