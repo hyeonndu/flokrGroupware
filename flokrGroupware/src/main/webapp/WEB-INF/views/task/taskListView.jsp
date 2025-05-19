@@ -108,18 +108,6 @@
 							    </svg>
 							</button>
 						</div>
-						<div class="filter-group">
-							<label class="filter-label">검색 필터:</label> <select
-								class="filter-select">
-								<option value="">카테고리</option>
-								<option value="디자인">디자인</option>
-								<option value="데이터">데이터</option>
-							</select> <select class="filter-select">
-								<option value="">상태</option>
-								<option value="진행중">진행중</option>
-								<option value="완료">완료</option>
-							</select>
-						</div>
 					</div>
 
 
@@ -292,6 +280,38 @@
 	      .then(res => res.text())
 	      .then(html => {
 	        document.getElementById("task-insert-view").innerHTML = html;
+	        
+	        const form = document.getElementById("insert-task-form");
+	        if (form) {
+	          form.addEventListener("submit", function (e) {
+	            e.preventDefault();
+	            console.log("✅ insert-task-form 제출 시도됨!");
+
+	            const formData = new FormData(form);
+	            for (let [key, value] of formData.entries()) {
+	              console.log(`${key} →`, value instanceof File ? value.name : value);
+	            }
+
+	            // 진짜 서버 전송
+	            fetch(form.action, {
+	              method: "POST",
+	              body: formData
+	            })
+	              .then(res => {
+	                if (!res.ok) throw new Error("서버 오류");
+	                return res.text();
+	              })
+	              .then(resp => {
+	                console.log("업무 등록 완료", resp);
+	                location.href = `${pageContext.request.contextPath}/task/list`;
+	              })
+	              .catch(err => {
+	                console.error("등록 실패", err);
+	              });
+	          });
+	        } else {
+	          console.warn("❌ insert-task-form을 찾지 못함");
+	        }
 	        
 	        // 폼이 로드된 직후에 직원 목록 로드 - DOMContentLoaded 이벤트를 기다리지 않음
 	        loadEmployeeList();

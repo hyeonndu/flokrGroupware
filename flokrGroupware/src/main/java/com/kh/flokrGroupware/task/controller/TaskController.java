@@ -104,15 +104,31 @@ public class TaskController {
 
 	@RequestMapping("/insert")
 	public String taskInsert(
-		Task task, 
-		@RequestParam("uploadFile") MultipartFile upfile, 
-		@RequestParam(value="assignees", required=false) String assignees,
-		Model model, 
-		HttpSession session, 
-		Attachment atmt) {
+			@RequestParam("taskTitle") String title,
+		    @RequestParam("taskContent") String content,
+		    @RequestParam("category") String category,
+		    @RequestParam("dueDate") String dueDate,
+		    @RequestParam("emoji") String emoji,
+		    @RequestParam(value = "uploadFile", required = false) MultipartFile upfile,
+		    @RequestParam(value = "assignees", required = false) String assignees,
+		    HttpSession session) {
 		
+		System.out.println("✅ title: " + title);
+	    System.out.println("✅ content: " + content);
+	    System.out.println("✅ assigneesRaw: " + assignees);
+
 		Employee loginUser = (Employee) session.getAttribute("loginUser");
 		int empNo = loginUser.getEmpNo();
+		
+		Task task = new Task();
+	    task.setTaskTitle(title);
+	    task.setTaskContent(content);
+	    task.setCategory(category);
+	    task.setDueDate(dueDate);
+	    task.setEmoji(emoji);
+	    task.setTaskWriter(String.valueOf(((Employee) session.getAttribute("loginUser")).getEmpNo()));
+	    
+	    Attachment atmt = null;
 		
 		// 파일 업로드 처리
 		if (upfile != null && !upfile.isEmpty() && upfile.getOriginalFilename() != null && !upfile.getOriginalFilename().trim().equals("")) {
