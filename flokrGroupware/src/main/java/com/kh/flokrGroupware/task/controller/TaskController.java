@@ -139,7 +139,6 @@ public class TaskController {
 		                      .map(Integer::parseInt)
 		                      .collect(Collectors.toList());
 		    
-		    System.out.println("담당자 목록: " + assigneeList);
 		}
 		
 		// 업데이트된 서비스 메소드 호출
