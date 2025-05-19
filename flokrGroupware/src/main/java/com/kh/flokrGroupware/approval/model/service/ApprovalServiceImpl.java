@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,9 @@ public class ApprovalServiceImpl implements ApprovalService {
 	
 	@Autowired
 	private SqlSessionTemplate sqlSession;
+	
+	@Autowired  // CacheManager 주입
+	private CacheManager cacheManager;
 	
 	// 양식 관련 메소드 구현
 
@@ -110,7 +114,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	@Cacheable(value = "draftDocuments", key = "#empNo") // 임시저장함 캐싱
 	public ArrayList<ApprovalDoc> selectDraftDocuments(int empNo) {
-		return aDao.selectDraftDocuments(sqlSession, empNo);
+		long startTime = System.currentTimeMillis();
+	    ArrayList<ApprovalDoc> result = aDao.selectDraftDocuments(sqlSession, empNo);
+	    long endTime = System.currentTimeMillis();
+	    System.out.println("[성능측정] selectDraftDocuments - DB 조회 시간: " + (endTime - startTime) + "ms");
+	    return result;
 	}
 
 	@Override
@@ -121,7 +129,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	@Cacheable(value = "waitingDocuments", key = "#empNo") // 수신문서함 캐싱
 	public ArrayList<ApprovalDoc> selectWaitingDocuments(int empNo) {
-		return aDao.selectWaitingDocuments(sqlSession, empNo);
+		long startTime = System.currentTimeMillis();
+	    ArrayList<ApprovalDoc> result = aDao.selectWaitingDocuments(sqlSession, empNo);
+	    long endTime = System.currentTimeMillis();
+	    System.out.println("[성능측정] selectWaitingDocuments - DB 조회 시간: " + (endTime - startTime) + "ms");
+	    return result;
 	}
 
 	@Override
@@ -344,6 +356,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
 	@Override
 	@Transactional
+	@CacheEvict(value = {"waitingDocuments", "completedDocuments"}, key = "#currentLine.docNo") // 캐시 무효화
 	public int approveDocument(ApprovalLine currentLine) {
 		int result = 0;
 		
@@ -376,6 +389,9 @@ public class ApprovalServiceImpl implements ApprovalService {
 			result += aDao.updateDocument(sqlSession, document);
 		}
 		
+		// ❤️ 캐시 무효화 추가
+	    refreshProcessingEfficiencyCache();
+		
 		return result;
 		
 	}
@@ -394,6 +410,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         // 2. 문서 상태를 반려로 변경
         ApprovalDoc document = aDao.selectDocumentByNo(sqlSession, currentLine.getDocNo());
         document.setDocStatus("REJECTED");
+        document.setCompletedDate(new Date()); // 완료일자 설정
         result += aDao.updateDocument(sqlSession, document);
         
         // 3. 다른 결재선들도 REJECTED 상태로 변경 (필요에 따라)
@@ -406,6 +423,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                 aDao.updateApprovalLine(sqlSession, line);
             }
         }
+        
+        // ❤️ 캐시 무효화 추가
+        refreshProcessingEfficiencyCache();
         
         return result;
     }
@@ -505,6 +525,128 @@ public class ApprovalServiceImpl implements ApprovalService {
 	@Override
 	public int selectRejectedCountByApprover(int empNo) {
 	    return aDao.selectRejectedCountByApprover(sqlSession, empNo);
+	}
+
+	/**
+	 * 특정 사용자의 수신 문서함 캐시를 명시적으로 갱신
+	 * Redis 캐시를 효과적으로 관리하기 위한 유틸리티 메서드
+	 * 
+	 * @param empNo 사원 번호
+	 */
+	@Override
+	public void refreshWaitingDocumentsForUser(int empNo) {
+		try {
+	        // 1. 기본 캐시 키 무효화
+	        cacheManager.getCache("waitingDocuments").evict(empNo);
+	        
+	        // 2. 페이징 관련 캐시 키 무효화 (1~10페이지 범위에서)
+	        for (int page = 1; page <= 10; page++) {
+	            String cacheKey = empNo + "_" + page;
+	            cacheManager.getCache("waitingDocuments").evict(cacheKey);
+	        }
+	        
+	        // 3. 로그 기록
+	        System.out.println("[캐시관리] 사용자 " + empNo + "의 수신 문서함 캐시가 무효화되었습니다.");
+	        
+	    } catch (Exception e) {
+	        // 캐시 무효화 실패해도 앱에 영향 없도록 예외 처리
+	        System.err.println("[캐시관리] 오류 발생: " + e.getMessage());
+	    }
+	}
+	
+	/**
+	 * 처리 효율성 지표 계산 (private 메서드)
+	 */
+	private HashMap<String, Object> calculateProcessingEfficiency(ArrayList<ApprovalDoc> list) {
+	    HashMap<String, Object> result = new HashMap<>();
+	    
+	    if (list == null || list.isEmpty()) {
+	        result.put("status", "-");
+	        result.put("percentage", 0);
+	        return result;
+	    }
+	    
+	    int fastCount = 0;  // 24시간 이내
+	    int normalCount = 0; // 1-3일
+	    int delayedCount = 0; // 3일 이상
+	    int totalValidDocs = 0;
+	    
+	    for (ApprovalDoc doc : list) {
+	        if (doc.getRequestedDate() != null && doc.getCompletedDate() != null) {
+	            long processHours = (doc.getCompletedDate().getTime() - doc.getRequestedDate().getTime()) 
+	                              / (1000 * 60 * 60);
+	            totalValidDocs++;
+	            
+	            if (processHours <= 24) {
+	                fastCount++;
+	            } else if (processHours <= 72) {
+	                normalCount++;
+	            } else {
+	                delayedCount++;
+	            }
+	        }
+	    }
+	    
+	    if (totalValidDocs == 0) {
+	        result.put("status", "-");
+	        result.put("percentage", 0);
+	        return result;
+	    }
+	    
+	    // 가장 높은 비율의 상태 결정
+	    String status;
+	    int percentage;
+	    
+	    if (fastCount >= normalCount && fastCount >= delayedCount) {
+	        status = "신속 처리";
+	        percentage = fastCount * 100 / totalValidDocs;
+	    } else if (normalCount >= fastCount && normalCount >= delayedCount) {
+	        status = "정상 처리";
+	        percentage = normalCount * 100 / totalValidDocs;
+	    } else {
+	        status = "지연 처리";
+	        percentage = delayedCount * 100 / totalValidDocs;
+	    }
+	    
+	    result.put("status", status);
+	    result.put("percentage", percentage);
+	    
+	    return result;
+	}
+
+
+	/**
+	 * 처리 효율성 지표 계산 메서드 (인터페이스 구현)
+	 */
+	@Override
+	@Cacheable(value = "processingEfficiency", 
+	           key = "#empNo + '_' + #statusFilter + '_' + #dateFrom + '_' + #dateTo")
+	public HashMap<String, Object> getProcessingEfficiency(int empNo, String statusFilter, 
+	                                                   String dateFrom, String dateTo) {
+	    
+		long startTime = System.currentTimeMillis();
+	    
+	    // 원래 코드 그대로 유지
+	    HashMap<String, Object> result = searchDocuments("completed", empNo, 1, 
+	                                                   null, null, dateFrom, dateTo, statusFilter);
+	    ArrayList<ApprovalDoc> list = (ArrayList<ApprovalDoc>) result.get("list");
+	    
+	    // calculateProcessingEfficiency 메소드 호출 시 필요한 파라미터 전달
+	    HashMap<String, Object> efficiencyResult = calculateProcessingEfficiency(list);
+	    
+	    long endTime = System.currentTimeMillis();
+	    System.out.println("[성능측정] getProcessingEfficiency - DB 조회 시간: " + (endTime - startTime) + "ms");
+	    
+	    return efficiencyResult;
+	}
+
+	/**
+	 * 캐시 무효화 메서드 (인터페이스 구현)
+	 */
+	@Override
+	@CacheEvict(value = "processingEfficiency", allEntries = true)
+	public void refreshProcessingEfficiencyCache() {
+		System.out.println("[캐시관리] 처리 효율성 지표 캐시가 무효화되었습니다.");
 	}
 	
 }

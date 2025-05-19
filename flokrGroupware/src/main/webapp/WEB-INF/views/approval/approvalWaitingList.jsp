@@ -9,284 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>수신 문서함 | Flokr</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* 전체 스타일 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-        }
-        
-        .apwaiting-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .apwaiting-header {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .apwaiting-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .apwaiting-title-badge {
-            background: #ff9800;
-            color: white;
-            font-size: 12px;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
-        
-        .apwaiting-subtitle {
-            font-size: 14px;
-            color: #777;
-        }
-        
-        .apwaiting-count {
-            color: #ff9800;
-            font-weight: 600;
-        }
-        
-        .apwaiting-urgent-notice {
-            background: #fff3e0;
-            border: 1px solid #ffcc80;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ff9800;
-            font-size: 13px;
-        }
-        
-        .apwaiting-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-        
-        .apwaiting-search-form {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            max-width: 500px;
-        }
-        
-        .apwaiting-search-select {
-            width: 120px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-        }
-        
-        .apwaiting-search-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .apwaiting-search-btn {
-            padding: 8px 16px;
-            background: #003561;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .apwaiting-table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        
-        .apwaiting-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .apwaiting-table th,
-        .apwaiting-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .apwaiting-table th {
-            background: #f8f9fa;
-            color: #555;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-        
-        .apwaiting-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .apwaiting-table tr.urgent {
-            background: #fff3e0;
-        }
-        
-        .apwaiting-table tr.urgent:hover {
-            background: #ffebcc;
-        }
-        
-        .apwaiting-doc-title {
-            color: #003561;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .apwaiting-doc-title:hover {
-            text-decoration: underline;
-        }
-        
-        .apwaiting-status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            background: #fff3e0;
-            color: #ff9800;
-        }
-        
-        .apwaiting-drafter {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        
-        .apwaiting-drafter-name {
-            font-weight: 500;
-        }
-        
-        .apwaiting-drafter-dept {
-            font-size: 12px;
-            color: #777;
-        }
-        
-        .apwaiting-deadline {
-            font-size: 13px;
-        }
-        
-        .apwaiting-deadline.overdue {
-            color: #f44336;
-            font-weight: 500;
-        }
-        
-        .apwaiting-action-cell {
-            text-align: center;
-        }
-        
-        .apwaiting-action-btn {
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            border: none;
-            margin: 0 3px;
-            transition: all 0.2s;
-        }
-        
-        .apwaiting-approve-btn {
-            background: #28a745;
-            color: white;
-        }
-        
-        .apwaiting-approve-btn:hover {
-            background: #218838;
-        }
-        
-        .apwaiting-reject-btn {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .apwaiting-reject-btn:hover {
-            background: #c82333;
-        }
-        
-        .apwaiting-empty {
-            text-align: center;
-            padding: 50px 20px;
-            color: #888;
-        }
-        
-        .apwaiting-empty i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #ddd;
-        }
-        
-        .apwaiting-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 30px;
-            gap: 5px;
-        }
-        
-        .apwaiting-page-link {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #666;
-            background: white;
-            transition: all 0.2s;
-        }
-        
-        .apwaiting-page-link:hover {
-            background: #f8f9fa;
-            border-color: #999;
-        }
-        
-        .apwaiting-page-link.active {
-            background: #003561;
-            color: white;
-            border-color: #003561;
-        }
-        
-        .apwaiting-page-link.disabled {
-            color: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .apwaiting-page-info {
-            color: #666;
-            font-size: 14px;
-            margin-top: 15px;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/approvalWaitingList.css">
 </head>
 <body>
     <!-- header.jsp include -->
@@ -312,7 +35,7 @@
             </c:if>
             
             <div class="apwaiting-actions">
-                <form class="apwaiting-search-form" method="get" action="searchDocuments.ap">
+                <form class="apwaiting-search-form" method="get" action="searchDocuments.ap" onsubmit="return validateSearchForm();">
 				    <input type="hidden" name="boxType" value="waiting">
 				    <select name="searchType" class="apwaiting-search-select">
 				        <option value="">전체</option>
@@ -376,15 +99,16 @@
 							    </span>
                             </td>
                             <td class="apwaiting-action-cell">
-                                <button class="apwaiting-action-btn apwaiting-approve-btn" 
-                                        onclick="processApproval(${doc.docNo}, 'approve')">
-                                    <i class="fas fa-check"></i> 승인
-                                </button>
-                                <button class="apwaiting-action-btn apwaiting-reject-btn" 
-                                        onclick="processApproval(${doc.docNo}, 'reject')">
-                                    <i class="fas fa-times"></i> 반려
-                                </button>
-                            </td>
+							    <button class="apwaiting-action-btn apwaiting-approve-btn" 
+							            onclick="processApproval(${doc.docNo}, 'approve')">
+							        <i class="fas fa-check"></i> 승인
+							    </button>
+							    <button class="apwaiting-action-btn apwaiting-reject-btn" 
+							            onclick="processApproval(${doc.docNo}, 'reject')">
+							        <i class="fas fa-times"></i> 반려
+							    </button>
+							</td>
+							
                         </tr>
                     </c:forEach>
                     <c:if test="${empty documentList}">
@@ -450,19 +174,247 @@
    </div>
    
    <script>
-       function processApproval(docNo, action) {
-           // 결재 상세 페이지로 이동 (승인/반려 처리는 상세 페이지에서)
-           window.location.href = 'documentDetail.ap?docNo=' + docNo;
-       }
-       
-       // 검색폼 처리
-       document.querySelector('.apwaiting-search-form').addEventListener('submit', function(e) {
-           const keyword = this.querySelector('input[name="keyword"]').value.trim();
-           if (!keyword) {
-               e.preventDefault();
-               alert('검색어를 입력해주세요.');
-           }
-       });
-   </script>
+	    function processApproval(docNo, action) {
+	        // 모달 생성 및 스타일링
+	        if (!document.getElementById('approval-modal')) {
+	            const modalHTML = `
+	                <div id="approval-modal" class="apdetail-comment-modal">
+	                    <div class="apdetail-comment-container">
+	                        <div class="apdetail-comment-header">
+	                            <span id="approval-modal-title">결재 의견</span>
+	                            <button class="apdetail-btn-outline" onclick="closeApprovalModal()">
+	                                <i class="fas fa-times"></i>
+	                            </button>
+	                        </div>
+	                        <div class="apdetail-comment-body">
+	                            <form id="approval-modal-form" class="apdetail-comment-form">
+	                                <input type="hidden" name="docNo" id="approval-doc-no">
+	                                <input type="hidden" name="action" id="approval-action">
+	                                <textarea name="comment" class="apdetail-comment-textarea" 
+	                                    placeholder="의견을 입력하세요" id="approval-comment-text"></textarea>
+	                                <div class="apdetail-comment-footer">
+	                                    <button type="button" class="apdetail-btn apdetail-btn-outline" onclick="closeApprovalModal()">
+	                                        취소
+	                                    </button>
+	                                    <button type="button" class="apdetail-btn" id="approval-submit-btn" onclick="submitApprovalAction()">
+	                                        제출
+	                                    </button>
+	                                </div>
+	                            </form>
+	                        </div>
+	                    </div>
+	                </div>
+	            `;
+	            
+	            // 모달 스타일 추가
+	            const styleElement = document.createElement('style');
+	            styleElement.textContent = `
+	                .apdetail-comment-modal {
+	                    position: fixed;
+	                    top: 0;
+	                    left: 0;
+	                    width: 100%;
+	                    height: 100%;
+	                    background: rgba(0,0,0,0.5);
+	                    display: flex;
+	                    align-items: center;
+	                    justify-content: center;
+	                    z-index: 1000;
+	                    opacity: 0;
+	                    visibility: hidden;
+	                    transition: all 0.3s;
+	                }
+	                
+	                .apdetail-comment-modal.active {
+	                    opacity: 1;
+	                    visibility: visible;
+	                }
+	                
+	                .apdetail-comment-container {
+	                    background: white;
+	                    width: 500px;
+	                    border-radius: 12px;
+	                    overflow: hidden;
+	                    transform: scale(0.8);
+	                    transition: transform 0.3s;
+	                }
+	                
+	                .apdetail-comment-modal.active .apdetail-comment-container {
+	                    transform: scale(1);
+	                }
+	                
+	                .apdetail-comment-header {
+	                   padding: 15px 20px;
+	                   border-bottom: 1px solid #eee;
+	                   font-size: 16px;
+	                   font-weight: 600;
+	                   display: flex;
+	                   justify-content: space-between;
+	                   align-items: center;
+	                }
+	                
+	                .apdetail-comment-body {
+	                   padding: 20px;
+	                }
+	                
+	                .apdetail-comment-form {
+	                   display: flex;
+	                   flex-direction: column;
+	                   gap: 15px;
+	                }
+	                
+	                .apdetail-comment-textarea {
+	                   width: 100%;
+	                   min-height: 100px;
+	                   padding: 10px;
+	                   border: 1px solid #ddd;
+	                   border-radius: 6px;
+	                   resize: vertical;
+	                   font-size: 14px;
+	                }
+	                
+	                .apdetail-comment-footer {
+	                   display: flex;
+	                   justify-content: flex-end;
+	                   gap: 10px;
+	                }
+	                
+	                .apdetail-btn {
+	                    padding: 10px 20px;
+	                    border-radius: 6px;
+	                    font-size: 14px;
+	                    font-weight: 500;
+	                    cursor: pointer;
+	                    border: none;
+	                    transition: all 0.3s;
+	                }
+	                
+	                .apdetail-btn-outline {
+	                    background: transparent;
+	                    border: 1px solid #ddd;
+	                    color: #666;
+	                }
+	                
+	                .apdetail-btn-outline:hover {
+	                    background: #f8f9fa;
+	                }
+	                
+	                .apdetail-btn-approve {
+	                    background: #28a745;
+	                    color: white;
+	                }
+	                
+	                .apdetail-btn-reject {
+	                    background: #dc3545;
+	                    color: white;
+	                }
+	            `;
+	            
+	            document.head.appendChild(styleElement);
+	            document.body.insertAdjacentHTML('beforeend', modalHTML);
+	            
+	            // 모달 외부 클릭 시 닫기
+	            document.getElementById('approval-modal').addEventListener('click', function(e) {
+	                if (e.target === this) {
+	                    closeApprovalModal();
+	                }
+	            });
+	        }
+	        
+	        // 승인/반려에 따라 모달 설정
+	        if (action === 'approve') {
+	            document.getElementById('approval-modal-title').textContent = '결재 승인';
+	            document.getElementById('approval-comment-text').placeholder = '의견을 입력하세요 (선택사항)';
+	            document.getElementById('approval-comment-text').required = false;
+	            document.getElementById('approval-submit-btn').textContent = '승인';
+	            document.getElementById('approval-submit-btn').className = 'apdetail-btn apdetail-btn-approve';
+	        } else if (action === 'reject') {
+	            document.getElementById('approval-modal-title').textContent = '결재 반려';
+	            document.getElementById('approval-comment-text').placeholder = '반려 사유를 입력하세요 (필수)';
+	            document.getElementById('approval-comment-text').required = true;
+	            document.getElementById('approval-submit-btn').textContent = '반려';
+	            document.getElementById('approval-submit-btn').className = 'apdetail-btn apdetail-btn-reject';
+	        }
+	        
+	        // 문서 번호와 액션 설정
+	        document.getElementById('approval-doc-no').value = docNo;
+	        document.getElementById('approval-action').value = action;
+	        
+	        // 모달 표시
+	        document.getElementById('approval-modal').classList.add('active');
+	    }
+	
+	    // 모달 닫기
+	    function closeApprovalModal() {
+	        document.getElementById('approval-modal').classList.remove('active');
+	        document.getElementById('approval-comment-text').value = '';
+	    }
+	
+	    // 승인/반려 액션 제출
+	    function submitApprovalAction() {
+	        const docNo = document.getElementById('approval-doc-no').value;
+	        const action = document.getElementById('approval-action').value;
+	        const comment = document.getElementById('approval-comment-text').value;
+	        
+	        // 반려 시 사유 필수 체크
+	        if (action === 'reject' && (!comment || comment.trim() === '')) {
+	            alert('반려 사유는 필수 입력 항목입니다.');
+	            return;
+	        }
+	        
+	        // AJAX 요청 URL 설정
+	        const url = action === 'approve' ? 'directApprove.ap' : 'directReject.ap';
+	        
+	        // AJAX로 처리 요청
+	        $.ajax({
+	            url: url,
+	            type: 'POST',
+	            data: {
+	                docNo: docNo,
+	                comment: comment
+	            },
+	            success: function(response) {
+	                if (response.success) {
+	                    alert(response.message);
+	                    // 모달 닫기
+	                    closeApprovalModal();
+	                    // 페이지 새로고침 (캐시 무시)
+	                    location.reload();
+	                } else {
+	                    alert(response.message);
+	                }
+	            },
+	            error: function() {
+	                alert('서버 오류가 발생했습니다.');
+	            },
+	            complete: function() {
+	                console.log('요청 완료');
+	                // 1초 후 다시 한번 새로고침 (이중 안전장치)
+	                setTimeout(function() {
+	                    location.reload(true);
+	                }, 1000);
+	            }
+	        });
+	    }
+	    
+	    // 검색폼 유효성 검사 (기존 코드 유지)
+	    function validateSearchForm() {
+	        const searchType = document.querySelector('select[name="searchType"]').value;
+	        const keyword = document.querySelector('input[name="keyword"]').value.trim();
+	        
+	        // 전체 선택 시에는 키워드가 있어도 되고 없어도 됨
+	        if (searchType === '') {
+	            return true;
+	        }
+	        
+	        // 검색 타입이 선택되었는데 키워드가 없는 경우
+	        if (searchType && !keyword) {
+	            alert('검색어를 입력해주세요.');
+	            return false;
+	        }
+	        
+	        return true;
+	    }
+	</script>
 </body>
 </html>      

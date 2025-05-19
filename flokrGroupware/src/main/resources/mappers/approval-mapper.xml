@@ -867,6 +867,14 @@
         and (e.emp_name like '%' || #{keyword} || '%' or d.dept_name like '%' || #{keyword} || '%')
     </if>
     
+    <!-- 검색 유형이 전체(빈 값)일 때 키워드 검색 조건 추가 -->
+    <if test="(searchType == null or searchType == '') and keyword != null and keyword != ''">
+        and (ad.title like '%' || #{keyword} || '%' 
+          or af.form_name like '%' || #{keyword} || '%'
+          or e.emp_name like '%' || #{keyword} || '%'
+          or d.dept_name like '%' || #{keyword} || '%')
+    </if>
+    
     <!-- 날짜 조건 -->
     <if test="dateFrom != null and dateFrom != ''">
         <choose>
@@ -953,6 +961,14 @@
     </if>
     <if test="searchType != null and searchType == 'drafter' and keyword != null and keyword != ''">
         and (e.emp_name like '%' || #{keyword} || '%' or d.dept_name like '%' || #{keyword} || '%')
+    </if>
+    
+    <!-- 검색 유형이 전체(빈 값)일 때 키워드 검색 조건 추가 -->
+    <if test="(searchType == null or searchType == '') and keyword != null and keyword != ''">
+        and (ad.title like '%' || #{keyword} || '%' 
+          or af.form_name like '%' || #{keyword} || '%'
+          or e.emp_name like '%' || #{keyword} || '%'
+          or d.dept_name like '%' || #{keyword} || '%')
     </if>
     
     <!-- 날짜 조건 -->

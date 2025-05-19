@@ -8,254 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>상신 문서함 | Flokr</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* 전체 스타일 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-        }
-        
-        .aprequest-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .aprequest-header {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .aprequest-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .aprequest-subtitle {
-            font-size: 14px;
-            color: #777;
-        }
-        
-        .aprequest-count {
-            color: #003561;
-            font-weight: 600;
-        }
-        
-        .aprequest-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-        
-        .aprequest-search-form {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            max-width: 500px;
-        }
-        
-        .aprequest-search-select {
-            width: 120px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-        }
-        
-        .aprequest-search-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .aprequest-search-btn {
-            padding: 8px 16px;
-            background: #003561;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-           font-size: 14px;
-       }
-       
-       .aprequest-filter-section {
-           margin-top: 15px;
-           display: flex;
-           gap: 10px;
-           align-items: center;
-       }
-       
-       .aprequest-filter-label {
-           font-size: 14px;
-           color: #666;
-       }
-       
-       .aprequest-filter-select {
-           padding: 6px 10px;
-           border: 1px solid #ddd;
-           border-radius: 4px;
-           font-size: 13px;
-       }
-       
-       .aprequest-table-container {
-           background: white;
-           border-radius: 12px;
-           box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-           overflow: hidden;
-       }
-       
-       .aprequest-table {
-           width: 100%;
-           border-collapse: collapse;
-           font-size: 14px;
-       }
-       
-       .aprequest-table th,
-       .aprequest-table td {
-           padding: 15px;
-           text-align: left;
-           border-bottom: 1px solid #f0f0f0;
-       }
-       
-       .aprequest-table th {
-           background: #f8f9fa;
-           color: #555;
-           font-weight: 600;
-           font-size: 13px;
-           text-transform: uppercase;
-       }
-       
-       .aprequest-table tr:hover {
-           background: #f8f9fa;
-       }
-       
-       .aprequest-doc-title {
-           color: #003561;
-           text-decoration: none;
-           font-weight: 500;
-       }
-       
-       .aprequest-doc-title:hover {
-           text-decoration: underline;
-       }
-       
-       .aprequest-status-badge {
-           padding: 4px 8px;
-           border-radius: 12px;
-           font-size: 12px;
-           font-weight: 500;
-           display: inline-block;
-       }
-       
-       .aprequest-status-requested {
-           background: #e8f4fd;
-           color: #2196f3;
-       }
-       
-       .aprequest-status-approved {
-           background: #e8f5e9;
-           color: #4caf50;
-       }
-       
-       .aprequest-status-rejected {
-           background: #ffeaea;
-           color: #f44336;
-       }
-       
-       .aprequest-progress {
-           display: flex;
-           align-items: center;
-           gap: 8px;
-           font-size: 13px;
-           color: #666;
-       }
-       
-       .aprequest-progress-bar {
-           width: 80px;
-           height: 6px;
-           background: #e9ecef;
-           border-radius: 3px;
-           overflow: hidden;
-       }
-       
-       .aprequest-progress-fill {
-           height: 100%;
-           background: #2196f3;
-           border-radius: 3px;
-           transition: width 0.3s ease;
-       }
-       
-       .aprequest-empty {
-           text-align: center;
-           padding: 50px 20px;
-           color: #888;
-       }
-       
-       .aprequest-empty i {
-           font-size: 48px;
-           margin-bottom: 15px;
-           color: #ddd;
-       }
-       
-       .aprequest-pagination {
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           margin-top: 30px;
-           gap: 5px;
-       }
-       
-       .aprequest-page-link {
-           padding: 8px 12px;
-           border: 1px solid #ddd;
-           border-radius: 4px;
-           text-decoration: none;
-           color: #666;
-           background: white;
-           transition: all 0.2s;
-       }
-       
-       .aprequest-page-link:hover {
-           background: #f8f9fa;
-           border-color: #999;
-       }
-       
-       .aprequest-page-link.active {
-           background: #003561;
-           color: white;
-           border-color: #003561;
-       }
-       
-       .aprequest-page-link.disabled {
-           color: #ccc;
-           cursor: not-allowed;
-       }
-       
-       .aprequest-page-info {
-           color: #666;
-           font-size: 14px;
-           margin-top: 15px;
-           text-align: center;
-       }
-   </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/approvalRequestedList.css">
 </head>
 <body>
    <!-- header.jsp include -->
@@ -273,19 +26,19 @@
            </p>
            
            <div class="aprequest-actions">
-               <form class="aprequest-search-form" method="get" action="searchDocuments.ap">
-    <input type="hidden" name="boxType" value="requested">
-    <select name="searchType" class="aprequest-search-select">
-        <option value="">전체</option>
-        <option value="title" ${searchType eq 'title' ? 'selected' : ''}>제목</option>
-        <option value="form" ${searchType eq 'form' ? 'selected' : ''}>양식</option>
-    </select>
-    <input type="text" name="keyword" class="aprequest-search-input" 
-           placeholder="검색어를 입력하세요" value="${keyword}">
-    <button type="submit" class="aprequest-search-btn">
-        <i class="fas fa-search"></i> 검색
-    </button>
-</form>
+               <form class="aprequest-search-form" method="get" action="searchDocuments.ap" onsubmit="return validateSearchForm();">
+			    <input type="hidden" name="boxType" value="requested">
+			    <select name="searchType" class="aprequest-search-select">
+			        <option value="">전체</option>
+			        <option value="title" ${searchType eq 'title' ? 'selected' : ''}>제목</option>
+			        <option value="form" ${searchType eq 'form' ? 'selected' : ''}>양식</option>
+			    </select>
+			    <input type="text" name="keyword" class="aprequest-search-input" 
+			           placeholder="검색어를 입력하세요" value="${keyword}">
+			    <button type="submit" class="aprequest-search-btn">
+			        <i class="fas fa-search"></i> 검색
+			    </button>
+			</form>
            </div>
            
            <div class="aprequest-filter-section">
@@ -435,32 +188,46 @@
    </div>
    
    <script>
-       function filterByStatus(status) {
-    		// URL 파라미터 객체 생성
-    	    let searchParams = new URLSearchParams(window.location.search);
-    	    
-    	    // 상태 필터 설정 (빈 값이면 파라미터 제거)
-    	    if (status) {
-    	        searchParams.set('statusFilter', status);
-    	    } else {
-    	        searchParams.delete('statusFilter');
-    	    }
-    	    
-    	    // 현재 페이지 초기화
-    	    searchParams.set('page', '1');
-    	    
-    	    // 리다이렉트
-    	    window.location.href = 'requestedList.ap?' + searchParams.toString();
-    	}
-       
-       // 검색폼 처리
-       document.querySelector('.aprequest-search-form').addEventListener('submit', function(e) {
-           const keyword = this.querySelector('input[name="keyword"]').value.trim();
-           if (!keyword) {
-               e.preventDefault();
-               alert('검색어를 입력해주세요.');
-           }
-       });
-   </script>
+	    // 상태 필터링 함수
+	    function filterByStatus(status) {
+	        // URL 파라미터 객체 생성
+	        let searchParams = new URLSearchParams(window.location.search);
+	        
+	     	// 전체 필터를 선택했거나 상태가 없으면 fromDashboard 파라미터 제거
+	        if (!status || status === "") {
+	            searchParams.delete('statusFilter');
+	            searchParams.delete('fromDashboard'); // 중요: 전체 필터 선택 시 fromDashboard 제거
+	        } else {
+	            searchParams.set('statusFilter', status);
+	            // 상태가 명시적으로 지정된 경우에도 fromDashboard 제거
+	            searchParams.delete('fromDashboard');
+	        }
+	        
+	        // 현재 페이지 초기화
+	        searchParams.set('page', '1');
+	        
+	        // 리다이렉트
+	        window.location.href = 'requestedList.ap?' + searchParams.toString();
+	    }
+	    
+	    // 검색폼 유효성 검사
+	    function validateSearchForm() {
+	        const searchType = document.querySelector('select[name="searchType"]').value;
+	        const keyword = document.querySelector('input[name="keyword"]').value.trim();
+	        
+	        // 전체 선택 시에는 키워드가 있어도 되고 없어도 됨
+	        if (searchType === '') {
+	            return true;
+	        }
+	        
+	        // 검색 타입이 선택되었는데 키워드가 없는 경우
+	        if (searchType && !keyword) {
+	            alert('검색어를 입력해주세요.');
+	            return false;
+	        }
+	        
+	        return true;
+	    }
+	</script>
 </body>
 </html>

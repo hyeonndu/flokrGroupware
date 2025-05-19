@@ -3,47 +3,8 @@
 
 <!-- documentData.data에서 재택근무신청서 정보 추출 -->
 <c:set var="remoteWorkData" value="${documentData.data}" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/remoteWorkUpdateForm.css">
 
-<style>
-/* 재택근무신청서 스타일 */
-.rwf-checkbox-container {
-    display: flex;
-    gap: 25px;
-    flex-wrap: wrap;
-    padding: 15px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.rwf-checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.rwf-checkbox {
-    width: 18px;
-    height: 18px;
-}
-
-.rwf-date-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 15px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.rwf-date-group input[type="date"] {
-    padding: 8px;
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
-    width: 200px;
-}
-</style>
 
 <div class="remotework-update-form">
     <div class="apupdate-section">

@@ -243,7 +243,31 @@ public interface ApprovalService {
      * @return 해당 사원이 결재자로서 반려한 문서의 개수
      */
     int selectRejectedCountByApprover(int empNo);
+    
+    /**
+     * 특정 사용자의 수신 문서함 캐시를 명시적으로 갱신
+     * Redis 캐시를 효과적으로 관리하기 위한 유틸리티 메서드
+     * 
+     * @param empNo 사원 번호
+     */
+    void refreshWaitingDocumentsForUser(int empNo);
+    
+    /**
+     * 처리 효율성 지표 계산
+     * @param empNo 사원번호
+     * @param statusFilter 상태 필터
+     * @param dateFrom 시작일
+     * @param dateTo 종료일
+     * @return 처리 효율성 정보 (상태, 비율)
+     */
+    HashMap<String, Object> getProcessingEfficiency(int empNo, String statusFilter, 
+                                                  String dateFrom, String dateTo);
 
+    /**
+     * 처리 효율성 지표 캐시 무효화
+     */
+    void refreshProcessingEfficiencyCache();
+    
 }
 
 

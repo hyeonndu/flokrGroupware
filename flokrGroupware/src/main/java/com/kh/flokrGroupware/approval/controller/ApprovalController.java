@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -578,13 +579,19 @@ public class ApprovalController {
     	ModelAndView mv = new ModelAndView();
     	
     	try {
+    		// 세션에서 로그인 유저 정보 추출
+            Employee loginUser = (Employee)session.getAttribute("loginUser");
+    		
             ApprovalLine currentLine = aService.selectApprovalLineByNo(lineNo);
             currentLine.setApprovalComment(comment);
             
             // 승인 처리 로직
             aService.approveDocument(currentLine);
             
-            mv.setViewName("redirect:/waitingList.ap");
+            // 캐시 명시적 무효화 추가 - 수신문서함 목록과 충돌 방지를 위해 직접 호출
+            aService.refreshWaitingDocumentsForUser(loginUser.getEmpNo());
+            
+            mv.setViewName("redirect:/waitingList.ap?refresh=true");
             mv.addObject("alertMsg", "문서가 성공적으로 승인되었습니다.");
             
         } catch (Exception e) {
@@ -599,7 +606,7 @@ public class ApprovalController {
      * GET 방식의 승인 요청 처리 (오류 방지용)
      * @return 수신 문서함으로 리다이렉트
      */
-    @GetMapping("approve.ap")
+    @GetMapping({"approve.ap", "reject.ap"})
     public String approveDocumentRedirect() {
         return "redirect:/waitingList.ap"; // 수신 문서함으로 리다이렉트
     }
@@ -625,13 +632,20 @@ public class ApprovalController {
     	}
     	
     	try {
+    		// 세션에서 로그인 유저 정보 추출
+            Employee loginUser = (Employee)session.getAttribute("loginUser");
+    		
             ApprovalLine currentLine = aService.selectApprovalLineByNo(lineNo);
             currentLine.setApprovalComment(comment);
             
             // 반려 처리 로직
             aService.rejectDocument(currentLine);
             
-            mv.setViewName("redirect:/waitingList.ap");
+            // 캐시 명시적 무효화 추가
+            aService.refreshWaitingDocumentsForUser(loginUser.getEmpNo());
+            
+            // 리다이렉트 시 refresh 파라미터 추가
+            mv.setViewName("redirect:/waitingList.ap?refresh=true");
             mv.addObject("alertMsg", "문서가 반려되었습니다.");
             
         } catch (Exception e) {
@@ -640,6 +654,142 @@ public class ApprovalController {
         }
     	
     	return mv;
+    }
+    
+    /**
+     * 문서 직접 승인 처리 API (수신 문서함에서 바로 승인)
+     * @param docNo 문서 번호
+     * @param session HTTP 세션
+     * @return 처리 결과
+     */
+    @PostMapping("directApprove.ap")
+    @ResponseBody
+    public HashMap<String, Object> directApproveDocument(@RequestParam("docNo") int docNo, 
+    													 @RequestParam(value = "comment", required = false) String comment,
+    													 HttpSession session) {
+        HashMap<String, Object> result = new HashMap<>();
+        
+        try {
+            Employee loginUser = (Employee)session.getAttribute("loginUser");
+            if (loginUser == null) {
+                result.put("success", false);
+                result.put("message", "로그인 정보가 없습니다.");
+                return result;
+            }
+            
+            // 현재 결재자 확인
+            ArrayList<ApprovalLine> lines = aService.selectApprovalLineByDocNo(docNo);
+            ApprovalLine currentLine = null;
+            
+            for (ApprovalLine line : lines) {
+                if (line.getApproverEmpNo() == loginUser.getEmpNo() && 
+                    "WAITING".equals(line.getLineStatus())) {
+                    currentLine = line;
+                    break;
+                }
+            }
+            
+            if (currentLine == null) {
+                result.put("success", false);
+                result.put("message", "승인 권한이 없습니다.");
+                return result;
+            }
+            
+            // 찾은 결재선에 의견 설정
+            currentLine.setApprovalComment(comment);
+            
+            // 승인 처리
+            int processResult = aService.approveDocument(currentLine);
+            
+            if (processResult > 0) {
+            	// 캐시 명시적 무효화 추가
+                aService.refreshWaitingDocumentsForUser(loginUser.getEmpNo());
+                
+                result.put("success", true);
+                result.put("message", "문서가 성공적으로 승인되었습니다.");
+            } else {
+                result.put("success", false);
+                result.put("message", "승인 처리 중 오류가 발생했습니다.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("success", false);
+            result.put("message", "승인 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    /**
+     * 문서 직접 반려 처리 API (수신 문서함에서 바로 반려)
+     * @param docNo 문서 번호
+     * @param comment 반려 사유
+     * @param session HTTP 세션
+     * @return 처리 결과
+     */
+    @PostMapping("directReject.ap")
+    @ResponseBody
+    public HashMap<String, Object> directRejectDocument(@RequestParam("docNo") int docNo, 
+                                                       @RequestParam("comment") String comment,
+                                                       HttpSession session) {
+        HashMap<String, Object> result = new HashMap<>();
+        
+        try {
+            if (comment == null || comment.trim().isEmpty()) {
+                result.put("success", false);
+                result.put("message", "반려 사유는 필수 입력 항목입니다.");
+                return result;
+            }
+            
+            Employee loginUser = (Employee)session.getAttribute("loginUser");
+            if (loginUser == null) {
+                result.put("success", false);
+                result.put("message", "로그인 정보가 없습니다.");
+                return result;
+            }
+            
+            // 현재 결재자 확인
+            ArrayList<ApprovalLine> lines = aService.selectApprovalLineByDocNo(docNo);
+            ApprovalLine currentLine = null;
+            
+            for (ApprovalLine line : lines) {
+                if (line.getApproverEmpNo() == loginUser.getEmpNo() && 
+                    "WAITING".equals(line.getLineStatus())) {
+                    currentLine = line;
+                    break;
+                }
+            }
+            
+            if (currentLine == null) {
+                result.put("success", false);
+                result.put("message", "반려 권한이 없습니다.");
+                return result;
+            }
+            
+            // 반려 사유 설정
+            currentLine.setApprovalComment(comment);
+            
+            // 반려 처리
+            int processResult = aService.rejectDocument(currentLine);
+            
+            if (processResult > 0) {
+            	
+            	// 캐시 명시적 무효화 추가
+                aService.refreshWaitingDocumentsForUser(loginUser.getEmpNo());
+            	
+                result.put("success", true);
+                result.put("message", "문서가 성공적으로 반려되었습니다.");
+            } else {
+                result.put("success", false);
+                result.put("message", "반려 처리 중 오류가 발생했습니다.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            result.put("success", false);
+            result.put("message", "반려 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+        
+        return result;
     }
     
     // ====================== 결재선 설정 ======================
@@ -866,8 +1016,15 @@ public class ApprovalController {
     @RequestMapping("requestedList.ap")
     public String requestedList(@RequestParam(value = "page", defaultValue = "1") int currentPage,
     							@RequestParam(value = "statusFilter", required = false) String statusFilter,
-                               HttpSession session, Model model) {
-        Employee loginUser = (Employee)session.getAttribute("loginUser");
+    							@RequestParam(value = "fromDashboard", required = false) String fromDashboard,
+    							HttpSession session, Model model) {
+        
+    	// 대시보드에서 왔고 필터가 없으면 자동으로 진행중 필터 설정
+        if("pending".equals(fromDashboard) && (statusFilter == null || statusFilter.isEmpty())) {
+            statusFilter = "REQUESTED"; // 또는 진행중에 해당하는 상태값
+        }
+    	
+    	Employee loginUser = (Employee)session.getAttribute("loginUser");
         
         HashMap<String, Object> result = aService.searchDocuments("requested", loginUser.getEmpNo(), 
                 currentPage, null, null, null, null, statusFilter);
@@ -889,8 +1046,14 @@ public class ApprovalController {
      */
     @RequestMapping("waitingList.ap")
     public String waitingList(@RequestParam(value = "page", defaultValue = "1") int currentPage,
+    						  @RequestParam(value = "refresh", required = false) String refresh,
                              HttpSession session, Model model) {
         Employee loginUser = (Employee)session.getAttribute("loginUser");
+        
+        // refresh 파라미터가 있으면 캐시 강제 무효화
+        if ("true".equals(refresh)) {
+            aService.refreshWaitingDocumentsForUser(loginUser.getEmpNo());
+        }
         
         HashMap<String, Object> result = aService.selectWaitingDocumentsPaging(loginUser.getEmpNo(), currentPage);
         
@@ -929,42 +1092,110 @@ public class ApprovalController {
      */
     @RequestMapping("completedList.ap")
     public String completedList(@RequestParam(value = "page", defaultValue = "1") int currentPage,
-    							 @RequestParam(value = "statusFilter", required = false) String statusFilter,
-    							HttpSession session, Model model) {
-    	Employee loginUser = (Employee)session.getAttribute("loginUser");
-    	
-    	// 페이징 처리된 결과 가져오기
-    	HashMap<String, Object> result = aService.selectCompletedDocumentsPaging(loginUser.getEmpNo(), currentPage);
-    	
-    	// 기본 통계 데이터 계산
-        ArrayList<ApprovalDoc> docList = (ArrayList<ApprovalDoc>)result.get("list");
-        int totalCount = ((PageInfo)result.get("pageInfo")).getListCount();
-        int approvedCount = 0;
-        int rejectedCount = 0;
+                               @RequestParam(value = "statusFilter", required = false) String statusFilter, // ❤️ 상태 필터 파라미터 추가
+                               @RequestParam(value = "periodFilter", required = false) String periodFilter, // ❤️ 기간 필터 파라미터 추가
+                               @RequestParam(value = "dateFrom", required = false) String dateFrom, // ❤️ 시작일 파라미터 추가
+                               @RequestParam(value = "dateTo", required = false) String dateTo, // ❤️ 종료일 파라미터 추가
+                               HttpSession session, Model model) {
+        Employee loginUser = (Employee)session.getAttribute("loginUser");
         
-        if(docList != null) {
-            for(ApprovalDoc doc : docList) {
-                if("APPROVED".equals(doc.getDocStatus())) {
-                    approvedCount++;
-                } else if("REJECTED".equals(doc.getDocStatus())) {
-                    rejectedCount++;
+        // 기간 필터가 선택된 경우 날짜 계산
+        if (periodFilter != null && !periodFilter.isEmpty() && (dateFrom == null || dateTo == null)) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date today = new Date();
+            Date fromDate = new Date();
+            
+            switch(periodFilter) {
+                case "today":
+                    // 오늘 날짜의 00시 00분 00초로 설정
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(today);
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+                    fromDate = cal.getTime();
+                    break;
+                case "week":
+                    // 일주일 전
+                    Calendar calWeek = Calendar.getInstance();
+                    calWeek.setTime(today);
+                    calWeek.add(Calendar.DATE, -7);
+                    fromDate = calWeek.getTime();
+                    break;
+                case "month":
+                    // 한달 전
+                    Calendar calMonth = Calendar.getInstance();
+                    calMonth.setTime(today);
+                    calMonth.add(Calendar.MONTH, -1);
+                    fromDate = calMonth.getTime();
+                    break;
+                case "3month":
+                    // 3개월 전
+                    Calendar cal3Month = Calendar.getInstance();
+                    cal3Month.setTime(today);
+                    cal3Month.add(Calendar.MONTH, -3);
+                    fromDate = cal3Month.getTime();
+                    break;
+            }
+            
+            dateFrom = sdf.format(fromDate);
+            dateTo = sdf.format(today);
+        }
+        
+        // ❤️ 필터 적용 시 searchDocuments 사용, 아니면 기존 메소드 사용
+        HashMap<String, Object> result;
+        if ((statusFilter != null && !statusFilter.isEmpty()) || 
+            (dateFrom != null && !dateFrom.isEmpty()) || 
+            (dateTo != null && !dateTo.isEmpty())) {
+            
+            result = aService.searchDocuments("completed", loginUser.getEmpNo(), 
+                    currentPage, null, null, dateFrom, dateTo, statusFilter);
+        } else {
+            // 페이징 처리된 결과 가져오기 - 기존 방식
+            result = aService.selectCompletedDocumentsPaging(loginUser.getEmpNo(), currentPage);
+            
+            // 기본 통계 데이터 계산
+            ArrayList<ApprovalDoc> docList = (ArrayList<ApprovalDoc>)result.get("list");
+            int totalCount = ((PageInfo)result.get("pageInfo")).getListCount();
+            int approvedCount = 0;
+            int rejectedCount = 0;
+            
+            if(docList != null) {
+                for(ApprovalDoc doc : docList) {
+                    if("APPROVED".equals(doc.getDocStatus())) {
+                        approvedCount++;
+                    } else if("REJECTED".equals(doc.getDocStatus())) {
+                        rejectedCount++;
+                    }
                 }
             }
+            
+            // 통계 데이터 세팅
+            HashMap<String, Object> stats = new HashMap<>();
+            stats.put("totalCount", totalCount);
+            stats.put("approvedCount", approvedCount);
+            stats.put("rejectedCount", rejectedCount);
+            stats.put("avgProcessTime", "계산 중...");
+            
+            result.put("stats", stats);
         }
-    	
-        // 통계 데이터 세팅
-        HashMap<String, Object> stats = new HashMap<>();
-        stats.put("totalCount", totalCount);
-        stats.put("approvedCount", approvedCount);
-        stats.put("rejectedCount", rejectedCount);
-        stats.put("avgProcessTime", "계산 중...");
+        
+        // ❤️ 처리 효율성 지표 추가
+        HashMap<String, Object> stats = (HashMap<String, Object>) result.get("stats");
+        HashMap<String, Object> efficiency = aService.getProcessingEfficiency(
+                loginUser.getEmpNo(), statusFilter, dateFrom, dateTo);
+        stats.put("processingEfficiency", efficiency);
         
         // 모델에 데이터 추가
-    	model.addAttribute("pageInfo", result.get("pageInfo"));
-        model.addAttribute("documentList", docList);
-        model.addAttribute("stats", stats);
+        model.addAttribute("pageInfo", result.get("pageInfo"));
+        model.addAttribute("documentList", result.get("list"));
+        model.addAttribute("stats", result.get("stats"));
         model.addAttribute("boxType", "completed");
-        model.addAttribute("statusFilter", statusFilter);
+        model.addAttribute("statusFilter", statusFilter); // 필터 상태 모델에 추가
+        model.addAttribute("periodFilter", periodFilter); // 기간 필터 모델에 추가
+        model.addAttribute("dateFrom", dateFrom); // 시작일 모델에 추가
+        model.addAttribute("dateTo", dateTo); // 종료일 모델에 추가
         
         return "approval/approvalCompletedList";
     }

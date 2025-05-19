@@ -6,314 +6,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>완료 문서함 | Flokr</title>
+    <title>완료 문서함 | Flokr</title>    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* 전체 스타일 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-        }
-        
-        .apcomplete-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .apcomplete-header {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .apcomplete-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .apcomplete-subtitle {
-            font-size: 14px;
-            color: #777;
-        }
-        
-        .apcomplete-count {
-            color: #003561;
-            font-weight: 600;
-        }
-        
-        .apcomplete-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .apcomplete-stat-card {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .apcomplete-stat-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-        }
-        
-        .apcomplete-stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            margin-top: 5px;
-        }
-        
-        .apcomplete-stat-approved {
-            color: #28a745;
-        }
-        
-        .apcomplete-stat-rejected {
-            color: #dc3545;
-        }
-        
-        .apcomplete-stat-avg {
-            color: #17a2b8;
-        }
-        
-        .apcomplete-stat-total {
-            color: #003561;
-        }
-        
-        .apcomplete-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-        
-        .apcomplete-search-form {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            max-width: 500px;
-        }
-        
-        .apcomplete-date-range {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        
-        .apcomplete-date-input {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            width: 130px;
-        }
-        
-        .apcomplete-search-select {
-            width: 120px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-        }
-        
-        .apcomplete-search-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .apcomplete-search-btn {
-            padding: 8px 16px;
-            background: #003561;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .apcomplete-filter-section {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .apcomplete-filter-label {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .apcomplete-filter-select {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        
-        .apcomplete-table-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        
-        .apcomplete-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        .apcomplete-table th,
-        .apcomplete-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .apcomplete-table th {
-            background: #f8f9fa;
-            color: #555;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-        
-        .apcomplete-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .apcomplete-doc-title {
-            color: #003561;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .apcomplete-doc-title:hover {
-            text-decoration: underline;
-        }
-        
-        .apcomplete-status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .apcomplete-status-approved {
-            background: #e8f5e9;
-            color: #4caf50;
-        }
-        
-        .apcomplete-status-rejected {
-            background: #ffeaea;
-            color: #f44336;
-        }
-        
-        .apcomplete-drafter {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        
-        .apcomplete-drafter-name {
-            font-weight: 500;
-        }
-        
-        .apcomplete-drafter-dept {
-            font-size: 12px;
-            color: #777;
-        }
-        
-        .apcomplete-duration {
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .apcomplete-fast {
-            color: #28a745;
-            font-weight: 500;
-        }
-        
-        .apcomplete-slow {
-            color: #dc3545;
-            font-weight: 500;
-        }
-        
-        .apcomplete-empty {
-            text-align: center;
-            padding: 50px 20px;
-            color: #888;
-        }
-        
-        .apcomplete-empty i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #ddd;
-        }
-        
-        .apcomplete-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 30px;
-            gap: 5px;
-        }
-        
-        .apcomplete-page-link {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #666;
-            background: white;
-            transition: all 0.2s;
-        }
-        
-        .apcomplete-page-link:hover {
-            background: #f8f9fa;
-            border-color: #999;
-        }
-        
-        .apcomplete-page-link.active {
-            background: #003561;
-            color: white;
-            border-color: #003561;
-        }
-        
-        .apcomplete-page-link.disabled {
-            color: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .apcomplete-page-info {
-            color: #666;
-            font-size: 14px;
-            margin-top: 15px;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/approvalCompletedList.css">
 </head>
 <body>
     <!-- header.jsp include -->
@@ -343,51 +38,73 @@
                     <div class="apcomplete-stat-label">반려</div>
                     <div class="apcomplete-stat-value apcomplete-stat-rejected">${empty stats ? 0 : (empty stats.rejectedCount ? 0 : stats.rejectedCount)}</div>
                 </div>
-                <div class="apcomplete-stat-card">
-                    <div class="apcomplete-stat-label">평균 처리 시간</div>
-                    <div class="apcomplete-stat-value apcomplete-stat-avg">${empty stats ? '-' : (empty stats.avgProcessTime ? '-' : stats.avgProcessTime)}</div>
-                </div>
+                <!-- 평균 처리 시간 카드를 처리 효율성 카드로 변경 -->
+			    <div class="apcomplete-stat-card">
+			        <div class="apcomplete-stat-label apcomplete-tooltip">처리 효율성
+				        <span class="apcomplete-tooltip-text">
+				            <strong>신속 처리</strong>: 24시간 이내 완료된 문서 비율<br>
+				            <strong>정상 처리</strong>: 1-3일 내 완료된 문서 비율<br>
+				            <strong>지연 처리</strong>: 3일 이상 소요된 문서 비율<br>
+				            현재 가장 높은 비율의 처리 상태를 보여줍니다.
+				        </span>
+				    </div>
+			        <div class="apcomplete-stat-value ${stats.processingEfficiency.status eq '신속 처리' ? 'apcomplete-stat-fast' : 
+			                (stats.processingEfficiency.status eq '정상 처리' ? 'apcomplete-stat-normal' : 
+			                 'apcomplete-stat-slow')}">
+			            ${empty stats ? '-' : (empty stats.processingEfficiency ? '-' : stats.processingEfficiency.status)}
+			            <c:if test="${not empty stats and not empty stats.processingEfficiency and not empty stats.processingEfficiency.percentage}">
+			                <span class="apcomplete-stat-percentage">${stats.processingEfficiency.percentage}%</span>
+			            </c:if>
+			        </div>
+			    </div>
             </div>
             
             <div class="apcomplete-actions">
-                <form class="apcomplete-search-form" method="get" action="searchDocuments.ap">
-				    <input type="hidden" name="boxType" value="completed">
-				    <div class="apcomplete-date-range">
-				        <input type="date" name="dateFrom" class="apcomplete-date-input" value="${dateFrom}">
-				        <span>~</span>
-				        <input type="date" name="dateTo" class="apcomplete-date-input" value="${dateTo}">
-				    </div>
-				    <select name="searchType" class="apcomplete-search-select">
-				        <option value="">전체</option>
-				        <option value="title" ${searchType eq 'title' ? 'selected' : ''}>제목</option>
-				        <option value="drafter" ${searchType eq 'drafter' ? 'selected' : ''}>기안자</option>
-				        <option value="form" ${searchType eq 'form' ? 'selected' : ''}>양식</option>
-				    </select>
-				    <input type="text" name="keyword" class="apcomplete-search-input" 
-				           placeholder="검색어를 입력하세요" value="${keyword}">
-				    <button type="submit" class="apcomplete-search-btn">
-				        <i class="fas fa-search"></i> 검색
-				    </button>
-				</form>
+                <form class="apcomplete-search-form" method="get" action="searchDocuments.ap" onsubmit="return validateSearchForm();">
+			        <input type="hidden" name="boxType" value="completed">
+			        
+			        <!-- 날짜 범위 -->
+			        <div class="apcomplete-date-range">
+			            <input type="date" name="dateFrom" class="apcomplete-date-input" value="${dateFrom}">
+			            <span>~</span>
+			            <input type="date" name="dateTo" class="apcomplete-date-input" value="${dateTo}">
+			        </div>
+			        
+			        <!-- 검색 필드 -->
+			        <div class="apcomplete-search-container">
+			            <select name="searchType" class="apcomplete-search-select">
+			                <option value="">전체</option>
+			                <option value="title" ${searchType eq 'title' ? 'selected' : ''}>제목</option>
+			                <option value="drafter" ${searchType eq 'drafter' ? 'selected' : ''}>기안자</option>
+			                <option value="form" ${searchType eq 'form' ? 'selected' : ''}>양식</option>
+			            </select>
+			            <input type="text" name="keyword" class="apcomplete-search-input" 
+			                   placeholder="검색어를 입력하세요" value="${keyword}">
+			            <button type="submit" class="apcomplete-search-btn">
+			                <i class="fas fa-search"></i> 검색
+			            </button>
+			        </div>
+			    </form>
             </div>
             
             <div class="apcomplete-filter-section">
-                <span class="apcomplete-filter-label">상태별 필터:</span>
-                <select name="statusFilter" class="apcomplete-filter-select" onchange="filterByStatus(this.value)">
-                    <option value="">전체</option>
-			        <option value="REQUESTED" ${statusFilter eq 'REQUESTED' ? 'selected' : ''}>진행중</option>
-			        <option value="APPROVED" ${statusFilter eq 'APPROVED' ? 'selected' : ''}>승인</option>
-			        <option value="REJECTED" ${statusFilter eq 'REJECTED' ? 'selected' : ''}>반려</option>
-                </select>
-                <span class="apcomplete-filter-label">기간:</span>
-                <select name="periodFilter" class="apcomplete-filter-select" onchange="filterByPeriod(this.value)">
-                    <option value="">전체</option>
-                    <option value="today">오늘</option>
-                    <option value="week">1주일</option>
-                    <option value="month">1개월</option>
-                    <option value="3month">3개월</option>
-                </select>
-            </div>
+    <span class="apcomplete-filter-label">상태별 필터:</span>
+    <!-- ❤️ 필터 선택 상태 유지를 위한 selected 속성 추가 -->
+    <select name="statusFilter" class="apcomplete-filter-select" onchange="filterByStatus(this.value)">
+        <option value="">전체</option>
+        <option value="APPROVED" ${statusFilter eq 'APPROVED' ? 'selected' : ''}>승인</option>
+        <option value="REJECTED" ${statusFilter eq 'REJECTED' ? 'selected' : ''}>반려</option>
+    </select>
+    <span class="apcomplete-filter-label">기간:</span>
+    <!-- ❤️ 기간 필터 선택 상태 유지를 위한 selected 속성 추가 -->
+    <select name="periodFilter" class="apcomplete-filter-select" onchange="filterByPeriod(this.value)">
+        <option value="">전체</option>
+        <option value="today" ${periodFilter eq 'today' ? 'selected' : ''}>오늘</option>
+        <option value="week" ${periodFilter eq 'week' ? 'selected' : ''}>1주일</option>
+        <option value="month" ${periodFilter eq 'month' ? 'selected' : ''}>1개월</option>
+        <option value="3month" ${periodFilter eq '3month' ? 'selected' : ''}>3개월</option>
+    </select>
+</div>
         </div>
         
         <div class="apcomplete-table-container">
@@ -487,16 +204,18 @@
             </a>
         </c:if>
         <c:if test="${pageInfo.currentPage > 1}">
-            <a href="searchDocuments.ap?boxType=completed&page=1&searchType=${searchType}&keyword=${keyword}&dateFrom=${dateFrom}&dateTo=${dateTo}&statusFilter=${statusFilter}" class="apcomplete-page-link">
+            <!-- ❤️ 페이지네이션 링크에 필터 파라미터 추가 -->
+            <a href="completedList.ap?page=1${statusFilter != null ? '&statusFilter='.concat(statusFilter) : ''}${periodFilter != null ? '&periodFilter='.concat(periodFilter) : ''}${dateFrom != null ? '&dateFrom='.concat(dateFrom) : ''}${dateTo != null ? '&dateTo='.concat(dateTo) : ''}" class="apcomplete-page-link">
                 <i class="fas fa-angle-double-left"></i>
             </a>
-            <a href="searchDocuments.ap?boxType=completed&page=${pageInfo.currentPage - 1}&searchType=${searchType}&keyword=${keyword}&dateFrom=${dateFrom}&dateTo=${dateTo}&statusFilter=${statusFilter}" class="apcomplete-page-link">
+            <a href="completedList.ap?page=${pageInfo.currentPage - 1}${statusFilter != null ? '&statusFilter='.concat(statusFilter) : ''}${periodFilter != null ? '&periodFilter='.concat(periodFilter) : ''}${dateFrom != null ? '&dateFrom='.concat(dateFrom) : ''}${dateTo != null ? '&dateTo='.concat(dateTo) : ''}" class="apcomplete-page-link">
                 <i class="fas fa-angle-left"></i>
             </a>
         </c:if>
         
         <c:forEach var="p" begin="${pageInfo.startPage}" end="${pageInfo.endPage}">
-            <a href="searchDocuments.ap?boxType=completed&page=${p}&searchType=${searchType}&keyword=${keyword}&dateFrom=${dateFrom}&dateTo=${dateTo}&statusFilter=${statusFilter}" 
+            <!-- ❤️ 페이지 번호 링크에 필터 파라미터 추가 -->
+            <a href="completedList.ap?page=${p}${statusFilter != null ? '&statusFilter='.concat(statusFilter) : ''}${periodFilter != null ? '&periodFilter='.concat(periodFilter) : ''}${dateFrom != null ? '&dateFrom='.concat(dateFrom) : ''}${dateTo != null ? '&dateTo='.concat(dateTo) : ''}" 
                class="apcomplete-page-link ${p == pageInfo.currentPage ? 'active' : ''}">${p}</a>
         </c:forEach>
         
@@ -509,10 +228,11 @@
             </a>
         </c:if>
         <c:if test="${pageInfo.currentPage < pageInfo.maxPage}">
-            <a href="searchDocuments.ap?boxType=completed&page=${pageInfo.currentPage + 1}&searchType=${searchType}&keyword=${keyword}&dateFrom=${dateFrom}&dateTo=${dateTo}&statusFilter=${statusFilter}" class="apcomplete-page-link">
+            <!-- ❤️ 페이지네이션 링크에 필터 파라미터 추가 -->
+            <a href="completedList.ap?page=${pageInfo.currentPage + 1}${statusFilter != null ? '&statusFilter='.concat(statusFilter) : ''}${periodFilter != null ? '&periodFilter='.concat(periodFilter) : ''}${dateFrom != null ? '&dateFrom='.concat(dateFrom) : ''}${dateTo != null ? '&dateTo='.concat(dateTo) : ''}" class="apcomplete-page-link">
                 <i class="fas fa-angle-right"></i>
             </a>
-            <a href="searchDocuments.ap?boxType=completed&page=${pageInfo.maxPage}&searchType=${searchType}&keyword=${keyword}&dateFrom=${dateFrom}&dateTo=${dateTo}&statusFilter=${statusFilter}" class="apcomplete-page-link">
+            <a href="completedList.ap?page=${pageInfo.maxPage}${statusFilter != null ? '&statusFilter='.concat(statusFilter) : ''}${periodFilter != null ? '&periodFilter='.concat(periodFilter) : ''}${dateFrom != null ? '&dateFrom='.concat(dateFrom) : ''}${dateTo != null ? '&dateTo='.concat(dateTo) : ''}" class="apcomplete-page-link">
                 <i class="fas fa-angle-double-right"></i>
             </a>
         </c:if>
@@ -524,39 +244,85 @@
     </div>
     
     <script>
-        function filterByStatus(status) {
-            updateUrl({ statusFilter: status });
+    function filterByStatus(status) {
+        // URL 파라미터 객체 생성
+        let searchParams = new URLSearchParams(window.location.search);
+        
+        // 상태 필터 설정 (빈 값이면 파라미터 제거)
+        if (status) {
+            searchParams.set('statusFilter', status);
+        } else {
+            searchParams.delete('statusFilter');
         }
         
-        function filterByPeriod(period) {
-            updateUrl({ periodFilter: period });
+        // 현재 페이지 초기화
+        searchParams.set('page', '1');
+        
+        // 리다이렉트
+        window.location.href = 'completedList.ap?' + searchParams.toString();
+    }
+    
+    // 기간별 필터 함수 수정
+    function filterByPeriod(period) {
+        // URL 파라미터 객체 생성
+        let searchParams = new URLSearchParams(window.location.search);
+        
+        // 기간 필터 설정
+        if (period) {
+            searchParams.set('periodFilter', period);
+        } else {
+            // 기간 필터가 없으면 관련 파라미터 모두 제거
+            searchParams.delete('periodFilter');
+            searchParams.delete('dateFrom');
+            searchParams.delete('dateTo');
         }
         
-        function updateUrl(params) {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            Object.keys(params).forEach(key => {
-                if (params[key]) {
-                    urlParams.set(key, params[key]);
-                } else {
-                    urlParams.delete(key);
-                }
-            });
-            
-            window.location.href = 'completedList.ap?' + urlParams.toString();
-        }
+        // 현재 페이지 초기화
+        searchParams.set('page', '1');
         
-        // 검색폼 제출
-        document.querySelector('.apcomplete-search-form').addEventListener('submit', function(e) {
-            const dateFrom = this.querySelector('input[name="dateFrom"]').value;
-            const dateTo = this.querySelector('input[name="dateTo"]').value;
-            const keyword = this.querySelector('input[name="keyword"]').value.trim();
-            
-            if (!dateFrom && !dateTo && !keyword) {
-                e.preventDefault();
-                alert('검색 조건을 하나 이상 입력해주세요.');
-            }
-        });
-    </script>
+        // 리다이렉트
+        window.location.href = 'completedList.ap?' + searchParams.toString();
+    }
+	    
+	    function updateUrl(params) {
+	        const urlParams = new URLSearchParams(window.location.search);
+	        
+	        Object.keys(params).forEach(key => {
+	            if (params[key]) {
+	                urlParams.set(key, params[key]);
+	            } else {
+	                urlParams.delete(key);
+	            }
+	        });
+	        
+	        window.location.href = 'completedList.ap?' + urlParams.toString();
+	    }
+	    
+	    // 검색폼 유효성 검사
+	    function validateSearchForm() {
+	        const searchType = document.querySelector('select[name="searchType"]').value;
+	        const keyword = document.querySelector('input[name="keyword"]').value.trim();
+	        const dateFrom = document.querySelector('input[name="dateFrom"]').value;
+	        const dateTo = document.querySelector('input[name="dateTo"]').value;
+	        
+	        // 검색어가 없어도 날짜 범위가 있으면 검색 허용
+	        if (dateFrom || dateTo) {
+	            return true;
+	        }
+	        
+	        // 전체 선택 시에는 키워드가 있어도 되고 없어도 됨
+	        if (searchType === '') {
+	            return true;
+	        }
+	        
+	        // 검색 타입이 선택되었는데 키워드가 없는 경우
+	        if (searchType && !keyword) {
+	            alert('검색어를 입력해주세요.');
+	            return false;
+	        }
+	        
+	        return true;
+	    }
+	</script>
 </body>
 </html>

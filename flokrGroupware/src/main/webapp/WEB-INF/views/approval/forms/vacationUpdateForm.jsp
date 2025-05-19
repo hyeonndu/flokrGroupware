@@ -3,67 +3,8 @@
 
 <!-- documentData.data에서 휴가신청서 정보 추출 -->
 <c:set var="vacationData" value="${documentData.data}" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/vacationUpdateForm.css">
 
-<style>
-/* 휴가신청서 스타일 */
-.vac-checkbox-container {
-    display: flex;
-    gap: 25px;
-    flex-wrap: wrap;
-    padding: 15px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.vac-checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.vac-checkbox {
-    width: 18px;
-    height: 18px;
-}
-
-.vac-date-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 15px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.vac-date-group input[type="date"] {
-    padding: 8px;
-    border: 1px solid #e2e8f0;
-    border-radius: 5px;
-    width: 200px;
-}
-
-.vac-annual-info {
-    display: flex;
-    gap: 15px;
-    padding: 15px;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    font-size: 14px;
-    align-items: center;
-}
-
-.vac-annual-info input {
-    width: 50px;
-    text-align: center;
-    padding: 5px;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    font-size: 14px;
-}
-</style>
 
 <div class="vacation-update-form">
     <div class="apupdate-section">
