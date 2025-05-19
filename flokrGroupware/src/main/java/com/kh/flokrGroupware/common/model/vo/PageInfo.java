@@ -1,5 +1,7 @@
 package com.kh.flokrGroupware.common.model.vo;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class PageInfo {
+public class PageInfo implements Serializable{
     private int listCount;    // 총 게시글 수
     private int currentPage;  // 현재 페이지
     private int pageLimit;    // 한 페이지에 보여질 페이징바의 페이지 개수

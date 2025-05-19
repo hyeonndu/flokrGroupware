@@ -12,7 +12,24 @@
 	
 	<!-- Application Loggers -->
 	<logger name="com.kh.flokrGroupware">
-		<level value="info" />
+		<level value="debug" />
+		<!-- <level value="info" />  -->
+	</logger>
+	
+	<!-- test 때문에 추가함 -->
+     <logger name="org.springframework.beans.factory">
+        <level value="INFO" /> </logger>
+     <logger name="org.apache.commons">
+        <level value="INFO"/>
+    </logger>
+    <logger name="org.mybatis">
+         <level value="INFO"/>
+    </logger>
+        
+    
+	<!-- 특히 approval 패키지는 상세 로깅 설정(추가부분 나중에 지우기) -->
+	<logger name="com.kh.flokrGroupware.approval">
+	    <level value="debug" />
 	</logger>
 	
 	<!-- 3rdparty Loggers -->
@@ -25,13 +42,43 @@
 	</logger>
 	
 	<logger name="org.springframework.context">
-		<level value="info" />
+		<level value="INFO" />
+		<!-- <level value="info" /> -->
 	</logger>
 
 	<logger name="org.springframework.web">
-		<level value="info" />
-		<!-- <level value="DEBUG" /> -->
+		<level value="INFO" />
+		<!-- <level value="info" /> -->
 	</logger>
+	
+	<!-- Redis 캐싱관련 -->
+	<logger name="org.springframework.cache">
+	    <level value="INFO" />
+	</logger>
+	
+	<logger name="org.springframework.data.redis">
+	    <level value="INFO" />
+	</logger>
+	
+	<logger name="redis.clients.jedis">
+	     <level value="INFO" />
+	</logger>
+	
+	<!-- AOP 관련 로거 추가 -->
+	<logger name="org.springframework.aop">
+	    <level value="INFO" />
+	</logger>
+	
+	<logger name="org.springframework.transaction.interceptor">
+	    <level value="INFO" />
+	</logger>
+	<logger name="org.springframework.transaction">
+        <level value="INFO" />
+    </logger>
+	<logger name="org.aspectj">
+        <level value="INFO" />
+		<!-- <level value="DEBUG" /> -->
+    </logger>
 	
 	<!-- 
 	<logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
