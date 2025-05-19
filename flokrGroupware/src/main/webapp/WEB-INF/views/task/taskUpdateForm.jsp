@@ -23,7 +23,7 @@
 		</c:choose>
         </button>
         <input type="hidden" name="emoji" id="selectedEmoji" value="${ task.emoji }" />
-        <input type="text" name="taskTitle" class="insert-title-input" value="${ task.taskTitle }" />
+        <input type="text" name="taskTitle" class="insert-title-input" value="${ task.taskTitle }" required/>
       </div>
       <div class="insert-header-actions">
         <button type="button" class="close-btn" onclick="backToList()">✕</button>
@@ -36,7 +36,7 @@
       <div class="insert-left-pane">
         <div class="update-rowLeft">
           <label>업무 내용</label>
-          <textarea name="taskContent" class="insert-content-box">${ task.taskContent }</textarea>
+          <textarea name="taskContent" class="insert-content-box" required>${ task.taskContent }</textarea>
         </div>
 
         <div class="update-rowLeft">
@@ -69,6 +69,7 @@
         <div class="update-rowRight">
           <label>카테고리</label>
 			<select name="category" class="insert-dropdown">
+			<option value="" ${ empty task.category ? 'selected' : ''}>선택하세요</option>
 			<option value="디자인" ${task.category eq '디자인' ? 'selected' : ''}>디자인</option>
 			<option value="데이터" ${task.category eq '데이터' ? 'selected' : ''}>데이터</option>
 			<option value="개발" ${task.category eq '개발' ? 'selected' : ''}>개발</option>
@@ -91,16 +92,6 @@
         <div class="update-rowRight">
           <label>마감일</label>
           <input type="date" name="dueDate" class="insert-date-input" value="${ task.dueDate }"/>
-        </div>
-
-        <div class="update-rowRight-end">
-          <label>담당자</label>
-          <div class="assignees">
-            <div class="avatar">👤</div>
-            <div class="avatar red">👩</div>
-            <div class="avatar gray">A</div>
-            <div class="avatar empty">+3</div>
-          </div>
         </div>
 
         <div class="insert-btn-group">

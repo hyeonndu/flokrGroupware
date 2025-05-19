@@ -4,15 +4,19 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -23,6 +27,7 @@ import com.kh.flokrGroupware.attachment.model.vo.Attachment;
 import com.kh.flokrGroupware.employee.model.vo.Employee;
 import com.kh.flokrGroupware.task.model.service.TaskServiceImpl;
 import com.kh.flokrGroupware.task.model.vo.Task;
+import com.kh.flokrGroupware.task.model.vo.TaskAssignee;
 
 @Controller
 @RequestMapping("/task")
@@ -54,6 +59,11 @@ public class TaskController {
 
 		ArrayList<Task> list = tService.taskList(empNo);
 		
+		for(Task task : list) {
+	        List<TaskAssignee> assignees = tService.getTaskAssignees(task.getTaskNo());
+	        task.setAssignees(assignees); // Task 클래스에 담당자 목록을 저장할 속성 필요
+	    }
+		
 		mv.addObject("list", list)
 		  .addObject("statusNameMap", statusNameMap)
 		  .addObject("statusColorMap", statusColorMap)
@@ -67,6 +77,8 @@ public class TaskController {
 	    Task task = tService.taskDetail(taskId);
 	    Attachment atmt = tService.getAttachment(taskId);
 	    
+	    List<TaskAssignee> assignees = tService.getTaskAssignees(taskId);
+	    
 	    Map<String, String> statusMap = new HashMap<>();
 	    statusMap.put("REQUEST", "요청");
 	    statusMap.put("IN_PROGRESS", "진행중");
@@ -79,6 +91,7 @@ public class TaskController {
 	    model.addAttribute("task", task);
 	    model.addAttribute("atmt", atmt);
 	    model.addAttribute("statusKor", statusKor);
+	    model.addAttribute("assignees", assignees);
 
 	    return "task/taskDetailView";
 	}
@@ -90,11 +103,18 @@ public class TaskController {
     }
 
 	@RequestMapping("/insert")
-	public String taskInsert(Task task,  @RequestParam("uploadFile") MultipartFile upfile, Model model, HttpSession session, Attachment atmt) {
+	public String taskInsert(
+		Task task, 
+		@RequestParam("uploadFile") MultipartFile upfile, 
+		@RequestParam(value="assignees", required=false) String assignees,
+		Model model, 
+		HttpSession session, 
+		Attachment atmt) {
 		
 		Employee loginUser = (Employee) session.getAttribute("loginUser");
 		int empNo = loginUser.getEmpNo();
 		
+		// 파일 업로드 처리
 		if (upfile != null && !upfile.isEmpty() && upfile.getOriginalFilename() != null && !upfile.getOriginalFilename().trim().equals("")) {
 		    atmt = new Attachment();
 		    String changeName = saveFile(upfile, session);
@@ -110,7 +130,19 @@ public class TaskController {
 		    atmt = null;
 		}
 
-		int result = tService.taskInsert(task, atmt);
+		// 담당자 목록 처리
+		List<Integer> assigneeList = null;
+		if (assignees != null && !assignees.isEmpty()) {
+		    assigneeList = Arrays.stream(assignees.split(","))
+		                      .map(String::trim)
+		                      .filter(s -> !s.isEmpty())
+		                      .map(Integer::parseInt)
+		                      .collect(Collectors.toList());
+		    
+		}
+		
+		// 업데이트된 서비스 메소드 호출
+		int result = tService.taskInsert(task, atmt, assigneeList);
 		
 		if(result > 0) {
 			session.setAttribute("alertMsg", "업무가 성공적으로 추가되었습니다.");
@@ -207,12 +239,9 @@ public class TaskController {
 	        
 	        result = tService.taskAtmtUpdate(task, atmt);
 	        
-	        System.out.println("if문 안");
-	        
 		} else {
 			
 			result = tService.taskUpdate(task);
-			System.out.println("else문 안");
 			
 		}
 		
@@ -226,5 +255,12 @@ public class TaskController {
 		
 		return response;
 	}
-
+	
+	@GetMapping("/employeeList")
+	@ResponseBody
+	public List<Employee> getEmployeeList(HttpSession session) {
+		Employee loginUser = (Employee) session.getAttribute("loginUser");
+		int empNo = loginUser.getEmpNo();
+	    return tService.getAllEmployees(empNo); // 사번, 이름, 부서명 포함
+	}
 }

@@ -143,29 +143,126 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
+/* 사원 정보 카드 스타일 */
+.employee-card {
+  display: none; /* 기본적으로 숨김 */
+  position: fixed !important; /* fixed 유지 */
+  width: 230px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  z-index: 99999 !important;
+  padding: 15px;
+  border: 1px solid #eaeaea;
+}
+
+.employee-card:before {
+  content: '';
+  position: absolute;
+  bottom: -8px !important; /* 상단이 아닌 하단에 위치 */
+  top: auto !important; /* top 속성 제거 */
+  left: 50% !important; /* 가운데 정렬 */
+  transform: translateX(-50%) !important; /* X축 가운데 정렬 */
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white !important; /* 위쪽 방향이 아닌 아래쪽 방향 */
+  border-bottom: none !important; /* 기존 하단 화살표 제거 */
+}
+
+.card-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #808080 !important;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 10px;
+  margin: 0 auto 15px;
+}
+
+.card-info {
+  text-align: center;
+}
+
+.emp-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.emp-position {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.emp-phone, .emp-email {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+
 .요청    { background: #b0bec5; }
 .진행중  { background: #90caf9; }
 .피드백  { background: #f8bbd0; }
 .보류    { background: #ffe082; }
 .완료    { background: #a5d6a7; }
 
-.assignees {
+.detail-assignees {
   display: flex;
   gap: 10px;
   align-items: center;
 }
-.avatar {
-  width: 34px;
-  height: 34px;
-  background: #dee2e6;
+.detail-avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  text-align: center;
-  line-height: 34px;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-color: #808080; /* 기본 회색 */
+  position: relative; /* 카드 위치 기준점 */
+  cursor: pointer;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
 }
-.avatar.red { background: #f03e3e; color: white; }
-.avatar.gray { background: #868e96; color: white; }
-.avatar.empty { background: #f1f3f5; color: #333; }
+
+.detail-avatar.red {
+  background-color: #e74c3c;
+}
+
+.detail-avatar.blue {
+  background-color: #3498db;
+}
+
+.detail-avatar.green {
+  background-color: #2ecc71;
+}
+
+.detail-avatar.purple {
+  background-color: #9b59b6;
+}
+
+.detail-avatar.orange {
+  background-color: #e67e22;
+}
+
+.detail-avatar.teal {
+  background-color: #1abc9c;
+}
+
+.detail-avatar.empty {
+  background-color: #ddd;
+  color: #666;
+  font-size: 0.8em;
+}
 
 .btn-group {
   margin-top: 25px;
@@ -232,3 +329,4 @@
 .dropdown-options li:hover {
   background-color: #f5f5f5;
 }
+
