@@ -9,7 +9,13 @@
 		<param-value>
 			/WEB-INF/spring/root-context.xml
 			/WEB-INF/spring/spring-security.xml
-		</param-value>
+		</param-value>		
+	</context-param>
+	
+	<!-- Redis 프로파일 설정 추가 (개발 환경에서는 dev, 서버에 배포할 때는 이 값을 deploy로 변경하면 됨) -->
+	<context-param>
+		<param-name>spring.profiles.active</param-name>
+    	<param-value>deploy</param-value>
 	</context-param>
 	
 	<!-- Creates the Spring Container shared by all Servlets and Filters -->
