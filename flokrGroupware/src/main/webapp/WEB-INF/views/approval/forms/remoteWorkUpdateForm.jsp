@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!-- documentData.data에서 재택근무신청서 정보 추출 -->
 <c:set var="remoteWorkData" value="${documentData.data}" />
 <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/remoteWorkUpdateForm.css">

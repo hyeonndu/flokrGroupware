@@ -1040,22 +1040,29 @@ public class ApprovalController {
     /**
      * 수신 문서함 목록 조회 (페이징)
      * @param currentPage 현재 페이지
+     * @param refresh 캐시 강제 갱신 여부
      * @param session HTTP 세션
      * @param model 뷰로 전달할 데이터
      * @return 수신 문서함 페이지
      */
     @RequestMapping("waitingList.ap")
     public String waitingList(@RequestParam(value = "page", defaultValue = "1") int currentPage,
-    						  @RequestParam(value = "refresh", required = false) String refresh,
+                             @RequestParam(value = "refresh", required = false) String refresh,
                              HttpSession session, Model model) {
         Employee loginUser = (Employee)session.getAttribute("loginUser");
         
-        // refresh 파라미터가 있으면 캐시 강제 무효화
-        if ("true".equals(refresh)) {
+        // "refresh" 파라미터가 있거나 session에 "waitingListLoaded"가 없으면 캐시 무효화
+        if ("true".equals(refresh) || session.getAttribute("waitingListLoaded") == null) {
+            // 캐시 무효화
             aService.refreshWaitingDocumentsForUser(loginUser.getEmpNo());
+            
+            // 첫 로드 표시 설정
+            session.setAttribute("waitingListLoaded", true);
         }
         
-        HashMap<String, Object> result = aService.selectWaitingDocumentsPaging(loginUser.getEmpNo(), currentPage);
+        // searchDocuments 메소드 사용 (부서 정보가 포함된 결과를 얻기 위해)
+        HashMap<String, Object> result = aService.searchDocuments("waiting", loginUser.getEmpNo(), 
+                currentPage, null, null, null, null, null);
         
         // 문서 목록 가져오기
         ArrayList<ApprovalDoc> docList = (ArrayList<ApprovalDoc>)result.get("list");
@@ -1092,10 +1099,10 @@ public class ApprovalController {
      */
     @RequestMapping("completedList.ap")
     public String completedList(@RequestParam(value = "page", defaultValue = "1") int currentPage,
-                               @RequestParam(value = "statusFilter", required = false) String statusFilter, // ❤️ 상태 필터 파라미터 추가
-                               @RequestParam(value = "periodFilter", required = false) String periodFilter, // ❤️ 기간 필터 파라미터 추가
-                               @RequestParam(value = "dateFrom", required = false) String dateFrom, // ❤️ 시작일 파라미터 추가
-                               @RequestParam(value = "dateTo", required = false) String dateTo, // ❤️ 종료일 파라미터 추가
+                               @RequestParam(value = "statusFilter", required = false) String statusFilter,
+                               @RequestParam(value = "periodFilter", required = false) String periodFilter,
+                               @RequestParam(value = "dateFrom", required = false) String dateFrom,
+                               @RequestParam(value = "dateTo", required = false) String dateTo,
                                HttpSession session, Model model) {
         Employee loginUser = (Employee)session.getAttribute("loginUser");
         
@@ -1143,59 +1150,48 @@ public class ApprovalController {
             dateTo = sdf.format(today);
         }
         
-        // ❤️ 필터 적용 시 searchDocuments 사용, 아니면 기존 메소드 사용
-        HashMap<String, Object> result;
-        if ((statusFilter != null && !statusFilter.isEmpty()) || 
-            (dateFrom != null && !dateFrom.isEmpty()) || 
-            (dateTo != null && !dateTo.isEmpty())) {
-            
-            result = aService.searchDocuments("completed", loginUser.getEmpNo(), 
-                    currentPage, null, null, dateFrom, dateTo, statusFilter);
-        } else {
-            // 페이징 처리된 결과 가져오기 - 기존 방식
-            result = aService.selectCompletedDocumentsPaging(loginUser.getEmpNo(), currentPage);
-            
-            // 기본 통계 데이터 계산
-            ArrayList<ApprovalDoc> docList = (ArrayList<ApprovalDoc>)result.get("list");
-            int totalCount = ((PageInfo)result.get("pageInfo")).getListCount();
-            int approvedCount = 0;
-            int rejectedCount = 0;
-            
-            if(docList != null) {
-                for(ApprovalDoc doc : docList) {
-                    if("APPROVED".equals(doc.getDocStatus())) {
-                        approvedCount++;
-                    } else if("REJECTED".equals(doc.getDocStatus())) {
-                        rejectedCount++;
-                    }
+        // 항상 searchDocuments 메소드 사용하여 데이터 로드 (부서 정보 포함)
+        HashMap<String, Object> result = aService.searchDocuments("completed", loginUser.getEmpNo(), 
+                currentPage, null, null, dateFrom, dateTo, statusFilter);
+        
+        // 기존 통계 데이터 계산
+        ArrayList<ApprovalDoc> docList = (ArrayList<ApprovalDoc>)result.get("list");
+        int totalCount = ((PageInfo)result.get("pageInfo")).getListCount();
+        int approvedCount = 0;
+        int rejectedCount = 0;
+        
+        if(docList != null) {
+            for(ApprovalDoc doc : docList) {
+                if("APPROVED".equals(doc.getDocStatus())) {
+                    approvedCount++;
+                } else if("REJECTED".equals(doc.getDocStatus())) {
+                    rejectedCount++;
                 }
             }
-            
-            // 통계 데이터 세팅
-            HashMap<String, Object> stats = new HashMap<>();
-            stats.put("totalCount", totalCount);
-            stats.put("approvedCount", approvedCount);
-            stats.put("rejectedCount", rejectedCount);
-            stats.put("avgProcessTime", "계산 중...");
-            
-            result.put("stats", stats);
         }
         
-        // ❤️ 처리 효율성 지표 추가
-        HashMap<String, Object> stats = (HashMap<String, Object>) result.get("stats");
+        // 통계 데이터 세팅
+        HashMap<String, Object> stats = new HashMap<>();
+        stats.put("totalCount", totalCount);
+        stats.put("approvedCount", approvedCount);
+        stats.put("rejectedCount", rejectedCount);
+        
+        // 처리 효율성 지표 추가
         HashMap<String, Object> efficiency = aService.getProcessingEfficiency(
                 loginUser.getEmpNo(), statusFilter, dateFrom, dateTo);
         stats.put("processingEfficiency", efficiency);
+        
+        result.put("stats", stats);
         
         // 모델에 데이터 추가
         model.addAttribute("pageInfo", result.get("pageInfo"));
         model.addAttribute("documentList", result.get("list"));
         model.addAttribute("stats", result.get("stats"));
         model.addAttribute("boxType", "completed");
-        model.addAttribute("statusFilter", statusFilter); // 필터 상태 모델에 추가
-        model.addAttribute("periodFilter", periodFilter); // 기간 필터 모델에 추가
-        model.addAttribute("dateFrom", dateFrom); // 시작일 모델에 추가
-        model.addAttribute("dateTo", dateTo); // 종료일 모델에 추가
+        model.addAttribute("statusFilter", statusFilter);
+        model.addAttribute("periodFilter", periodFilter);
+        model.addAttribute("dateFrom", dateFrom);
+        model.addAttribute("dateTo", dateTo);
         
         return "approval/approvalCompletedList";
     }
@@ -1393,8 +1389,21 @@ public class ApprovalController {
             model.addAttribute("boxType", boxType);
             
             // 완료 문서함에 통계 추가
-            if ("completed".equals(boxType) && result.containsKey("stats")) {
-                model.addAttribute("stats", result.get("stats"));
+            if ("completed".equals(boxType)) {
+                // 기존 통계 정보 가져오기
+                HashMap<String, Object> stats;
+                if (result.containsKey("stats")) {
+                    stats = (HashMap<String, Object>) result.get("stats");
+                } else {
+                    stats = new HashMap<>();
+                }
+                
+                // ❤️ 처리 효율성 지표 항상 계산하여 추가 (수정된 부분)
+                HashMap<String, Object> efficiency = aService.getProcessingEfficiency(
+                        loginUser.getEmpNo(), statusFilter, dateFrom, dateTo);
+                stats.put("processingEfficiency", efficiency);
+                
+                model.addAttribute("stats", stats);
             }
             
             // 수신 문서함에 긴급문서 개수 계산 추가
