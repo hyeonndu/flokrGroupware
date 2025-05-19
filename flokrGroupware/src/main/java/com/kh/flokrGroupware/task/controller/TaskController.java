@@ -76,6 +76,9 @@ public class TaskController {
 	public String taskDetail(@RequestParam("taskId") int taskId, Model model) {
 	    Task task = tService.taskDetail(taskId);
 	    Attachment atmt = tService.getAttachment(taskId);
+	    if (atmt != null) {
+	        model.addAttribute("atmt", atmt);
+	    }
 	    
 	    List<TaskAssignee> assignees = tService.getTaskAssignees(taskId);
 	    
@@ -112,10 +115,6 @@ public class TaskController {
 		    @RequestParam(value = "uploadFile", required = false) MultipartFile upfile,
 		    @RequestParam(value = "assignees", required = false) String assignees,
 		    HttpSession session) {
-		
-		System.out.println("✅ title: " + title);
-	    System.out.println("✅ content: " + content);
-	    System.out.println("✅ assigneesRaw: " + assignees);
 
 		Employee loginUser = (Employee) session.getAttribute("loginUser");
 		int empNo = loginUser.getEmpNo();
