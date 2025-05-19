@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -158,8 +157,7 @@ public class ChatController {
 	
 	@MessageMapping("/chat/message")
 	public void handleChatMessage(@Payload ChatMessage chatMessage) {
-	    System.out.println("!!!!!!!!!!!!!! ChatController: WebSocket Message received by handleChatMessage !!!!!!!!!!!!!!"); // 눈에 잘 띄게!
-	    System.out.println("Received Message: " + chatMessage);
+		System.out.println("WebSocket Message received: " + chatMessage);
 		
 		// TODO: 여기에 필요한 로직 추가 가능
 		// 예: 메시지 수신 시간 설정 (서버 시간 기준)

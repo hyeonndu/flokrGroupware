@@ -196,11 +196,9 @@
                 </div>
 
                 <div class="modal fade" id="leaveChatRoomModal" tabindex="-1" aria-labelledby="leaveChatRoomModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content"> 
-                            <div class="modal-header"> 
+                    <div class="modal-dialog">
+                            <div class="modal-header">
                                 <h5 class="modal-title" id="leaveChatRoomModalLabel">채팅방 나가기</h5>
-                                
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
@@ -208,10 +206,9 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">아니오</button>
-                                <button type="button" class="btn btn-danger" id="confirmLeaveChatRoomBtn">예</button> 
+                                <button type="button" class="btn btn-danger" id="confirmLeaveChatRoomBtn">예</button>
                             </div>
                         </div>
-                    </div>
                 </div>
                 
 
@@ -294,38 +291,17 @@
             const $chatMainArea = $('.chat-main'); // 메시지, 입력창 등을 포함하는 메인 영역
             const $placeholderArea = $('#chat-placeholder'); // 초기 상태에서 표시되는 placeholder 영역
 
-            // 채팅방 헤더 관련 jQuery 객체
-            const $chatHeaderTitle = $('.chat-main-header .chat-header-title');
-            // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-            // 오류가 발생한 변수입니다. 이 위치에 올바르게 선언되어야 합니다.
-            // HTML 구조: .chat-main-header > div > .chat-header-info > .chat-header-subtitle > i.material-icons
-            window.$chatHeaderSubtitleIcon = $('.chat-main-header .chat-header-info .chat-header-subtitle .material-icons');
-            const $chatHeaderMemberCountDisplay = $('.chat-main-header .chat-header-info .chat-header-subtitle .member-count-display');
-            // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+            const $chatHeaderTitle = $('.chat-header-title'); // 헤더 제목 span
+            const $chatHeaderSubtitle = $('.chat-header-subtitle'); // 헤더 부제목/상태 span
+            const $chatHeaderAvatarArea = $('.header-avatar'); // 헤더 아바타 이미지를 담는 div
 
-            const $chatHeaderAvatarArea = $('.chat-main-header .header-avatar');
-            const $chatRoomOutIcon = $('#chatRoom-out-icon'); // 채팅방 나가기 아이콘
-
-            // 메시지 입력 관련
-            const $messageInput = $('.message-input-area input[type="text"]');
-            const $sendButton = $('.message-input-area button');
-
-            // 페이지 로드 시 확인용 로그 (개발자 도구 콘솔에서 확인)
-            console.log("페이지 로드 시 $messageInput 객체:", $messageInput);
-            console.log("페이지 로드 시 $sendButton 객체:", $sendButton);
-            if ($messageInput.length === 0) {
-                console.error("오류: 메시지 입력 필드($messageInput)를 찾을 수 없습니다. HTML 또는 선택자를 확인하세요!");
-            }
-            if ($sendButton.length === 0) {
-                console.error("오류: 전송 버튼($sendButton)을 찾을 수 없습니다. HTML 또는 선택자를 확인하세요!");
-            }
+            const $messageInput = $('.message-input-area input[type="text"]'); // 메시지 입력 필드
+            const $sendButton = $('.message-input-area button'); // 메시지 전송 버튼
 
             // --- WebSocket 관련 변수 ---
             let stompClient = null; // STOMP 클라이언트 인스턴스
             let currentRoomSubscription = null; // 현재 구독 중인 채팅방 토픽 구독 객체
             let selectedRoomNo = null; // 현재 사용자가 선택/보고 있는 채팅방 번호
-            let isStompConnected = false; // 연결 상태를 관리하는 플래그
-            let pendingRoomSubscription = null; // 연결 후 구독해야 할 방 번호
 
             // ★ 수정: empId는 WebSocket user destination용으로, empNo는 API 호출 및 로직용으로 분리 사용 ★
             const loginUserEmpId = $("#loginUserId").val(); // 새로 추가한 hidden input에서 empId 가져오기
@@ -344,18 +320,6 @@
             // --- WebSocket 연결 함수 정의 ---
             // 페이지 로드 시 WebSocket 서버와 연결을 시작합니다.
             function connectWebSocket() {
-
-                if (stompClient && stompClient.connected) { // 이미 연결되어 있다면 중복 연결 시도 방지
-                    console.log('chatList.ch: STOMP client already connected.');
-                    isStompConnected = true; // 상태 동기화
-                    if (pendingRoomSubscription) { // 혹시 모를 보류된 구독 처리
-                        const roomToSubscribe = pendingRoomSubscription;
-                        pendingRoomSubscription = null;
-                        subscribeToRoom(roomToSubscribe);
-                    }
-                    return;
-                }
-
                 // SockJS 연결 URL 설정 (contextPath 포함)
                 const socketUrl = contextPath + '/ws-stomp';
                 console.log("Connecting to WebSocket:", socketUrl);
@@ -365,16 +329,10 @@
                 // STOMP 연결 시도
                 stompClient.connect({}, function (frame) {
                     console.log('WebSocket Connected: ' + frame);
-                    isStompConnected = true;
                     // 연결 성공 후 초기 작업 (필요시)
                     // 예: 사용자 상태를 온라인으로 업데이트 등
                     // TODO: 연결 성공 시 필요한 초기 구독 (예: 개인 알림 채널 구독)
-                            // 연결 성공 후, 보류 중인 작업이 있다면 실행
-                    if (pendingRoomSubscription) {
-                        console.log('chatList.ch: Processing pending subscription for room:', pendingRoomSubscription);
-                        subscribeToRoom(pendingRoomSubscription);
-                        pendingRoomSubscription = null; // 처리 후 초기화
-                    }
+
                     // --- 사용자별 안 읽은 메시지 알림 토픽 구독 ---
                     // 이 구독은 백엔드에서 '총 안 읽은 채팅 수' 변화 알림을 보낼 때 사용합니다.
                     // 토픽 경로는 백엔드 구현과 일치해야 합니다.
@@ -403,7 +361,6 @@
                     }
                 }, function(error) {
                     console.error('STOMP connection error:', error);
-                    isStompConnected = false;
                     // 연결 실패 시 사용자에게 알림
                     // alert("WebSocket 연결에 실패했습니다. 페이지를 새로고침 해주세요.");
                     // 연결 재시도 로직 등을 추가할 수 있습니다.
@@ -553,108 +510,6 @@
                 }
             }
 
-            /**
-             * 채팅방 메인 헤더 정보를 업데이트하는 함수
-             * @param {object | null} roomInfo - 채팅방 정보 객체. 오류 또는 정보 없음 시 null.
-             * - roomNo (필수): 채팅방 번호
-             * - roomName (필수): 채팅방 이름
-             * - roomType (필수): 'P' (개인), 'G' (그룹)
-             * - memberCount (선택): 그룹 채팅 시 인원수 (서버 제공)
-             * - chatUserImgPath (선택): 1:1 채팅 시 상대방 프로필 이미지 경로
-             * - (기타 필요한 roomInfo 내의 필드들...)
-             * @param {number | null} listItemMemberCount - (선택적) 채팅 목록 아이템에서 가져온 멤버 수 (참고용)
-             */
-            function updateChatHeader(roomInfo, listItemMemberCount = null) {
-                if (roomInfo && typeof roomInfo.roomNo !== 'undefined' && roomInfo.roomNo !== null) {
-                    // 유효한 채팅방 정보가 있는 경우
-
-                    // 1. 채팅방 이름 설정
-                    $chatHeaderTitle.text(roomInfo.roomName || '채팅방');
-
-                    // 2. 아바타 및 인원수/상태 업데이트
-                    $chatHeaderAvatarArea.empty().hide(); // 초기화 후 숨김
-                    $chatHeaderSubtitleIcon.hide(); // 그룹 아이콘 초기 숨김
-                    $chatHeaderMemberCountDisplay.text(''); // 인원수 초기화
-
-                    if (roomInfo.roomType === 'P') { // 1:1 채팅
-                        // 1:1 채팅 시 상대방 프로필 이미지 표시
-                        if (roomInfo.chatUserImgPath && roomInfo.chatUserImgPath !== 'null' && String(roomInfo.chatUserImgPath).trim() !== '') {
-                            const imgPath = `${contextPath}/${roomInfo.chatUserImgPath}`;
-                            const $avatarImg = $('<img>').attr('src', imgPath)
-                                                        .attr('alt', roomInfo.roomName || '상대 프로필')
-                                                        .on('error', function() {
-                                                            $(this).attr('src', `${contextPath}/resources/images/default_profile.PNG`);
-                                                        });
-                            $chatHeaderAvatarArea.append($avatarImg).show();
-                        } else {
-                            // 기본 프로필 이미지 표시 또는 아이콘 표시 (선택)
-                            const $defaultAvatarImg = $('<img>').attr('src', `${contextPath}/resources/images/default_profile.PNG`)
-                                                            .attr('alt', roomInfo.roomName || '기본 프로필');
-                            $chatHeaderAvatarArea.append($defaultAvatarImg).show();
-                        }
-                        // 1:1 채팅에서는 헤더의 그룹 아이콘과 인원수 숨김
-                        $chatHeaderSubtitleIcon.hide();
-                        $chatHeaderMemberCountDisplay.parent().hide();
-
-
-                    } else if (roomInfo.roomType === 'G') { // 그룹 채팅
-                        // 그룹 채팅 시 고정 아이콘 또는 그룹 대표 이미지 표시
-                        // 현재 HTML은 <div class="header-avatar"> 안에 이미지를 넣는 구조이므로,
-                        // 그룹 아이콘을 여기에 넣거나, CSS로 별도 처리할 수 있습니다.
-                        // 여기서는 그룹 아이콘을 header-avatar 영역에 표시합니다.
-                        const $groupIconForAvatar = $('<i>').addClass('material-icons').css({'font-size': '36px', 'color': '#adb5bd'}); // CSS는 예시입니다.
-                        // 실제 아이콘은 material-icons-outlined 등 원하는 스타일 사용 가능
-                        if(roomInfo.groupProfileImgPath) { // 만약 그룹도 대표 이미지가 있다면
-                            const imgPath = `${contextPath}/${roomInfo.groupProfileImgPath}`;
-                            const $avatarImg = $('<img>').attr('src', imgPath)
-                                                        .attr('alt', roomInfo.roomName || '그룹 프로필')
-                                                        .on('error', function() {
-                                                            // 에러 시 아이콘 표시 또는 기본 그룹 이미지
-                                                            $(this).replaceWith($groupIconForAvatar.text('groups'));
-                                                        });
-                            $chatHeaderAvatarArea.append($avatarImg).show();
-                        } else { // 그룹 대표 이미지가 없으면 아이콘 표시
-                            $chatHeaderAvatarArea.append($groupIconForAvatar.text('groups')).show();
-                        }
-
-
-                        // 그룹 인원수 표시
-                        const memberCount = parseInt(roomInfo.memberCount); // 서버에서 받은 인원수
-                        if (!isNaN(memberCount) && memberCount > 0) {
-                            $chatHeaderMemberCountDisplay.text(memberCount);
-                        } else if (listItemMemberCount !== null && !isNaN(parseInt(listItemMemberCount)) && parseInt(listItemMemberCount) > 0){
-                            $chatHeaderMemberCountDisplay.text(parseInt(listItemMemberCount)); // 서버 값이 없으면 목록 값 참고
-                        }
-
-                        $chatHeaderSubtitleIcon.text('group').show(); // 헤더의 작은 그룹 아이콘 표시
-                        $chatHeaderMemberCountDisplay.parent().show(); // 인원수 포함된 부제목 영역 표시
-                    }
-
-                    // 3. 채팅방 나가기 버튼 설정
-                    $chatRoomOutIcon.data('roomno', roomInfo.roomNo).show();
-
-                    // 4. 메인 채팅 영역 표시, 플레이스홀더 숨김
-                    $chatMainArea.removeClass('hidden');
-                    $placeholderArea.hide();
-
-                    console.log('Chat header updated for room:', roomInfo.roomName, '(No:', roomInfo.roomNo, ', Type:', roomInfo.roomType, ')');
-
-                } else {
-                    // 유효한 채팅방 정보가 없는 경우 (초기 상태 또는 오류)
-                    $chatHeaderTitle.text('채팅');
-                    $chatHeaderAvatarArea.empty().hide();
-                    $chatHeaderSubtitleIcon.hide();
-                    $chatHeaderMemberCountDisplay.text('');
-                    $chatHeaderMemberCountDisplay.parent().hide();
-                    $chatRoomOutIcon.data('roomno', null).hide();
-
-                    $chatMainArea.addClass('hidden');
-                    $placeholderArea.show();
-
-                    console.log('Chat header reset. No room selected or roomInfo is invalid.');
-                }
-            }
-
 
 
 
@@ -705,24 +560,28 @@
                         if (stompClient && stompClient.connected) {
                             const topic = '/topic/chat/room/' + roomNo;
                             console.log('Subscribing to:', topic);
-
-                            // 이전 구독이 있다면 해제 (중복 구독 방지)
-                            if (currentRoomSubscription) {
-                                currentRoomSubscription.unsubscribe();
-                                console.log('Unsubscribed from previous room before new subscription.');
-                            }
-
                             currentRoomSubscription = stompClient.subscribe(topic, function (chatMessage) {
                                 console.log('Message received from WebSocket:', chatMessage.body);
                                 try {
                                     const messageObject = JSON.parse(chatMessage.body);
+                                    // 현재 보고 있는 방의 메시지만 표시
+                                    // 수신된 메시지의 roomNo와 현재 선택된 roomNo가 같은지 확인 (숫자 또는 문자열 비교)
                                     if (String(messageObject.roomNo) === String(selectedRoomNo)) {
-                                        displayChatMessage(messageObject);
+                                         displayChatMessage(messageObject); // 새 메시지를 화면에 추가
+                                         // 새 메시지 수신 시 스크롤 최하단으로 이동
                                         $messageList.scrollTop($messageList[0].scrollHeight);
                                     } else {
                                         console.log("Received message for a different room:", messageObject.roomNo);
-                                        // 다른 방 메시지 수신 시 UI 업데이트 로직 (필요시)
+                                        // TODO: 다른 방 메시지 수신 시 채팅 목록 업데이트 (예: 해당 채팅방 아이템에 새 메시지 알림 표시)
+                                        // 해당 chat-item을 찾아 업데이트하는 로직 필요
+                                        const $targetChatItem = $chatList.find('.chat-item[data-roomno="' + messageObject.roomNo + '"]');
+                                        if ($targetChatItem.length > 0) {
+                                            // 예: 마지막 메시지 업데이트 및 스타일 변경
+                                            $targetChatItem.find('.chat-text').text(messageObject.chatContent || '');
+                                            // TODO: 새 메시지 알림 (점 표시 등) 기능 추가
+                                        }
                                     }
+
                                 } catch (e) {
                                     console.error("Error processing received message:", e, chatMessage.body);
                                 }
@@ -731,17 +590,6 @@
                         } else {
                             console.error("STOMP client not connected. Cannot subscribe to room messages.");
                             // WebSocket 연결이 끊어졌을 경우 재연결 로직 또는 알림 필요
-                            // 여기에 재시도 로직 추가
-                            setTimeout(() => {
-                                console.log('Retrying subscription to room ' + roomNo + '...');
-                                if (stompClient && stompClient.connected) {
-                                    const topic = '/topic/chat/room/' + roomNo;
-                                    currentRoomSubscription = stompClient.subscribe(topic, function (chatMessage) {
-                                        // ... 동일한 구독 로직
-                                    });
-                                    console.log('Successfully subscribed to room ' + roomNo + ' on retry.');
-                                }
-                            }, 2000);
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
@@ -755,173 +603,97 @@
                 });
             }
 
-            // STOMP 연결 대기 및 구독을 처리하는 새로운 함수
-            function subscribeToRoom(roomNo, maxRetries = 10, currentRetry = 0) {
-            // stompClient 객체가 아직 초기화되지 않았거나, isStompConnected가 명시적으로 false인 경우
-            if (!stompClient || !isStompConnected) {
-                // isStompConnected가 false라는 것은 아직 connect 성공 콜백이 실행되지 않았거나 연결이 끊긴 상태.
-                // connectWebSocket 함수가 연결을 시도하고 성공 콜백에서 pendingRoomSubscription을 처리할 것이므로,
-                // 여기서는 pendingRoomSubscription에 방 번호를 기록하고 함수를 종료하는 것이 더 깔끔할 수 있습니다.
-                // 또는, 기존 재시도 로직이 stompClient.connected를 확인하므로, 이 부분을 그대로 둘 수도 있습니다.
-                // 여기서는 좀 더 명확하게 pending을 설정하고, 재시도 로직은 stompClient.connected를 보도록 합니다.
-                console.warn(`subscribeToRoom for room ${roomNo}: STOMP client is not ready (isStompConnected: ${isStompConnected}). Queuing task.`);
-                pendingRoomSubscription = roomNo; // 구독 요청을 보류 상태로 둡니다.
-                // 만약 connectWebSocket() 호출이 아직 안되었다면 여기서 호출 트리거도 가능하나, 보통은 페이지 로드 시 한 번만 호출합니다.
-                return; // 함수 실행 중단, connectWebSocket 성공 콜백에서 처리 기대
-            }
-
-            if (stompClient.connected) { // 실제 stompJS 라이브러리의 연결 상태 확인
-                const topic = '/topic/chat/room/' + roomNo;
-                console.log('Subscribing to:', topic);
-
-                if (currentRoomSubscription) {
-                    currentRoomSubscription.unsubscribe();
-                    console.log('Unsubscribed from previous room before new subscription.');
-                }
-
-                currentRoomSubscription = stompClient.subscribe(topic, function (chatMessage) {
-                    console.log('Message received from WebSocket:', chatMessage.body);
-                    try {
-                        const messageObject = JSON.parse(chatMessage.body);
-                        if (String(messageObject.roomNo) === String(selectedRoomNo)) {
-                            displayChatMessage(messageObject); // displayChatMessage 함수는 별도 정의
-                            $messageList.scrollTop($messageList[0].scrollHeight); // $messageList는 jQuery 객체
-                        } else {
-                            console.log("Received message for a different room:", messageObject.roomNo);
-                        }
-                    } catch (e) {
-                        console.error("Error processing received message:", e, chatMessage.body);
-                    }
-                });
-                console.log('Successfully subscribed to room ' + roomNo + ' messages.');
-                // ★★★ 중요: 성공적으로 구독했으므로, 이 방에 대한 pending 상태는 해제되어야 합니다. ★★★
-                if (pendingRoomSubscription === roomNo) {
-                    pendingRoomSubscription = null;
-                }
-            } else {
-                // STOMP 연결이 안 되어 있으면 재시도 (기존 로직)
-                if (currentRetry < maxRetries) {
-                    console.log(`subscribeToRoom: STOMP not connected for room ${roomNo}. Retry ${currentRetry + 1}/${maxRetries} in 1 second...`);
-                    // 재시도 전에도 pending 상태는 유지되어야 합니다. (이미 위에서 설정했거나, connectWebSocket에서 처리)
-                    // pendingRoomSubscription = roomNo; // 불필요하거나 중복될 수 있음
-                    setTimeout(() => {
-                        subscribeToRoom(roomNo, maxRetries, currentRetry + 1);
-                    }, 1000);
-                } else {
-                    console.error(`subscribeToRoom: STOMP client not connected after ${maxRetries} retries for room ${roomNo}. Cannot subscribe.`);
-                    // ★★★ 최대 재시도 실패 시, 여전히 pending 상태로 둘 수 있습니다. ★★★
-                    // 다음에 WebSocket 연결이 (다른 이유로) 성공했을 때 시도할 수 있도록.
-                    pendingRoomSubscription = roomNo;
-                }
-            }
-        }
-
-            // --- 특정 채팅방 상세 정보 및 메시지 로드 함수 정의 ---
-            // 채팅 목록 항목 클릭 시 또는 새 채팅방 생성 후 호출됩니다.
-            function loadChatRoomDetails(roomNo, listItemMemberCount = null) {
-                console.log("Loading chat room details for roomNo:", roomNo, "List item count (from list):", listItemMemberCount);
+            // --- 채팅방 헤더 업데이트 함수 정의 ---
+            // 채팅방 정보 (이름, 아바타, 상태/인원수 등)를 화면에 표시합니다.
+            function updateChatHeader(roomInfo, listItemMemberCount = null) {
                 const path = contextPath;
 
-                // 현재 보고 있는 방 번호 업데이트
-                selectedRoomNo = roomNo;
+                let headerTitle = '채팅방'; // 기본값 (혹시 모를 다른 타입 대비)
 
-                // 이전 방 구독 해제 (새로운 방을 로드하기 전에)
-                if (stompClient && stompClient.connected && currentRoomSubscription) {
-                    currentRoomSubscription.unsubscribe();
-                    console.log('Unsubscribed from previous room.');
-                    currentRoomSubscription = null; // 구독 객체 초기화
+                if (roomInfo) { // roomInfo 객체가 유효한 경우에만 처리
+                    if (roomInfo.roomType === 'G') {
+                        // 단체 채팅인 경우: roomName을 사용하고, 없으면 '단체 채팅방' 등으로 표시
+                        headerTitle = roomInfo.roomName || '단체 채팅방'; // 기본값 '단체 채팅방' 등 원하는 문자열로 변경 가능
+                    } else if (roomInfo.roomType === 'P') {
+                        // 1:1 채팅인 경우:
+                        if (roomInfo.roomName) {
+                            // 만약 1:1 채팅인데 roomName이 명시적으로 설정되어 있다면 그 이름을 사용
+                            headerTitle = roomInfo.roomName;
+                        } else {
+                            // roomName이 설정되지 않은 1:1 채팅이라면, 상대방의 이름을 사용
+                            // roomInfo.chatUserName는 백엔드에서 1:1 상대방 이름 정보를 담아준다고 가정한 필드명입니다.
+                            // 실제 필드명이 다르다면 해당 필드명으로 수정해주세요.
+                            headerTitle = roomInfo.chatUserName || '1:1 채팅방'; // 상대방 이름이 없을 경우 '1:1 채팅방' 기본값
+                            console.log("roomInfo.chatUserName : " + roomInfo.chatUserName);
+                        }
+                    }
+                    // 다른 roomType이 있다면 초기값 '채팅방'이 사용됩니다.
                 }
 
-                // AJAX를 통해 해당 채팅방의 정보와 메시지 목록을 가져옵니다.
-                $.ajax({
-                    url: path + "/chatMessage.ch/" + roomNo, // ChatController의 해당 매핑
-                    type: 'GET',
-                    dataType: 'json', // 서버 응답을 JSON으로 기대
-                    success: function(data) {
-                        console.log('Received chat room details and history:', data);
-                        const roomInfo = data.room;
-                        const messages = data.messages;
+                // 최종 결정된 헤더 타이틀을 화면에 표시
+                $chatHeaderTitle.text(headerTitle);
 
-                        // 1. 채팅방 헤더 (이름, 아바타, 상태/인원수) 업데이트
-                        updateChatHeader(roomInfo, listItemMemberCount);
 
-                        // 2. 기존 메시지 목록 지우기
-                        $messageList.empty();
+                // --- 부제목 (상태 또는 인원수) 및 아바타 업데이트 ---
+                let subtitleHTML = '';
+                $chatHeaderAvatarArea.empty(); // 기존 아바타 비우기
 
-                        // 3. 받은 메시지 목록으로 화면 다시 그리기
-                        if (messages && Array.isArray(messages) && messages.length > 0) {
-                            $.each(messages, function(index, message) {
-                                displayChatMessage(message);
-                            });
-                            // 메시지 로드 후 스크롤 최하단으로 이동
-                            $messageList.scrollTop($messageList[0].scrollHeight);
-                        } else {
-                            $messageList.append('<div class="no-messages" style="text-align: center; color: #aaa; padding: 20px;">대화 내용이 없습니다.</div>');
-                        }
+                if (roomInfo && roomInfo.roomType === 'P') { // 1:1 채팅
+                    // TODO: 1:1 채팅 상대방의 온라인 상태 정보를 받아와서 표시해야 함 (WebSocket 또는 별도 API 필요)
+                    const isOnline = false; // 임시로 false 설정 (실제 상태 로직 필요)
+                    subtitleHTML = '<span class="status-dot ' + (isOnline ? 'online' : '') + '"></span> ' + (isOnline ? '온라인' : '오프라인');
 
-                        // 4. 현재 채팅방 토픽 구독 (수정된 부분)
-                            if (isStompConnected) {
-                                subscribeToRoom(roomNo);
-                            } else {
-                                console.warn("chatList.ch: STOMP not connected. Queuing subscription for room:", roomNo);
-                                pendingRoomSubscription = roomNo; // 연결 후 구독하도록 방 번호 저장
-                                // 만약 stompClient.connect가 아직 호출 전이라면 여기서 connectWebSocket() 호출도 고려
-                                if (!stompClient || !stompClient.ws || stompClient.ws.readyState !== SockJS.OPEN) {
-                                    // connectWebSocket(); // 혹은 이미 호출되었다고 가정
-                                }
-                            }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.error('Error fetching chat room details:', textStatus, errorThrown);
-                        console.log('Status code:', jqXHR.status);
-                        console.log('Response text:', jqXHR.responseText);
-                        // 오류 메시지 표시 및 화면 초기화
-                        $messageList.empty().append('<div class="error-messages" style="text-align: center; color: red; padding: 20px;">대화 내용을 불러오는 중 오류가 발생했습니다. ('+ jqXHR.status +')</div>');
-                        updateChatHeader(null); // 헤더 초기화
-                    }
-                });
-            }
+                    // 1:1 채팅 상대방 프로필 이미지 표시
+                    // roomInfo.chatUserImgPath는 ChatRoom VO에 추가된 필드 (Mapper에서 조회)
+                    const profileImgSrc = (roomInfo.chatUserImgPath && roomInfo.chatUserImgPath !== 'null') ? path + '/' + roomInfo.chatUserImgPath : path + '/resources/images/default_profile.PNG';
+                    $chatHeaderAvatarArea.html('<img src="' + profileImgSrc + '" alt="'+ (roomInfo.roomName || '상대방') +'" onerror="this.onerror=null; this.src=\''+ path + '/resources/images/default_profile.PNG\'">');
 
-            // STOMP 연결 대기 및 구독을 처리하는 새로운 함수
-            function subscribeToRoom(roomNo, maxRetries = 10, currentRetry = 0) {
-                if (stompClient && stompClient.connected) {
-                    const topic = '/topic/chat/room/' + roomNo;
-                    console.log('Subscribing to:', topic);
+                } else if (roomInfo && roomInfo.roomType === 'G') { // 단체 채팅
+                    // ** 인원수 표시 로직 수정 **
+                    // 1. 서버에서 받은 roomInfo.memberCount 값이 있다면 그 값을 사용
+                    // 2. 서버 값이 없다면 (또는 AJAX 성공 전에 임시로 표시하고 싶다면),
+                    //    클릭 이벤트에서 넘어온 listItemMemberCount 값을 사용
+                    // 3. 둘 다 없다면 기본값 0을 사용
 
-                    // 이전 구독이 있다면 해제 (중복 구독 방지)
-                    if (currentRoomSubscription) {
-                        currentRoomSubscription.unsubscribe();
-                        console.log('Unsubscribed from previous room before new subscription.');
-                    }
+                    const memberCountToDisplay = (listItemMemberCount !== null && !isNaN(listItemMemberCount))
+                                 ? listItemMemberCount // 1. 클릭 이벤트에서 가져온 목록 인원수(숫자이고 유효한 경우)를 최우선 사용
+                                : ((roomInfo && roomInfo.memberCount !== undefined && roomInfo.memberCount !== null)
+                                ? roomInfo.memberCount // 2. 목록 값이 없으면 서버에서 받은 roomInfo.memberCount 값이 있는지 확인하고 사용
+                                : 0); // 3. 둘 다 없으면 기본값 0 사용
 
-                    currentRoomSubscription = stompClient.subscribe(topic, function (chatMessage) {
-                        console.log('Message received from WebSocket:', chatMessage.body);
-                        try {
-                            const messageObject = JSON.parse(chatMessage.body);
-                            if (String(messageObject.roomNo) === String(selectedRoomNo)) {
-                                displayChatMessage(messageObject);
-                                $messageList.scrollTop($messageList[0].scrollHeight);
-                            } else {
-                                console.log("Received message for a different room:", messageObject.roomNo);
-                                // 다른 방 메시지 수신 시 UI 업데이트 로직 (필요시)
-                            }
-                        } catch (e) {
-                            console.error("Error processing received message:", e, chatMessage.body);
-                        }
-                    });
-                    console.log('Subscribed to room ' + roomNo + ' messages.');
+                    console.log("Update header - Using member count:", memberCountToDisplay, "(Server:", roomInfo?.memberCount, "List:", listItemMemberCount, ")");
+
+
+                    // roomInfo.memberCount는 ChatRoom VO에 추가된 필드 (Mapper에서 조회)
+                    subtitleHTML = '<span class="material-icons" id="roomList-icon" style="font-size: 17px;">person</span> ' + memberCountToDisplay; // 가져온 값을 사용
+
+                    // ... (그룹 아바타 로직) ...
+                    // 단체 채팅 기본 아이콘
+                    $chatHeaderAvatarArea.html('<span class="material-icons" id="roomList-icon">groups</span>'); // HTML 구조에 맞춰 icon 변경
+                    // 아이콘 스타일 조정 (CSS 파일에 추가하는 것이 더 좋지만, 여기서도 가능)
+                    // $chatHeaderAvatarArea.find('i').css({ 'font-size': '1.5em', 'color': '#ccc' }); // 기존 Font Awesome i 태그 스타일
+                    $chatHeaderAvatarArea.find('.material-icons').css({ 'font-size': '1.5em', 'color': '#ccc' }); // Material Icons 스타일
+
+
+                } else { // 기타 유형 (필요시)
+                    subtitleHTML = '';
+                    // ... (기타 아바타 로직) ...
+                    $chatHeaderAvatarArea.html('<span class="material-icons">comment</span>'); // HTML 구조에 맞춰 icon 변경
+                    $chatHeaderAvatarArea.find('.material-icons').css({ 'font-size': '1.5em', 'color': '#ccc' });
+
+                }
+                // 최종 결정된 부제목 HTML을 화면에 표시
+                $chatHeaderSubtitle.html(subtitleHTML); // <-- 여기 수정
+
+                // Placeholder 숨기고 채팅 메인 영역 표시
+                // roomInfo가 유효한 경우에만 채팅 메인 영역 표시
+                if (roomInfo) {
+                    $placeholderArea.hide();
+                    $chatMainArea.removeClass('hidden');
                 } else {
-                    // STOMP 연결이 안 되어 있으면 재시도
-                    if (currentRetry < maxRetries) {
-                        console.log(`STOMP not connected yet. Retry ${currentRetry + 1}/${maxRetries} in 1 second...`);
-                        setTimeout(() => {
-                            subscribeToRoom(roomNo, maxRetries, currentRetry + 1);
-                        }, 1000);
-                    } else {
-                        console.error("STOMP client not connected after " + maxRetries + " retries. Cannot subscribe to room messages.");
-                        // 사용자에게 알림 표시 (선택사항)
-                        // alert('채팅 연결에 실패했습니다. 페이지를 새로고침해주세요.');
-                    }
+                    // roomInfo가 null인 경우 (예: 오류 발생 시), placeholder 유지
+                    $placeholderArea.show();
+                    $chatMainArea.addClass('hidden');
                 }
             }
 
@@ -1038,9 +810,9 @@
                     // 입력 필드가 비어있다면 알림 없이 함수 종료
                     return;
                 }
-                if (!isStompConnected) { // stompClient.connected 대신 플래그 사용 또는 둘 다 사용
-                    console.error('chatList.ch: STOMP client not connected. Cannot send message.');
-                    alert("서버와 연결되지 않았습니다. 잠시 후 다시 시도해주세요.");
+                if (!stompClient || !stompClient.connected) {
+                    console.error('STOMP client not connected. Cannot send message.');
+                    alert("서버와 연결되지 않았습니다. 페이지를 새로고침 해주세요."); // 사용자에게 알림
                     return;
                 }
                 if (selectedRoomNo == null) {
@@ -1084,7 +856,6 @@
                     console.error("Error sending message via STOMP:", error);
                     alert("메시지 전송 중 오류가 발생했습니다."); // 사용자에게 알림
                 }
-                console.log("sendMessage 함수 종료됨."); // <-- 로그 추가
             }
 
 
@@ -1577,8 +1348,7 @@
             });
 
 
-            // WebSocket 연결 시작
-            connectWebSocket();
+
 
 
 
@@ -1649,13 +1419,10 @@
                 }
             });
 
+
             // 메시지 전송 버튼 클릭 이벤트
-            $messageInput.on('keypress', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) { // Enter 키 확인
-                    console.log("★★★ Enter 키 입력됨! sendMessage 함수를 호출합니다."); // 이 로그가 뜨는지 확인
-                    e.preventDefault(); // 폼 전송 등 기본 동작 방지
-                    sendMessage();
-                }
+            $sendButton.on('click', function() {
+                sendMessage(); // 메시지 전송 함수 호출
             });
 
             // 메시지 입력 필드에서 Enter 키 누름 이벤트
@@ -1679,7 +1446,8 @@
             //          페이지 로드 시 초기화
             // ====================================================
 
-
+            // WebSocket 연결 시작
+            connectWebSocket();
 
             // 페이지 로드 시 첫 번째 채팅방 자동 선택 및 로드 (선택 사항)
             // 사용자의 편의를 위해 페이지 로드 시 가장 최근 대화방을 자동으로 열어줄 수 있습니다.
@@ -1702,6 +1470,8 @@
                     console.log("STOMP Connection Disconnected.");
                 }
             });
+
+            
 
 
         }); // $(document).ready 끝
