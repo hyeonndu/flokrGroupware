@@ -94,7 +94,7 @@
                 <div class="header-profile-info">
                     <span class="header-profile-name">${loginUser.empName}님</span>
                 </div>
-                <a href="logout.me" class="header-btn-sm header-logout-btn">로그아웃</a>
+                <a href="${pageContext.request.contextPath}/logout.me" class="header-btn-sm header-logout-btn">로그아웃</a>
             </div>
         </c:if>
     </div>
