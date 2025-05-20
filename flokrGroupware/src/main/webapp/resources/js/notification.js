@@ -264,6 +264,11 @@ function handleNewNotification(message) {
         addNewNotification(notification);
         
         // 토스트 알림 표시 - 글로벌 함수 사용
+        // 알림 타입 확인 로그 추가
+        console.log('알림 타입:', notification.refType || notification.REF_TYPE);
+        console.log('알림 제목:', notification.title || notification.TITLE);
+        
+        // 토스트 알림 표시 - 타입에 상관없이 항상 표시되도록 수정
         const title = notification.title || notification.TITLE || '새 알림';
         showNotificationToast(title);
         
@@ -271,6 +276,7 @@ function handleNewNotification(message) {
         $(document).trigger('notification:new', [notification]);
     } catch (e) {
         console.error("새 알림 처리 중 오류 발생", e);
+        console.error("원본 메시지:", message);
     }
 }
 

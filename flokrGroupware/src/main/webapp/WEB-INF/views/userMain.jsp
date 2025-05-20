@@ -168,7 +168,10 @@
                       <tr>
                         <td>
                           <div class="addr-name-cell"> <%-- 셀 내부 Flex 컨테이너 --%>
-                            <img src="" alt="팀원" class="addr-profile-img">
+                            <svg class="addr-profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
+                            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
+                            </svg>
                             <div class="addr-text">
                               <span class="addr-name">Pedro</span>
                               <span class="addr-subtitle">Developer</span> <%-- 직책 예시 --%>
@@ -183,7 +186,10 @@
                       <tr>
                          <td>
                           <div class="addr-name-cell">
-                            <img src="https://via.placeholder.com/32/33FF57/FFFFFF?text=R" alt="Ryan profile" class="addr-profile-img">
+                            <svg class="addr-profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
+                            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
+                            </svg>
                             <div class="addr-text">
                               <span class="addr-name">Ryan</span>
                               <span class="addr-subtitle">Designer</span> <%-- 직책 예시 --%>
@@ -198,7 +204,10 @@
                        <tr>
                          <td>
                           <div class="addr-name-cell">
-                            <img src="https://via.placeholder.com/32/3357FF/FFFFFF?text=B" alt="Brian profile" class="addr-profile-img">
+                            <svg class="addr-profile-img" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="7" r="5" fill="#E2E8F0"/>
+                            <path d="M3 19c0-3.314 4.03-6 9-6s9 2.686 9 6v1H3v-1z" fill="#E2E8F0"/>
+                            </svg>
                             <div class="addr-text">
                               <span class="addr-name">Brian</span>
                               <span class="addr-subtitle">Manager</span> <%-- 직책 예시 --%>

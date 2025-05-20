@@ -782,6 +782,41 @@
       $("#facilityList").addClass("active");
     }
     
+    // STOMP 연결 완료 이벤트 리스너
+    $(document).on('notification:connected', function() {
+      console.log('알림 시스템이 연결되었습니다.');
+    });
+    
+	// 새 알림 수신 이벤트 리스너 
+    $(document).on('notification:new', function(e, notification) {
+        console.log('새 알림 수신:', notification);
+        
+        // 디버깅을 위한 추가 로그
+        console.log('알림 타입:', notification.refType || notification.REF_TYPE);
+        console.log('알림 제목:', notification.title || notification.TITLE);
+        
+        // 해당 알림이 시설 예약 관련 알림인 경우 처리
+        const refType = notification.refType || notification.REF_TYPE;
+        if (refType === 'FACILITY') {
+            // 토스트 알림이 자동으로 뜨는지 확인
+            console.log('시설 관련 알림 감지 - 토스트 표시됨');
+            
+            // 알림 제목 가져오기
+            const title = notification.title || notification.TITLE || '새 시설 예약 알림';
+            
+            // 직접 토스트 알림 호출 (백업)
+            if (typeof window.showToastNotification === 'function') {
+                window.showToastNotification(title);
+            }
+            
+            // 예약 관리 탭이 활성화되어 있으면 예약 목록 새로고침
+            if ($("#reservationListTab").hasClass('active')) {
+                console.log('예약 관리 탭 활성화 상태 - 목록 새로고침');
+                searchReservations();
+            }
+        }
+    });
+    
     // 탭 전환
     $("#facilityTabs .nav-link").click(function(e) {
       e.preventDefault();
@@ -880,550 +915,560 @@
         if (confirm("정말로 이 시설을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
           // AJAX로 시설 삭제 요청
           $.ajax({
-            url: '${pageContext.request.contextPath}/deleteFacility',
+        	  url: '${pageContext.request.contextPath}/deleteFacility',
+              type: 'POST',
+              data: { facilityNo: facilityNo },
+              dataType: 'json',
+              success: function(response) {
+                if (response.success) {
+                  alertify.success(response.message || "시설이 삭제되었습니다.");
+                  // 페이지 새로고침
+                  location.reload();
+                } else {
+                  alertify.error(response.message || "시설 삭제에 실패했습니다.");
+                }
+              },
+              error: function(xhr, status, error) {
+                alertify.error("시설 삭제 중 오류가 발생했습니다.");
+              }
+            });
+          }
+        });
+        
+        // 시설 검색 버튼 클릭
+        $("#searchFacilityBtn").click(function() {
+          const keyword = $("#facilitySearch").val().trim();
+          
+          if (keyword) {
+            // AJAX로 시설 검색 요청
+            $.ajax({
+              url: '${pageContext.request.contextPath}/getFacilities',
+              type: 'GET',
+              data: { keyword: keyword },
+              dataType: 'json',
+              success: function(response) {
+                if (response.success) {
+                  updateFacilityCards(response.facilities);
+                } else {
+                  alertify.error(response.message || "시설 검색에 실패했습니다.");
+                }
+              },
+              error: function(xhr, status, error) {
+                alertify.error("시설 검색 중 오류가 발생했습니다.");
+              }
+            });
+          } else {
+            // 검색어가 없으면 전체 목록 표시
+            $.ajax({
+              url: '${pageContext.request.contextPath}/getFacilities',
+              type: 'GET',
+              dataType: 'json',
+              success: function(response) {
+                if (response.success) {
+                  updateFacilityCards(response.facilities);
+                }
+              }
+            });
+          }
+        });
+        
+        // 예약 검색 버튼 클릭
+        $("#searchReservationBtn").click(function() {
+          searchReservations();
+        });
+        
+        // 예약 필터 변경 시 검색 실행
+        $("#facilityFilter, #statusFilter, #dateFilter").change(function() {
+          searchReservations();
+        });
+        
+        // 시설 카드 필터링
+        $("#facilityTypeFilter, #facilityStatusFilter").change(function() {
+          filterFacilityCards();
+        });
+        
+        // 시설 폼 제출
+        $("#facilityForm").submit(function(e) {
+          e.preventDefault();
+          
+          // FormData 생성
+          const formData = new FormData(this);
+          
+          // 폼 유효성 검사
+          if (!formData.get('facilityName')) {
+            alertify.error("시설명은 필수 입력사항입니다.");
+            return;
+          }
+          
+          // facilityNo 확인 및 처리
+          const facilityId = formData.get('facilityNo');
+          const isNew = facilityId === '0' || facilityId === '' || facilityId === null;
+          const url = isNew ? 
+            '${pageContext.request.contextPath}/addFacility' : 
+            '${pageContext.request.contextPath}/updateFacility';
+          
+          // AJAX로 폼 제출
+          $.ajax({
+            url: url,
             type: 'POST',
-            data: { facilityNo: facilityNo },
-            dataType: 'json',
+            data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
               if (response.success) {
-                alertify.success(response.message || "시설이 삭제되었습니다.");
+                // 토스트 알림 표시 (명시적으로 호출)
+                if (typeof window.showToastNotification === 'function') {
+                  window.showToastNotification(isNew ? "시설이 추가되었습니다." : "시설 정보가 수정되었습니다.");
+                }
+                
+                alertify.success(response.message || "시설 정보가 저장되었습니다.");
+                $("#facilityModal").hide();
                 // 페이지 새로고침
                 location.reload();
               } else {
-                alertify.error(response.message || "시설 삭제에 실패했습니다.");
+                alertify.error(response.message || "시설 정보 저장에 실패했습니다.");
               }
             },
             error: function(xhr, status, error) {
-              alertify.error("시설 삭제 중 오류가 발생했습니다.");
+              alertify.error("시설 정보 저장 중 오류가 발생했습니다: " + xhr.status);
             }
           });
-        }
-      });
-      
-      // 시설 검색 버튼 클릭
-      $("#searchFacilityBtn").click(function() {
-        const keyword = $("#facilitySearch").val().trim();
+        });
         
-        if (keyword) {
-          // AJAX로 시설 검색 요청
+        // 예약 상세 보기 버튼 클릭
+        $(document).on('click', '.view-reservation', function() {
+          const reservationNo = $(this).data('id');
+          
+          // AJAX로 예약 상세 정보 로드
           $.ajax({
-            url: '${pageContext.request.contextPath}/getFacilities',
+            url: '${pageContext.request.contextPath}/getReservationDetail',
             type: 'GET',
-            data: { keyword: keyword },
+            data: { reservationNo: reservationNo },
             dataType: 'json',
             success: function(response) {
               if (response.success) {
-                updateFacilityCards(response.facilities);
+                const reservation = response.reservation;
+                
+                // 모달에 데이터 채우기
+                $("#resNo").text(reservation.RESERVATION_NO);
+                $("#resFacility").text(reservation.FACILITY_NAME);
+                $("#resReserver").text(reservation.RESERVER_NAME + " (" + reservation.RESERVER_ID + ")");
+                $("#resDept").text(reservation.DEPT_NAME);
+                $("#resPosition").text(reservation.POSITION_NAME);
+                
+                // 날짜 포맷팅
+                const startTime = new Date(reservation.START_TIME);
+                const endTime = new Date(reservation.END_TIME);
+                const formattedStartTime = startTime.toLocaleDateString('ko-KR') + ' ' + startTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
+                const formattedEndTime = endTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
+                
+                $("#resTime").text(formattedStartTime + ' ~ ' + formattedEndTime);
+                $("#resPurpose").text(reservation.PURPOSE);
+                
+                // 상태 표시
+                let statusText = '';
+                let statusClass = '';
+                let displayStatus = '';
+                
+                // 상태 결정 로직
+                if (reservation.RES_STATUS === 'PENDING') {
+                    displayStatus = 'PENDING';
+                    statusText = '승인 대기';
+                    statusClass = 'status-pending';
+                } else if (reservation.RES_STATUS === 'APPROVED') {
+                    displayStatus = 'APPROVED';
+                    statusText = '승인 완료';
+                    statusClass = 'status-active';
+                } else if (reservation.RES_STATUS === 'CANCELED') {
+                    displayStatus = 'CANCELED';
+                    statusText = '취소됨';
+                    statusClass = 'status-inactive';
+                } else if (reservation.RES_STATUS === 'ACTIVE') {
+                    // ACTIVE 상태인 경우 CREATE_DATE와 UPDATE_DATE를 비교해서 처리
+                    const createDate = new Date(reservation.CREATE_DATE).getTime();
+                    const updateDate = reservation.UPDATE_DATE ? new Date(reservation.UPDATE_DATE).getTime() : 0;
+                    
+                    if (!reservation.UPDATE_DATE || createDate === updateDate) {
+                        displayStatus = 'PENDING';
+                        statusText = '승인 대기';
+                        statusClass = 'status-pending';
+                    } else {
+                        displayStatus = 'APPROVED';
+                        statusText = '승인 완료';
+                        statusClass = 'status-active';
+                    }
+                }
+                
+                $("#resStatus").html('<span class="status-badge ' + statusClass + '">' + statusText + '</span>');
+                
+                // 날짜 정보
+                if (reservation.CREATE_DATE) {
+                  const createDate = new Date(reservation.CREATE_DATE);
+                  $("#resCreateDate").text(createDate.toLocaleDateString('ko-KR') + ' ' + createDate.toLocaleTimeString('ko-KR'));
+                } else {
+                  $("#resCreateDate").text('-');
+                }
+                
+                if (reservation.UPDATE_DATE) {
+                  const updateDate = new Date(reservation.UPDATE_DATE);
+                  $("#resUpdateDate").text(updateDate.toLocaleDateString('ko-KR') + ' ' + updateDate.toLocaleTimeString('ko-KR'));
+                } else {
+                  $("#resUpdateDate").text('-');
+                }
+                
+                // 액션 버튼 추가 - 모달에서는 승인/거절만 표시
+                $("#reservationActions").empty();
+                
+                if (displayStatus === 'PENDING') {
+                  $("#reservationActions").append('<button type="button" class="btn btn-success approve-reservation-modal" data-id="' + reservation.RESERVATION_NO + '">승인</button> ');
+                  $("#reservationActions").append('<button type="button" class="btn btn-danger cancel-reservation-modal" data-id="' + reservation.RESERVATION_NO + '">승인 거절</button> ');
+                } else if (displayStatus === 'APPROVED') {
+                  $("#reservationActions").append('<button type="button" class="btn btn-danger cancel-reservation-modal" data-id="' + reservation.RESERVATION_NO + '">승인 취소</button> ');
+                }
+                
+                $("#reservationActions").append('<button type="button" class="btn btn-secondary modal-close-btn">닫기</button>');
+                
+                // 모달 표시
+                $("#reservationModal").show();
               } else {
-                alertify.error(response.message || "시설 검색에 실패했습니다.");
+                alertify.error(response.message || "예약 정보를 불러올 수 없습니다.");
               }
             },
             error: function(xhr, status, error) {
-              alertify.error("시설 검색 중 오류가 발생했습니다.");
+              alertify.error("예약 정보를 불러오는 중 오류가 발생했습니다.");
             }
           });
-        } else {
-          // 검색어가 없으면 전체 목록 표시
-          $.ajax({
-            url: '${pageContext.request.contextPath}/getFacilities',
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-              if (response.success) {
-                updateFacilityCards(response.facilities);
-              }
+        });
+        
+        // 예약 승인 버튼 클릭 (테이블에서)
+        $(document).on('click', '.approve-reservation', function() {
+          const reservationNo = $(this).data('id');
+          updateReservationStatus(reservationNo, 'APPROVED');
+        });
+        
+        // 예약 취소 버튼 클릭 (테이블에서)
+        $(document).on('click', '.cancel-reservation', function() {
+          const reservationNo = $(this).data('id');
+          if (confirm("정말로 이 예약 요청을 거절하시겠습니까?")) {
+            updateReservationStatus(reservationNo, 'CANCELED');
+          }
+        });
+        
+        // 예약 승인 버튼 클릭 (모달에서)
+        $(document).on('click', '.approve-reservation-modal', function() {
+          const reservationNo = $(this).data('id');
+          updateReservationStatus(reservationNo, 'APPROVED', true);
+        });
+        
+        // 예약 취소 버튼 클릭 (모달에서)
+        $(document).on('click', '.cancel-reservation-modal', function() {
+          const reservationNo = $(this).data('id');
+          if (confirm("정말로 이 예약 요청을 거절하시겠습니까?")) {
+            updateReservationStatus(reservationNo, 'CANCELED', true);
+          }
+        });
+        
+        // 시설 카드 업데이트 함수
+        function updateFacilityCards(facilities) {
+          const container = $("#facilityCardContainer");
+          container.empty();
+          
+          if (facilities.length === 0) {
+            container.html('<div class="empty-state"><i class="fas fa-search"></i><p>검색 결과가 없습니다.</p></div>');
+            return;
+          }
+          
+          facilities.forEach(function(facility) {
+            let statusBadge = '';
+            if (facility.facilityStatus === 'ACTIVE') {
+              statusBadge = '<span class="status-badge status-active">사용 가능</span>';
+            } else if (facility.facilityStatus === 'MAINTENANCE') {
+              statusBadge = '<span class="status-badge status-pending">점검 중</span>';
+            } else {
+              statusBadge = '<span class="status-badge status-inactive">사용 불가</span>';
             }
+            
+            let typeIcon = '';
+            switch(facility.facilityType) {
+              case 'MEETING_ROOM':
+                typeIcon = '<i class="fas fa-chalkboard-teacher"></i>';
+                break;
+              case 'EQUIPMENT':
+                typeIcon = '<i class="fas fa-tools"></i>';
+                break;
+              case 'VEHICLE':
+                typeIcon = '<i class="fas fa-car"></i>';
+                break;
+              default:
+                typeIcon = '<i class="fas fa-building"></i>';
+            }
+            
+            let capacityHtml = '';
+            if (facility.capacity && facility.capacity > 0) {
+              capacityHtml = '<p><i class="fas fa-users"></i> 최대 ' + facility.capacity + '명 수용 가능</p>';
+            }
+            
+            let locationHtml = '';
+            if (facility.facilityLocation) {
+              locationHtml = '<p><i class="fas fa-map-marker-alt"></i> ' + facility.facilityLocation + '</p>';
+            }
+            
+            let descriptionHtml = '';
+            if (facility.description) {
+              descriptionHtml = '<p><i class="fas fa-info-circle"></i> ' + facility.description + '</p>';
+            }
+            
+            const card = $('<div class="facility-card" data-type="' + facility.facilityType + '" data-status="' + facility.facilityStatus + '">' +
+              '<div class="facility-icon-container">' + typeIcon + statusBadge + '</div>' +
+              '<div class="facility-content">' +
+              '<h3 class="facility-name">' + facility.facilityName + '</h3>' +
+              '<div class="facility-info">' + capacityHtml + locationHtml + descriptionHtml + '</div>' +
+              '<div class="facility-status">' +
+              '<div class="action-buttons">' +
+              '<button class="btn btn-sm btn-primary edit-facility" data-id="' + facility.facilityNo + '"><i class="fas fa-edit"></i> 수정</button>' +
+              '<button class="btn btn-sm btn-danger delete-facility" data-id="' + facility.facilityNo + '"><i class="fas fa-trash"></i> 삭제</button>' +
+              '</div>' +
+              '</div>' +
+              '</div>' +
+              '</div>');
+            
+            container.append(card);
           });
-        }
-      });
-      
-      // 예약 검색 버튼 클릭
-      $("#searchReservationBtn").click(function() {
-        searchReservations();
-      });
-      
-      // 예약 필터 변경 시 검색 실행
-      $("#facilityFilter, #statusFilter, #dateFilter").change(function() {
-        searchReservations();
-      });
-      
-      // 시설 카드 필터링
-      $("#facilityTypeFilter, #facilityStatusFilter").change(function() {
-        filterFacilityCards();
-      });
-      
-      // 시설 폼 제출
-      $("#facilityForm").submit(function(e) {
-        e.preventDefault();
-        
-        // FormData 생성
-        const formData = new FormData(this);
-        
-        // 폼 유효성 검사
-        if (!formData.get('facilityName')) {
-          alertify.error("시설명은 필수 입력사항입니다.");
-          return;
+          
+          // 필터링 적용
+          filterFacilityCards();
         }
         
-        // facilityNo 확인 및 처리
-        const facilityId = formData.get('facilityNo');
-        const isNew = facilityId === '0' || facilityId === '' || facilityId === null;
-        const url = isNew ? 
-          '${pageContext.request.contextPath}/addFacility' : 
-          '${pageContext.request.contextPath}/updateFacility';
-        
-        // AJAX로 폼 제출
-        $.ajax({
-          url: url,
-          type: 'POST',
-          data: formData,
-          processData: false,
-          contentType: false,
-          success: function(response) {
-            if (response.success) {
-              alertify.success(response.message || "시설 정보가 저장되었습니다.");
-              $("#facilityModal").hide();
-              // 페이지 새로고침
-              location.reload();
-            } else {
-              alertify.error(response.message || "시설 정보 저장에 실패했습니다.");
+        // 시설 카드 필터링 함수
+        function filterFacilityCards() {
+          const typeFilter = $("#facilityTypeFilter").val();
+          const statusFilter = $("#facilityStatusFilter").val();
+          
+          $(".facility-card").each(function() {
+            const type = $(this).data('type');
+            const status = $(this).data('status');
+            
+            let show = true;
+            
+            if (typeFilter && type !== typeFilter) {
+              show = false;
             }
-          },
-          error: function(xhr, status, error) {
-            alertify.error("시설 정보 저장 중 오류가 발생했습니다: " + xhr.status);
-          }
-        });
-      });
-      
-      // 예약 상세 보기 버튼 클릭
-      $(document).on('click', '.view-reservation', function() {
-        const reservationNo = $(this).data('id');
-        
-        // AJAX로 예약 상세 정보 로드
-        $.ajax({
-          url: '${pageContext.request.contextPath}/getReservationDetail',
-          type: 'GET',
-          data: { reservationNo: reservationNo },
-          dataType: 'json',
-          success: function(response) {
-            if (response.success) {
-              const reservation = response.reservation;
-              
-              // 모달에 데이터 채우기
-              $("#resNo").text(reservation.RESERVATION_NO);
-              $("#resFacility").text(reservation.FACILITY_NAME);
-              $("#resReserver").text(reservation.RESERVER_NAME + " (" + reservation.RESERVER_ID + ")");
-              $("#resDept").text(reservation.DEPT_NAME);
-              $("#resPosition").text(reservation.POSITION_NAME);
-              
-              // 날짜 포맷팅
-              const startTime = new Date(reservation.START_TIME);
-              const endTime = new Date(reservation.END_TIME);
-              const formattedStartTime = startTime.toLocaleDateString('ko-KR') + ' ' + startTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
-              const formattedEndTime = endTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
-              
-              $("#resTime").text(formattedStartTime + ' ~ ' + formattedEndTime);
-              $("#resPurpose").text(reservation.PURPOSE);
-              
-              // 상태 표시
-              let statusText = '';
-              let statusClass = '';
-              let displayStatus = '';
-              
-              // 상태 결정 로직
-              if (reservation.RES_STATUS === 'PENDING') {
-                  displayStatus = 'PENDING';
-                  statusText = '승인 대기';
-                  statusClass = 'status-pending';
-              } else if (reservation.RES_STATUS === 'APPROVED') {
-                  displayStatus = 'APPROVED';
-                  statusText = '승인 완료';
-                  statusClass = 'status-active';
-              } else if (reservation.RES_STATUS === 'CANCELED') {
-                  displayStatus = 'CANCELED';
-                  statusText = '취소됨';
-                  statusClass = 'status-inactive';
-              } else if (reservation.RES_STATUS === 'ACTIVE') {
-                  // ACTIVE 상태인 경우 CREATE_DATE와 UPDATE_DATE를 비교해서 처리
-                  const createDate = new Date(reservation.CREATE_DATE).getTime();
-                  const updateDate = reservation.UPDATE_DATE ? new Date(reservation.UPDATE_DATE).getTime() : 0;
-                  
-                  if (!reservation.UPDATE_DATE || createDate === updateDate) {
-                      displayStatus = 'PENDING';
-                      statusText = '승인 대기';
-                      statusClass = 'status-pending';
-                  } else {
-                      displayStatus = 'APPROVED';
-                      statusText = '승인 완료';
-                      statusClass = 'status-active';
-                  }
-              }
-              
-              $("#resStatus").html('<span class="status-badge ' + statusClass + '">' + statusText + '</span>');
-              
-              // 날짜 정보
-              if (reservation.CREATE_DATE) {
-                const createDate = new Date(reservation.CREATE_DATE);
-                $("#resCreateDate").text(createDate.toLocaleDateString('ko-KR') + ' ' + createDate.toLocaleTimeString('ko-KR'));
-              } else {
-                $("#resCreateDate").text('-');
-              }
-              
-              if (reservation.UPDATE_DATE) {
-                const updateDate = new Date(reservation.UPDATE_DATE);
-                $("#resUpdateDate").text(updateDate.toLocaleDateString('ko-KR') + ' ' + updateDate.toLocaleTimeString('ko-KR'));
-              } else {
-                $("#resUpdateDate").text('-');
-              }
-              
-              // 액션 버튼 추가 - 모달에서는 승인/거절만 표시
-              $("#reservationActions").empty();
-              
-              if (displayStatus === 'PENDING') {
-                $("#reservationActions").append('<button type="button" class="btn btn-success approve-reservation-modal" data-id="' + reservation.RESERVATION_NO + '">승인</button> ');
-                $("#reservationActions").append('<button type="button" class="btn btn-danger cancel-reservation-modal" data-id="' + reservation.RESERVATION_NO + '">승인 거절</button> ');
-              } else if (displayStatus === 'APPROVED') {
-                $("#reservationActions").append('<button type="button" class="btn btn-danger cancel-reservation-modal" data-id="' + reservation.RESERVATION_NO + '">승인 취소</button> ');
-              }
-              
-              $("#reservationActions").append('<button type="button" class="btn btn-secondary modal-close-btn">닫기</button>');
-              
-              // 모달 표시
-              $("#reservationModal").show();
-            } else {
-              alertify.error(response.message || "예약 정보를 불러올 수 없습니다.");
+            
+            if (statusFilter && status !== statusFilter) {
+              show = false;
             }
-          },
-          error: function(xhr, status, error) {
-            alertify.error("예약 정보를 불러오는 중 오류가 발생했습니다.");
-          }
-        });
-      });
-      
-      // 예약 승인 버튼 클릭 (테이블에서)
-      $(document).on('click', '.approve-reservation', function() {
-        const reservationNo = $(this).data('id');
-        updateReservationStatus(reservationNo, 'APPROVED');
-      });
-      
-      // 예약 취소 버튼 클릭 (테이블에서)
-      $(document).on('click', '.cancel-reservation', function() {
-        const reservationNo = $(this).data('id');
-        if (confirm("정말로 이 예약 요청을 거절하시겠습니까?")) {
-          updateReservationStatus(reservationNo, 'CANCELED');
-        }
-      });
-      
-      // 예약 승인 버튼 클릭 (모달에서)
-      $(document).on('click', '.approve-reservation-modal', function() {
-        const reservationNo = $(this).data('id');
-        updateReservationStatus(reservationNo, 'APPROVED', true);
-      });
-      
-      // 예약 취소 버튼 클릭 (모달에서)
-      $(document).on('click', '.cancel-reservation-modal', function() {
-        const reservationNo = $(this).data('id');
-        if (confirm("정말로 이 예약 요청을 거절하시겠습니까?")) {
-          updateReservationStatus(reservationNo, 'CANCELED', true);
-        }
-      });
-      
-      // 시설 카드 업데이트 함수
-      function updateFacilityCards(facilities) {
-        const container = $("#facilityCardContainer");
-        container.empty();
-        
-        if (facilities.length === 0) {
-          container.html('<div class="empty-state"><i class="fas fa-search"></i><p>검색 결과가 없습니다.</p></div>');
-          return;
-        }
-        
-        facilities.forEach(function(facility) {
-          let statusBadge = '';
-          if (facility.facilityStatus === 'ACTIVE') {
-            statusBadge = '<span class="status-badge status-active">사용 가능</span>';
-          } else if (facility.facilityStatus === 'MAINTENANCE') {
-            statusBadge = '<span class="status-badge status-pending">점검 중</span>';
+            
+            $(this).toggle(show);
+          });
+          
+          // 필터링 결과가 없을 경우 메시지 표시
+          if ($(".facility-card:visible").length === 0) {
+            if ($("#facilityCardContainer .empty-state").length === 0) {
+              $("#facilityCardContainer").append('<div class="empty-state"><i class="fas fa-filter"></i><p>필터링 결과가 없습니다.</p></div>');
+            }
           } else {
-            statusBadge = '<span class="status-badge status-inactive">사용 불가</span>';
+            $("#facilityCardContainer .empty-state").remove();
           }
-          
-          let typeIcon = '';
-          switch(facility.facilityType) {
-            case 'MEETING_ROOM':
-              typeIcon = '<i class="fas fa-chalkboard-teacher"></i>';
-              break;
-            case 'EQUIPMENT':
-              typeIcon = '<i class="fas fa-tools"></i>';
-              break;
-            case 'VEHICLE':
-              typeIcon = '<i class="fas fa-car"></i>';
-              break;
-            default:
-              typeIcon = '<i class="fas fa-building"></i>';
-          }
-          
-          let capacityHtml = '';
-          if (facility.capacity && facility.capacity > 0) {
-            capacityHtml = '<p><i class="fas fa-users"></i> 최대 ' + facility.capacity + '명 수용 가능</p>';
-          }
-          
-          let locationHtml = '';
-          if (facility.facilityLocation) {
-            locationHtml = '<p><i class="fas fa-map-marker-alt"></i> ' + facility.facilityLocation + '</p>';
-          }
-          
-          let descriptionHtml = '';
-          if (facility.description) {
-            descriptionHtml = '<p><i class="fas fa-info-circle"></i> ' + facility.description + '</p>';
-          }
-          
-          const card = $('<div class="facility-card" data-type="' + facility.facilityType + '" data-status="' + facility.facilityStatus + '">' +
-            '<div class="facility-icon-container">' + typeIcon + statusBadge + '</div>' +
-            '<div class="facility-content">' +
-            '<h3 class="facility-name">' + facility.facilityName + '</h3>' +
-            '<div class="facility-info">' + capacityHtml + locationHtml + descriptionHtml + '</div>' +
-            '<div class="facility-status">' +
-            '<div class="action-buttons">' +
-            '<button class="btn btn-sm btn-primary edit-facility" data-id="' + facility.facilityNo + '"><i class="fas fa-edit"></i> 수정</button>' +
-            '<button class="btn btn-sm btn-danger delete-facility" data-id="' + facility.facilityNo + '"><i class="fas fa-trash"></i> 삭제</button>' +
-            '</div>' +
-            '</div>' +
-            '</div>' +
-            '</div>');
-          
-          container.append(card);
-        });
-        
-        // 필터링 적용
-        filterFacilityCards();
-      }
-      
-      // 시설 카드 필터링 함수
-      function filterFacilityCards() {
-        const typeFilter = $("#facilityTypeFilter").val();
-        const statusFilter = $("#facilityStatusFilter").val();
-        
-        $(".facility-card").each(function() {
-          const type = $(this).data('type');
-          const status = $(this).data('status');
-          
-          let show = true;
-          
-          if (typeFilter && type !== typeFilter) {
-            show = false;
-          }
-          
-          if (statusFilter && status !== statusFilter) {
-            show = false;
-          }
-          
-          $(this).toggle(show);
-        });
-        
-        // 필터링 결과가 없을 경우 메시지 표시
-        if ($(".facility-card:visible").length === 0) {
-          if ($("#facilityCardContainer .empty-state").length === 0) {
-            $("#facilityCardContainer").append('<div class="empty-state"><i class="fas fa-filter"></i><p>필터링 결과가 없습니다.</p></div>');
-          }
-        } else {
-          $("#facilityCardContainer .empty-state").remove();
-        }
-      }
-      
-      // 예약 검색 및 테이블 업데이트 함수
-      function searchReservations() {
-        const facilityNo = $("#facilityFilter").val();
-        const status = $("#statusFilter").val();
-        const date = $("#dateFilter").val();
-        const keyword = $("#reserverSearch").val().trim();
-        
-        // AJAX로 예약 검색 요청
-        $.ajax({
-          url: '${pageContext.request.contextPath}/getReservations',
-          type: 'GET',
-          data: {
-            facilityNo: facilityNo || null,
-            status: status || null,
-            date: date || null,
-            keyword: keyword || null
-          },
-          dataType: 'json',
-          success: function(response) {
-            if (response.success) {
-              updateReservationTable(response.reservations);
-            } else {
-              alertify.error(response.message || "예약 검색에 실패했습니다.");
-            }
-          },
-          error: function(xhr, status, error) {
-            alertify.error("예약 검색 중 오류가 발생했습니다.");
-          }
-        });
-      }
-      
-      // 예약 테이블 업데이트 함수
-      function updateReservationTable(reservations) {
-        const tbody = $("#reservationsTable tbody");
-        tbody.empty();
-        
-        if (!reservations || reservations.length === 0) {
-          tbody.html('<tr><td colspan="7" class="text-center">검색 결과가 없습니다.</td></tr>');
-          return;
         }
         
-        reservations.forEach(function(reservation) {
-          // 예약 상태에 따른 뱃지 설정
-          let statusBadge = '';
-          let displayStatus = '';
+        // 예약 검색 및 테이블 업데이트 함수
+        function searchReservations() {
+          const facilityNo = $("#facilityFilter").val();
+          const status = $("#statusFilter").val();
+          const date = $("#dateFilter").val();
+          const keyword = $("#reserverSearch").val().trim();
           
-          // 상태 결정 로직
-          if (reservation.RES_STATUS === 'PENDING') {
-              displayStatus = 'PENDING';
-              statusBadge = '<span class="status-badge status-pending">승인 대기</span>';
-          } else if (reservation.RES_STATUS === 'APPROVED') {
-              displayStatus = 'APPROVED';
-              statusBadge = '<span class="status-badge status-active">승인 완료</span>';
-          } else if (reservation.RES_STATUS === 'CANCELED') {
-              displayStatus = 'CANCELED';
-              statusBadge = '<span class="status-badge status-inactive">취소됨</span>';
-          } else if (reservation.RES_STATUS === 'ACTIVE') {
-              // ACTIVE 상태인 경우 CREATE_DATE와 UPDATE_DATE를 비교해서 처리
-              const createDate = new Date(reservation.CREATE_DATE).getTime();
-              const updateDate = reservation.UPDATE_DATE ? new Date(reservation.UPDATE_DATE).getTime() : 0;
-              
-              if (!reservation.UPDATE_DATE || createDate === updateDate) {
-                  displayStatus = 'PENDING';
-                  statusBadge = '<span class="status-badge status-pending">승인 대기</span>';
+          // AJAX로 예약 검색 요청
+          $.ajax({
+            url: '${pageContext.request.contextPath}/getReservations',
+            type: 'GET',
+            data: {
+              facilityNo: facilityNo || null,
+              status: status || null,
+              date: date || null,
+              keyword: keyword || null
+            },
+            dataType: 'json',
+            success: function(response) {
+              if (response.success) {
+                updateReservationTable(response.reservations);
               } else {
-                  displayStatus = 'APPROVED';
-                  statusBadge = '<span class="status-badge status-active">승인 완료</span>';
+                alertify.error(response.message || "예약 검색에 실패했습니다.");
               }
-          }
-          
-          // 액션 버튼 설정
-          let actionButtons = '<button class="btn btn-sm btn-secondary view-reservation" data-id="' + reservation.RESERVATION_NO + '"><i class="fas fa-eye"></i></button> ';
-          
-          // PENDING 상태일 때만 승인 버튼 표시
-          if (displayStatus === 'PENDING') {
-            actionButtons += '<button class="btn btn-sm btn-success approve-reservation" data-id="' + reservation.RESERVATION_NO + '"><i class="fas fa-check"></i></button> ';
-          }
-          
-          // PENDING 또는 APPROVED 상태일 때만 취소 버튼 표시
-          if (displayStatus === 'PENDING' || displayStatus === 'APPROVED') {
-            actionButtons += '<button class="btn btn-sm btn-danger cancel-reservation" data-id="' + reservation.RESERVATION_NO + '"><i class="fas fa-times"></i></button>';
-          }
-          
-          // 예약 시간 포맷팅
-          const startTime = new Date(reservation.START_TIME);
-          const endTime = new Date(reservation.END_TIME);
-          const formattedStartTime = startTime.toLocaleDateString('ko-KR') + ' ' + startTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
-          const formattedEndTime = endTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
-          
-          // 행 생성
-          const row = $('<tr data-reservation-id="' + reservation.RESERVATION_NO + '">' +
-            '<td>' + (reservation.RESERVATION_NO || '') + '</td>' +
-            '<td>' + (reservation.FACILITY_NAME || '') + '</td>' +
-            '<td>' + (reservation.RESERVER_NAME || '') + ' (' + (reservation.DEPT_NAME || '') + ')</td>' +
-            '<td>' + formattedStartTime + ' ~ ' + formattedEndTime + '</td>' +
-            '<td>' + (reservation.PURPOSE || '') + '</td>' +
-            '<td>' + statusBadge + '</td>' +
-            '<td><div class="action-buttons">' + actionButtons + '</div></td>' +
-            '</tr>');
-          
-          tbody.append(row);
-        });
-      }
-      
-      // 예약 상태 업데이트 함수
-      function updateReservationStatus(reservationNo, status, closeModal = false) {
-        // AJAX로 예약 상태 변경 요청
-        $.ajax({
-          url: '${pageContext.request.contextPath}/updateReservationStatus',
-          type: 'POST',
-          data: {
-            reservationNo: reservationNo,
-            status: status
-          },
-          dataType: 'json',
-          success: function(response) {
-            if (response.success) {
-              let message = "";
-              if (status === 'APPROVED') {
-                message = "예약이 승인되었습니다.";
-              } else if (status === 'CANCELED') {
-                message = "예약이 거절되었습니다.";
-              } else {
-                message = "예약 상태가 변경되었습니다.";
-              }
-              
-              alertify.success(message);
-              
-              // UI 즉시 업데이트
-              updateReservationStatusInUI(reservationNo, status);
-              
-              if (closeModal) {
-                $("#reservationModal").hide();
-              }
-            } else {
-              alertify.error(response.message || "예약 상태 변경에 실패했습니다.");
+            },
+            error: function(xhr, status, error) {
+              alertify.error("예약 검색 중 오류가 발생했습니다.");
             }
-          },
-          error: function(xhr, status, error) {
-            alertify.error("예약 상태 변경 중 오류가 발생했습니다.");
+          });
+        }
+        
+        // 예약 테이블 업데이트 함수
+        function updateReservationTable(reservations) {
+          const tbody = $("#reservationsTable tbody");
+          tbody.empty();
+          
+          if (!reservations || reservations.length === 0) {
+            tbody.html('<tr><td colspan="7" class="text-center">검색 결과가 없습니다.</td></tr>');
+            return;
           }
-        });
-      }
-      
-	// UI에서 예약 상태 즉시 업데이트 함수
-	function updateReservationStatusInUI(reservationNo, status) {
-	  // 테이블에서 해당 예약 행 찾기
-	  const row = $("tr[data-reservation-id='" + reservationNo + "']");
-	  
-	  if (row.length > 0) {
-	    // 상태 뱃지 컬럼 업데이트
-	    const statusCell = row.find("td:eq(5)");
-	    let badgeHtml = '';
-	    
-	    switch(status) {
-	      case 'APPROVED':
-	        badgeHtml = '<span class="status-badge status-active">승인 완료</span>';
-	        break;
-	      case 'CANCELED':
-	        badgeHtml = '<span class="status-badge status-inactive">취소됨</span>';
-	        break;
-	      case 'PENDING':
-	        badgeHtml = '<span class="status-badge status-pending">승인 대기</span>';
-	        break;
-	    }
-	    
-	    statusCell.html(badgeHtml);
-	    
-	    // 액션 버튼 업데이트
-	    const actionCell = row.find("td:eq(6) .action-buttons");
-	    let actionButtons = '<button class="btn btn-sm btn-secondary view-reservation" data-id="' + reservationNo + '"><i class="fas fa-eye"></i></button> ';
-	    
-	    if (status === 'PENDING') {
-	      actionButtons += '<button class="btn btn-sm btn-success approve-reservation" data-id="' + reservationNo + '"><i class="fas fa-check"></i></button> ';
-	      actionButtons += '<button class="btn btn-sm btn-danger cancel-reservation" data-id="' + reservationNo + '"><i class="fas fa-times"></i></button>';
-	    } else if (status === 'APPROVED') {
-	      actionButtons += '<button class="btn btn-sm btn-danger cancel-reservation" data-id="' + reservationNo + '"><i class="fas fa-times"></i></button>';
-	    }
-	    
-	    actionCell.html(actionButtons);
-	  } else {
-	    console.log("예약 행을 찾을 수 없어 테이블을 다시 로드합니다.");
-	    // 행을 찾지 못한 경우 전체 테이블 다시 로드
-	    searchReservations();
-	  }
-	}
-      
-      // 페이지 로드 시 예약 목록 초기화
-      if (tabParam === 'reservationList') {
-        searchReservations();
-      }
-    });
-</script>
+          
+          reservations.forEach(function(reservation) {
+            // 예약 상태에 따른 뱃지 설정
+            let statusBadge = '';
+            let displayStatus = '';
+            
+            // 상태 결정 로직
+            if (reservation.RES_STATUS === 'PENDING') {
+                displayStatus = 'PENDING';
+                statusBadge = '<span class="status-badge status-pending">승인 대기</span>';
+            } else if (reservation.RES_STATUS === 'APPROVED') {
+                displayStatus = 'APPROVED';
+                statusBadge = '<span class="status-badge status-active">승인 완료</span>';
+            } else if (reservation.RES_STATUS === 'CANCELED') {
+                displayStatus = 'CANCELED';
+                statusBadge = '<span class="status-badge status-inactive">취소됨</span>';
+            } else if (reservation.RES_STATUS === 'ACTIVE') {
+                // ACTIVE 상태인 경우 CREATE_DATE와 UPDATE_DATE를 비교해서 처리
+                const createDate = new Date(reservation.CREATE_DATE).getTime();
+                const updateDate = reservation.UPDATE_DATE ? new Date(reservation.UPDATE_DATE).getTime() : 0;
+                
+                if (!reservation.UPDATE_DATE || createDate === updateDate) {
+                    displayStatus = 'PENDING';
+                    statusBadge = '<span class="status-badge status-pending">승인 대기</span>';
+                } else {
+                    displayStatus = 'APPROVED';
+                    statusBadge = '<span class="status-badge status-active">승인 완료</span>';
+                }
+            }
+            
+            // 액션 버튼 설정
+            let actionButtons = '<button class="btn btn-sm btn-secondary view-reservation" data-id="' + reservation.RESERVATION_NO + '"><i class="fas fa-eye"></i></button> ';
+            
+            // PENDING 상태일 때만 승인 버튼 표시
+            if (displayStatus === 'PENDING') {
+              actionButtons += '<button class="btn btn-sm btn-success approve-reservation" data-id="' + reservation.RESERVATION_NO + '"><i class="fas fa-check"></i></button> ';
+            }
+            
+            // PENDING 또는 APPROVED 상태일 때만 취소 버튼 표시
+            if (displayStatus === 'PENDING' || displayStatus === 'APPROVED') {
+              actionButtons += '<button class="btn btn-sm btn-danger cancel-reservation" data-id="' + reservation.RESERVATION_NO + '"><i class="fas fa-times"></i></button>';
+            }
+            
+            // 예약 시간 포맷팅
+            const startTime = new Date(reservation.START_TIME);
+            const endTime = new Date(reservation.END_TIME);
+            const formattedStartTime = startTime.toLocaleDateString('ko-KR') + ' ' + startTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
+            const formattedEndTime = endTime.toLocaleTimeString('ko-KR', {hour: '2-digit', minute:'2-digit'});
+            
+            // 행 생성
+            const row = $('<tr data-reservation-id="' + reservation.RESERVATION_NO + '">' +
+              '<td>' + (reservation.RESERVATION_NO || '') + '</td>' +
+              '<td>' + (reservation.FACILITY_NAME || '') + '</td>' +
+              '<td>' + (reservation.RESERVER_NAME || '') + ' (' + (reservation.DEPT_NAME || '') + ')</td>' +
+              '<td>' + formattedStartTime + ' ~ ' + formattedEndTime + '</td>' +
+              '<td>' + (reservation.PURPOSE || '') + '</td>' +
+              '<td>' + statusBadge + '</td>' +
+              '<td><div class="action-buttons">' + actionButtons + '</div></td>' +
+              '</tr>');
+            
+            tbody.append(row);
+          });
+        }
+        
+        // 예약 상태 업데이트 함수
+        function updateReservationStatus(reservationNo, status, closeModal = false) {
+          // AJAX로 예약 상태 변경 요청
+          $.ajax({
+            url: '${pageContext.request.contextPath}/updateReservationStatus',
+            type: 'POST',
+            data: {
+              reservationNo: reservationNo,
+              status: status
+            },
+            dataType: 'json',
+            success: function(response) {
+              if (response.success) {
+                let message = "";
+                if (status === 'APPROVED') {
+                  message = "예약이 승인되었습니다.";
+                } else if (status === 'CANCELED') {
+                  message = "예약이 거절되었습니다.";
+                } else {
+                  message = "예약 상태가 변경되었습니다.";
+                }
+                
+                // 토스트 알림 표시 (명시적 호출)
+                if (typeof window.showToastNotification === 'function') {
+                  window.showToastNotification(message);
+                }
+                
+                alertify.success(message);
+                
+                // UI 즉시 업데이트
+                updateReservationStatusInUI(reservationNo, status);
+                
+                if (closeModal) {
+                  $("#reservationModal").hide();
+                }
+              } else {
+                alertify.error(response.message || "예약 상태 변경에 실패했습니다.");
+              }
+            },
+            error: function(xhr, status, error) {
+              alertify.error("예약 상태 변경 중 오류가 발생했습니다.");
+            }
+          });
+        }
+        
+        // UI에서 예약 상태 즉시 업데이트 함수
+        function updateReservationStatusInUI(reservationNo, status) {
+          // 테이블에서 해당 예약 행 찾기
+          const row = $("tr[data-reservation-id='" + reservationNo + "']");
+          
+          if (row.length > 0) {
+            // 상태 뱃지 컬럼 업데이트
+            const statusCell = row.find("td:eq(5)");
+            let badgeHtml = '';
+            
+            switch(status) {
+              case 'APPROVED':
+                badgeHtml = '<span class="status-badge status-active">승인 완료</span>';
+                break;
+              case 'CANCELED':
+                badgeHtml = '<span class="status-badge status-inactive">취소됨</span>';
+                break;
+              case 'PENDING':
+                badgeHtml = '<span class="status-badge status-pending">승인 대기</span>';
+                break;
+            }
+            
+            statusCell.html(badgeHtml);
+            
+            // 액션 버튼 업데이트
+            const actionCell = row.find("td:eq(6) .action-buttons");
+            let actionButtons = '<button class="btn btn-sm btn-secondary view-reservation" data-id="' + reservationNo + '"><i class="fas fa-eye"></i></button> ';
+            
+            if (status === 'PENDING') {
+              actionButtons += '<button class="btn btn-sm btn-success approve-reservation" data-id="' + reservationNo + '"><i class="fas fa-check"></i></button> ';
+              actionButtons += '<button class="btn btn-sm btn-danger cancel-reservation" data-id="' + reservationNo + '"><i class="fas fa-times"></i></button>';
+            } else if (status === 'APPROVED') {
+              actionButtons += '<button class="btn btn-sm btn-danger cancel-reservation" data-id="' + reservationNo + '"><i class="fas fa-times"></i></button>';
+            }
+            
+            actionCell.html(actionButtons);
+          } else {
+            console.log("예약 행을 찾을 수 없어 테이블을 다시 로드합니다.");
+            // 행을 찾지 못한 경우 전체 테이블 다시 로드
+            searchReservations();
+          }
+        }
+        
+        // 페이지 로드 시 예약 목록 초기화
+        if (tabParam === 'reservationList') {
+          searchReservations();
+        }
+      });
+  </script>
 
 </body>
 </html>

@@ -488,7 +488,7 @@ public class FacilityController {
             int result = facilityService.updateReservationStatus(params);
             
             if(result > 0) {
-                // 알림 발송 처리
+                // 알림 발송 처리 - 더 명확한 제목과 내용으로 수정
                 try {
                     // 시설명 가져오기
                     String facilityName = (String) reservation.get("FACILITY_NAME");
@@ -508,7 +508,7 @@ public class FacilityController {
                         }
                     }
                     
-                    // 알림 제목과 내용 설정
+                    // 알림 제목과 내용 설정 - 더 명확한 형식으로 수정
                     String notificationTitle;
                     String notificationContent;
                     
@@ -517,13 +517,13 @@ public class FacilityController {
                         // 관리자가 상태 변경하는 경우, 예약자에게 알림 발송
                         if(loginUser.getEmpNo() != reserverEmpNo && reserverId != null) {
                             if(status.equals("APPROVED")) {
-                                notificationTitle = "시설 예약 승인 완료";
+                                notificationTitle = "[시설 예약] 승인 완료";
                                 notificationContent = facilityName + " 예약이 승인되었습니다.";
                             } else if(status.equals("CANCELED")) {
-                                notificationTitle = "시설 예약 승인 거절";
+                                notificationTitle = "[시설 예약] 승인 거절";
                                 notificationContent = facilityName + " 예약 요청이 거절되었습니다.";
                             } else {
-                                notificationTitle = "시설 예약 상태 변경";
+                                notificationTitle = "[시설 예약] 상태 변경";
                                 notificationContent = facilityName + " 예약 상태가 변경되었습니다.";
                             }
                             
@@ -542,7 +542,7 @@ public class FacilityController {
                     } else {
                         // 일반 사용자가 취소하는 경우, 관리자에게 알림 발송
                         if(status.equals("CANCELED")) {
-                            notificationTitle = "시설 예약 취소";
+                            notificationTitle = "[시설 예약] 취소 알림";
                             notificationContent = loginUser.getEmpName() + "님이 " + facilityName + " 예약을 취소했습니다.";
                             
                             // 관리자에게 알림 발송 (관리자 ID가 1이라고 가정)
@@ -735,15 +735,15 @@ public class FacilityController {
             // 예약 생성
             int result = facilityService.insertReservation(params);
             
-            // 예약 생성 성공 시 알림 발송
-            if(result > 0) {
+            // 예약 생성 성공 시 관리자에게 알림 발송
+            if (result > 0) {
                 // 시설 정보 가져오기
                 Facility facility = facilityService.selectFacility(facilityNo);
                 
                 // 관리자에게 알림 발송
                 try {
                     // 관리자는 1명이므로, empNo가 1인 사용자(또는 시스템 관리자)를 고정으로 사용
-                    Employee admin = employeeService.selectEmployee(1); // 관리자 사번을 1로 가정
+                    Employee admin = employeeService.selectEmployee(1);
                     
                     if (admin != null) {
                         logger.info("관리자에게 예약 알림 발송 - 사용자: " + loginUser.getEmpId() + ", 시설명: " + facility.getFacilityName());
@@ -751,11 +751,11 @@ public class FacilityController {
                         notificationSenderService.sendNotificationToUser(
                             admin.getEmpNo(),
                             admin.getEmpId(),
-                            "FACILITY",
-                            "[시설 예약 신청]",
-                            loginUser.getEmpName() + "님이 " + facility.getFacilityName() + " 예약을 신청했습니다.",
-                            "facility",
-                            String.valueOf(result) // 생성된 예약 번호를 참조 ID로 사용 (또는 facilityNo)
+                            "FACILITY", // 참조 타입
+                            "[시설 예약 신청]", // 제목
+                            loginUser.getEmpName() + "님이 " + facility.getFacilityName() + " 예약을 신청했습니다.", // 내용
+                            "facility", // 참조 URL
+                            String.valueOf(result) // 생성된 예약 번호를 참조 ID로 사용
                         );
                     } else {
                         logger.warn("시스템 관리자 정보를 찾을 수 없습니다. 알림을 발송할 수 없습니다.");
@@ -1051,4 +1051,4 @@ public class FacilityController {
             return null;
         }
     }
- }
+}
