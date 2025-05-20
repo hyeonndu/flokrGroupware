@@ -197,4 +197,24 @@ public class AttendanceController {
 	    
 	    return response;
 	}
+	
+	@RequestMapping("/getClockInTime")
+	@ResponseBody
+	public Map<String, Object> getClockInTime(HttpSession session) {
+	    Employee loginUser = (Employee) session.getAttribute("loginUser");
+	    int empNo = loginUser.getEmpNo();
+	    
+	    Attendance todayAttendance = attService.getTodayAttendance(empNo);
+	    
+	    Map<String, Object> response = new HashMap<>();
+	    if (todayAttendance != null && todayAttendance.getClockInTime() != null) {
+	        response.put("success", true);
+	        response.put("clockInTime", todayAttendance.getClockInTime());  // 출근 시간 전달
+	    } else {
+	        response.put("success", false);
+	    }
+	    
+	    return response;
+	}
+
 }
