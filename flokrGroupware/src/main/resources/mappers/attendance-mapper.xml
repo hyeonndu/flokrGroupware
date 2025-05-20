@@ -17,31 +17,36 @@
 	  AND TRUNC(ATTENDANCE_DATE) = TRUNC(SYSDATE)
 	</select>
 	
-	<insert id="insertTodayAttendance">
+	<insert id="insertTodayAttendance" parameterType="Attendance">
 	  INSERT INTO ATTENDANCE (ATTENDANCE_NO, EMP_NO, ATTENDANCE_DATE)
-	  VALUES (SEQ_ATTENDANCE.NEXTVAL, #{empNo}, #{today})
+	  VALUES (SEQ_ATTENDANCE.NEXTVAL, #{empNo}, #{attendanceDate}) <!-- ✅ Fix -->
 	</insert>
+
 	
 	<update id="updateClockIn">
-	  UPDATE ATTENDANCE
-	  SET CLOCK_IN_TIME = #{now},
-	      ATT_STATUS = #{status}
-	  WHERE EMP_NO = #{empNo}
-	  AND TRUNC(ATTENDANCE_DATE) = TRUNC(SYSDATE)
+	    UPDATE ATTENDANCE
+	    SET CLOCK_IN_TIME = #{clockInTime},
+	        ATT_STATUS = #{attStatus}
+	    WHERE EMP_NO = #{empNo}
+	    AND TRUNC(ATTENDANCE_DATE) = TRUNC(SYSDATE)
 	</update>
+
 	
 	<update id="updateClockOut">
 	  UPDATE ATTENDANCE
-	  SET CLOCK_OUT_TIME = #{now},
+	  SET CLOCK_OUT_TIME = #{clockOutTime},
 	      ATT_STATUS = 'LEAVE'
 	  WHERE EMP_NO = #{empNo}
 	  AND TRUNC(ATTENDANCE_DATE) = TRUNC(SYSDATE)
 	</update>
 	
-	<select id="getAttendancesBetween" resultMap="attendanceResult">
-	    SELECT * FROM ATTENDANCE
-	    WHERE EMP_NO = #{empNo}
-	    AND ATTENDANCE_DATE BETWEEN #{startOfWeek} AND #{endOfWeek}
+	<select id="getAttendancesBetween" parameterType="attendance" resultMap="attendanceResult">
+	  SELECT *
+	  FROM ATTENDANCE
+	  WHERE EMP_NO = #{empNo}
+	    AND TRUNC(ATTENDANCE_DATE) BETWEEN TRUNC(#{startDate}) AND TRUNC(#{endDate})
+	  ORDER BY ATTENDANCE_DATE
 	</select>
+
 
 </mapper>

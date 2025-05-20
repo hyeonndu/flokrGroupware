@@ -6,6 +6,7 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,34 +43,46 @@ public class AttendanceServiceImpl implements AttendanceService {
 
 	@Override
 	public int updateClockIn(int empNo, Timestamp now, String status) {
-		return attDao.updateClockIn(sqlSession, empNo, now, status);
+	    return attDao.updateClockIn(sqlSession, empNo, now, status); // now는 Timestamp 타입으로 전달
 	}
 
 	@Override
 	public int updateClockOut(int empNo, Timestamp now) {
 		return attDao.updateClockOut(sqlSession, empNo, now);
 	}
+	
+	@Override
+	public int updateWorkType(int empNo, String type) {
+	    // 업무 형태 업데이트 메서드 추가
+	    return attDao.updateWorkType(sqlSession, empNo, type);
+	}
 
 	@Override
 	public Duration calculateWeekWorkDuration(int empNo) {
-	    // 현재 날짜 기준으로 주간 범위 (월 ~ 일)
 	    LocalDate today = LocalDate.now();
+	    
+	    // 이번 주의 시작(월요일) 날짜와 끝(일요일)을 구함
 	    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-	    LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY);
+	    LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY).plusDays(1);  // 일요일 자정 포함
 
+	    // DB에서 해당 날짜 범위 내 근태 기록을 가져옴
 	    List<Attendance> weekRecords = attDao.getAttendancesBetween(sqlSession, empNo, startOfWeek, endOfWeek);
 
 	    Duration total = Duration.ZERO;
+
 	    for (Attendance att : weekRecords) {
-	        if (att.getClockInTime() != null && att.getClockOutTime() != null) {
-	            total = total.plus(Duration.between(att.getClockInTime().toLocalDateTime(), att.getClockOutTime().toLocalDateTime()));
-	        } else if (att.getClockInTime() != null && att.getClockOutTime() == null) {
-	            // 출근 중인 경우 현재 시각까지 누적
-	            total = total.plus(Duration.between(att.getClockInTime().toLocalDateTime(), LocalDateTime.now()));
+	        if (att.getClockInTime() != null) {
+	            // 출근 시간과 퇴근 시간 계산
+	            LocalDateTime clockIn = att.getClockInTime().toLocalDateTime();
+	            LocalDateTime clockOut = (att.getClockOutTime() != null) 
+	                ? att.getClockOutTime().toLocalDateTime() 
+	                : LocalDateTime.now(); // 퇴근 안 했으면 현재 시간까지 계산
+
+	            total = total.plus(Duration.between(clockIn, clockOut)); // 근무 시간 누적
 	        }
 	    }
 
-	    return total;
+	    return total;  // 최종 누적 근무 시간
 	}
 	
 	@Override
@@ -131,6 +144,21 @@ public class AttendanceServiceImpl implements AttendanceService {
 	public Map<String, Duration> calculateMonthSummary(int empNo) {
 	    LocalDate first = LocalDate.now().withDayOfMonth(1);
 	    LocalDate last = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+	    
+	    return calculateMonthSummaryForDates(empNo, first, last);
+	}
+	
+	@Override
+	public Map<String, Duration> calculateMonthSummaryForYearMonth(int empNo, int year, int month) {
+	    // 특정 연도, 월에 대한 월간 근무 시간 계산
+	    YearMonth yearMonth = YearMonth.of(year, month);
+	    LocalDate first = yearMonth.atDay(1);
+	    LocalDate last = yearMonth.atEndOfMonth();
+	    
+	    return calculateMonthSummaryForDates(empNo, first, last);
+	}
+	
+	private Map<String, Duration> calculateMonthSummaryForDates(int empNo, LocalDate first, LocalDate last) {
 	    List<Attendance> monthRecords = attDao.getAttendancesBetween(sqlSession, empNo, first, last);
 
 	    Duration total = Duration.ZERO;
@@ -138,8 +166,22 @@ public class AttendanceServiceImpl implements AttendanceService {
 	    Map<Integer, Duration> weeklyMap = new HashMap<>();
 
 	    for (Attendance att : monthRecords) {
-	        if (att.getClockInTime() != null && att.getClockOutTime() != null) {
-	            Duration d = Duration.between(att.getClockInTime().toLocalDateTime(), att.getClockOutTime().toLocalDateTime());
+	        if (att.getClockInTime() != null) {
+	            Duration d;
+	            if (att.getClockOutTime() != null) {
+	                d = Duration.between(att.getClockInTime().toLocalDateTime(), att.getClockOutTime().toLocalDateTime());
+	            } else {
+	                // 현재 출근 중이고 아직 퇴근 안한 경우
+	                LocalDate attDate = att.getAttendanceDate().toLocalDate();
+	                LocalDate today = LocalDate.now();
+	                // 오늘 날짜의 출근 중인 데이터만 실시간 계산
+	                if (attDate.isEqual(today)) {
+	                    d = Duration.between(att.getClockInTime().toLocalDateTime(), LocalDateTime.now());
+	                } else {
+	                    // 과거 날짜이지만 퇴근 기록이 없는 경우 (0으로 처리)
+	                    d = Duration.ZERO;
+	                }
+	            }
 	            int week = getWeekOfMonth(att.getAttendanceDate().toLocalDate());
 	            weeklyMap.put(week, weeklyMap.getOrDefault(week, Duration.ZERO).plus(d));
 	        }
@@ -208,9 +250,18 @@ public class AttendanceServiceImpl implements AttendanceService {
 	            if (att.getClockOutTime() != null) {
 	                workDuration = Duration.between(att.getClockInTime().toLocalDateTime(), att.getClockOutTime().toLocalDateTime());
 	            } else {
-	                workDuration = Duration.between(att.getClockInTime().toLocalDateTime(), LocalDateTime.now());
+	                // 오늘인 경우만 실시간 계산, 그 외에는 0으로 처리
+	                if (d.isEqual(LocalDate.now())) {
+	                    workDuration = Duration.between(att.getClockInTime().toLocalDateTime(), LocalDateTime.now());
+	                } else {
+	                    workDuration = Duration.ZERO;
+	                }
 	            }
-	            summaryMap.get(weekNum).addDuration(workDuration);
+	            
+	            // 주차 정보가 있는 경우에만 추가
+	            if (summaryMap.containsKey(weekNum)) {
+	                summaryMap.get(weekNum).addDuration(workDuration);
+	            }
 	        }
 	    }
 
@@ -231,6 +282,4 @@ public class AttendanceServiceImpl implements AttendanceService {
 	    }
 	    return map;
 	}
-
-
 }

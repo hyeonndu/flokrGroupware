@@ -59,15 +59,15 @@
                 <div id="p01-onoffbtn">
                     <p class="current-date"><fmt:formatDate value="${today}" pattern="yyyy년 MM월 dd일" /></p>
                     <div class="time-info-box">
-                        <div class="time-section">
-                            <span class="time-label">출근 시간</span>
-                            <span class="time-value">08 : 52</span> <%-- 실제 시간 필요 --%>
-                        </div>
-                        <div class="time-section">
-                            <span class="time-label">퇴근 시간</span>
-                            <span class="time-value placeholder">-- : --</span> <%-- 실제 시간 필요 --%>
-                        </div>
-                    </div>
+					    <div class="time-section">
+					        <span class="time-label">출근 시간</span>
+					        <span class="time-value" id="clockInTime">-- : --</span> <!-- 출근 시간 -->
+					    </div>
+					    <div class="time-section">
+					        <span class="time-label">퇴근 시간</span>
+					        <span class="time-value" id="clockOutTime">-- : --</span> <!-- 퇴근 시간 -->
+					    </div>
+					</div>
                     <div class="action-buttons">
                         <button class="btn-large btn-checkin">출근</button>
                         <button class="btn-large btn-checkout">퇴근</button>
@@ -80,34 +80,42 @@
                     <table>
                         <thead>
                             <tr>
-                                <th></th>
-                                <th>TASK NAME</th>
-                                <th>REQUEST DATE</th>
-                                <th>DEADLINE</th>
-                                <th>STATUS</th>
+                                <th>업무 제목</th>
+                                <th>생성일</th>
+                                <th>마감일</th>
+                                <th>상태</th>
                             </tr>
                         </thead>
                         <tbody>
                             <%-- 업무 목록 데이터 (예시) --%>
                             <tr>
-                                <td><input type="checkbox"></td>
-                                <td>업무목록 입니다.</td>
-                                <td>07/12/2023</td>
-                                <td>07/12/2023</td>
+                                <td>사용자 데이터 시각화</td>
+                                <td>2025/05/19</td>
+                                <td>2025/05/22</td>
                                 <td><span class="status status-inprogress">진행중</span></td>
                             </tr>
                             <tr>
-                                <td><input type="checkbox"></td>
-                                <td>업무목록 입니다.</td>
-                                <td>05/12/2023</td>
-                                <td>05/12/2023</td>
+                                <td>리액트 컴포넌트 개발</td>
+                                <td>2025/05/17</td>
+                                <td>2025/05/23</td>
                                 <td><span class="status status-inprogress">진행중</span></td>
                             </tr>
                             <tr>
-                                <td><input type="checkbox"></td>
-                                <td>업무목록 입니다.</td>
-                                <td>11/12/2023</td>
-                                <td>11/12/2023</td>
+                                <td>스프링부트 API 개발 가이드</td>
+                                <td>2025/05/18</td>
+                                <td>2025/05/25</td>
+                                <td><span class="status status-completed">완료</span></td>
+                            </tr>
+                            <tr>
+                                <td>UI 디자인 원칙 및 컴포넌트</td>
+                                <td>2025/05/11</td>
+                                <td>2025/05/21</td>
+                                <td><span class="status status-inprogress">진행중</span></td>
+                            </tr>
+                            <tr>
+                                <td>사용자 인터페이스 디자인</td>
+                                <td>2025/05/13</td>
+                                <td>2025/05/20</td>
                                 <td><span class="status status-completed">완료</span></td>
                             </tr>
                         </tbody>
@@ -928,6 +936,46 @@
 	        return num < 10 ? "0" + num : num;
 	    }
 	});
+	
+	// 출근 버튼 클릭 시
+	document.querySelector(".btn-checkin").addEventListener("click", function() {
+	    fetch('/attendance/clockIn', {
+	        method: 'POST',
+	        headers: {
+	            'Content-Type': 'application/json'
+	        },
+	        body: JSON.stringify({ type: 'NORMAL' })  // 'NORMAL' 또는 'REMOTE' 근무 유형
+	    })
+	    .then(response => response.json())
+	    .then(data => {
+	        if (data.success) {
+	            alert("출근 완료!");
+	            updateClockInTime();  // 출근 시간 갱신 함수 호출
+	        } else {
+	            alert("출근 처리 실패");
+	        }
+	    })
+	    .catch(error => {
+	        console.error("Error:", error);
+	    });
+	});
+
+	// 출근 시간 업데이트 함수
+	function updateClockInTime() {
+	    fetch('/attendance/getClockInTime')  // 서버에서 출근 시간 가져오기
+	        .then(response => response.json())
+	        .then(data => {
+	            const clockInElement = document.getElementById('clockInTime');
+	            if (data.success && data.clockInTime) {
+	                const clockInTime = new Date(data.clockInTime);  // 출근 시간
+	                clockInElement.textContent = `${clockInTime.getHours()} : ${clockInTime.getMinutes()}`;
+	            }
+	        })
+	        .catch(error => {
+	            console.error("출근 시간 업데이트 오류:", error);
+	        });
+	}
+
 	</script>
 </body>
 </html>

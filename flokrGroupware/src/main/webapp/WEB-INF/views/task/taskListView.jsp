@@ -689,7 +689,7 @@
 	          
 	          // 담당자 정보
 	          const assigneeDiv = document.createElement("div");
-	          assigneeDiv.innerHTML = "<strong>업무 담당자:</strong> 👤 A, B 외";
+	          assigneeDiv.innerHTML = "<strong>업무 담당자:</strong> 최민준, 김지혜 외";
 	          metaDiv.appendChild(assigneeDiv);
 	          
 	          // 카테고리
