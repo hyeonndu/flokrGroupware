@@ -265,7 +265,7 @@ public class TaskController {
 			response.put("success", true);
 		}else { // 수정 실패 => 에러페이지
 			session.setAttribute("alertMsg", "업무 수정에 실패하였습니다.");
-			response.put("success", false);
+			response.put("fail", false);
 		}
 		
 		return response;
