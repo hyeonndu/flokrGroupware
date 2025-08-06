@@ -38,20 +38,25 @@
 
 ### ❤️ 주현수 (조장)
 
-*   업무 관리
-    - 업무 추가/수정/삭제
-    - 카테고리 선택
-    - 이모지 선택 (emoji picker 라이브러리 이용)
-    - 공동 작업자 선택
-    - 첨부파일 선택
+*   업무 등록/수정/삭제
+    - 업무 추가 시 이모지 선택 기능 제공
+    - 마감일, 카테고리, 상태(Tag) 설정 가능
+    - 첨부파일 업로드 지원
+    - 공동 작업자 선택 가능
+*   업무 상세 조회
+    - 클릭 시 우측에 상세보기 뷰 전환
+    - 담당자, 상태, 파일 미리보기 등 표시
+*   업무 상태 태그 시스템
+    - 요청, 진행 중, 피드백, 보류, 완료 상태 지원
+    - 상태에 따라 색상 변경되는 Badge 스타일 적용
 *   근태 관리
     - 출퇴근 실시간 기록
     - 재택 여부 선택
     - 주간/월간 기록 실시간 반영
-*   elastic search를 이용한 검색엔진 구현
-    - 자동완성
-    - 오타 수정
-    - 유사어 검색 처리
+*   Elasticsearch 기반 검색 기능
+    - 실시간 자동완성 (suggest API)
+    - 오타 보정 검색 (fuzzy search)
+    - 검색 결과 리스트 → 업무 상세로 연결 가능
 
 ### 💛 김현지 (조원)
 
@@ -93,6 +98,10 @@
 *   Spring, MyBatis, Maven
 *   Oracle DB
 
+### 🔎 검색 엔진
+
+*   Elasticsearch 7.17
+
 ### 📦 기능별 사용 라이브러리
 
 *   😀 이모지 선택: emoji picker
@@ -111,19 +120,19 @@ ERD CLOUD:
 
 *   업무 관리
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/업무관리.gif" width="700">
+    <img src="flokrGroupware/src/main/webapp/resources/images/업무관리.gif" width="700">  
 
 *   검색 엔진
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/검색엔진.gif" width="700">
+    <img src="flokrGroupware/src/main/webapp/resources/images/검색엔진.gif" width="700">  
 
 *   근태 관리 (사무실)
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(사무실).gif" width="700">
+    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(사무실).gif" width="700">  
 
 *   근태 관리 (재택)
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(재택).gif" width="700">
+    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(재택).gif" width="700">  
 
 ### 💛 김현지
 
