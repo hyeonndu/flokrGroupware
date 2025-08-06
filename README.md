@@ -19,6 +19,7 @@
 플로커는 장소에 구애받지 않고 하나의 플랫폼에서 업무를 처리함으로써, 업무 효율과 협업 생산성을 높이는 데에 도움을 줍니다. 또한 고급 검색과 통합 시스템 도입을 통해 정보 접근성을 개선하고, 실시간 소통과 유기적인 조직 운영을 가능하게 합니다.
 
 
+
 # 📆 개발 기간
 
 #### 2025.04.09 ~ 2025.05.20
@@ -33,6 +34,8 @@
 *   2025.05.20 : 프로젝트 최종 발표
 
 <img src="flokrGroupware/src/main/webapp/resources/images/작업일정표_1조.png" width="700">
+
+
 
 # 👨‍💻 구성원 및 역할
 
@@ -76,6 +79,8 @@
 *   ()
 *   ()
 
+
+
 # ⚙️ 개발 환경
 
 *   OS : Windows10
@@ -84,6 +89,8 @@
 *   DBMS : Oracle
 *   Languages : Java, HTML, CSS, JavaScript, JQuery, JSP, SQL
 *   Management : Git, GitHub, SourceTree
+
+
 
 # 🛠️ 기술 스택 & 사용 라이브러리
 
@@ -109,10 +116,14 @@
 *   🔄 JSON 처리: Gson, JSON-simple
 *   🗄 DB 연동: Oracle JDBC Driver (ojdbc6)
 
+
+
 # 💾 설계
 
 ERD CLOUD:  
 <img src="flokrGroupware/src/main/webapp/resources/images/ERDCLOUD_Flokr.png" width="700">
+
+
 
 # 🎀 프로젝트 구현
 
@@ -120,19 +131,23 @@ ERD CLOUD:
 
 *   업무 관리
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/업무관리.gif" width="700">  
+    <img src="flokrGroupware/src/main/webapp/resources/images/업무관리.gif" width="700">
+
 
 *   검색 엔진
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/검색엔진.gif" width="700">  
+    <img src="flokrGroupware/src/main/webapp/resources/images/검색엔진.gif" width="700">
+
 
 *   근태 관리 (사무실)
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(사무실).gif" width="700">  
+    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(사무실).gif" width="700">
+
 
 *   근태 관리 (재택)
     
-    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(재택).gif" width="700">  
+    <img src="flokrGroupware/src/main/webapp/resources/images/근태관리(재택).gif" width="700">
+
 
 ### 💛 김현지
 
@@ -141,6 +156,7 @@ ERD CLOUD:
 
 
 ### 💜 이지은
+
 
 
 # 📚 최종 보고서
