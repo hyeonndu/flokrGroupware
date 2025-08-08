@@ -63,9 +63,23 @@
 
 ### 💛 김현지 (조원)
 
-*   ()
-*   ()
-*   ()
+*   로그인 및 관리자 대시보드
+    - Spring Security 기반 사용자 인증 및 권한 관리
+    - BCrypt 암호화를 통한 비밀번호 보안 강화
+    - 관리자/일반사용자 권한별 대시보드 자동 분기
+    - 실시간 통계 현황 (총 직원 수, 부서 수, 현재 접속자 수, 공지사항)
+*   사원 관리
+    - 사원 등록 시 사번/이메일 자동 생성, 초기 비밀번호 암호화
+    - 사원 목록 조회, 수정, 삭제 기능
+    - 페이징 처리 및 다중 조건 검색 기능
+*   시설 관리
+    - 회의실, 장비 등 시설 등록 및 관리
+    - 사용자 시설 예약 신청 → 관리자 승인/거절 워크 플로우 (실시간 알림 연동)
+    - 시설 예약 시 시간 중복 예약 방지를 위한 로직 적용
+*   알림 관리
+    - WebSocket STOMP 기반 실시간 알림
+    - 개인/부서/전체 대상 알림 기능
+    - 알림 뱃지 카운트, 읽지 않음/읽음 상태 관리 및 알림 히스토리 관리
 
 ### 🩵 신현정 (조원)
 
@@ -150,6 +164,25 @@ ERD CLOUD:
 
 
 ### 💛 김현지
+
+*   로그인 / 관리자 대시보드
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/로그인 페이지 및 관리자 대시보드.gif" width="700">
+
+
+*   사원 관리
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/사원 관리.gif" width="700">
+
+
+*   시설 관리
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/시설 관리.gif" width="700">
+
+
+*   알림 관리
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/알림 관리.gif" width="700">
 
 
 ### 🩵 신현정
