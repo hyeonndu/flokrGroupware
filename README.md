@@ -204,7 +204,7 @@ ERD CLOUD:
 
 *   단체 채팅방 생성
 
-    <img src="flokrGroupware/src/main/webapp/resources/images/04_단체채팅방 생성.gif" width="700">
+    <img src="flokrGroupware/src/main/webapp/resources/images/04_단체채팅방 생성 .gif" width="700">
 
 *   채팅 전송
 
@@ -212,7 +212,7 @@ ERD CLOUD:
     
 *   채팅방 나가기
 
-    <img src="flokrGroupware/src/main/webapp/resources/images/03_채팅방 나가기.gif" width="700">
+    <img src="flokrGroupware/src/main/webapp/resources/images/03_채팅방 나가기 .gif" width="700">
 
 
 
