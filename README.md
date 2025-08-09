@@ -89,9 +89,17 @@
 
 ### 💜 이지은 (조원)
 
-*   ()
-*   ()
-*   ()
+*   실시간 통신 인프라 설계
+    - Spring WebSocket과 STOMP로 양방향 통신 채널 구축
+    - Handshake 시 인증 정보 확인 및 WebSocket 세션 적용 Interceptor 구현
+*   메시지 처리 시스템 구현
+    - TextWebSocketHandler 상속, 메시지 수신·처리 및 사용자/채팅방 전달 로직 개발
+*   채팅방 관리 기능
+    - 채팅방 생성·퇴장 기능 구현
+    - 채팅방 목록 검색 기능 개발
+*   메신저 핵심 기능
+    - 1:1 및 그룹 채팅 지원
+    - 채팅 기록 저장·조회 기능 구현
 
 
 
@@ -189,6 +197,23 @@ ERD CLOUD:
 
 
 ### 💜 이지은
+
+*   1:1 채팅방 생성
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/01_채팅방생성.gif" width="700">
+
+*   단체 채팅방 생성
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/04_단체채팅방 생성.gif" width="700">
+
+*   채팅 전송
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/02_채팅전송.gif" width="700">
+    
+*   채팅방 나가기
+
+    <img src="flokrGroupware/src/main/webapp/resources/images/03_채팅방 나가기.gif" width="700">
+
 
 
 
