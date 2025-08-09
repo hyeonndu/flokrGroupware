@@ -180,17 +180,17 @@ ERD CLOUD:
 
 *   사원 관리
 
-    <img src="flokrGroupware/src/main/webapp/resources/images/사원 관리.gif" width="700">
+    <img src="https://github.com/user-attachments/assets/b68d7e3f-40c8-41e7-886d-e0a8fad55eae" width="700">
 
 
 *   시설 관리
 
-    <img src="flokrGroupware/src/main/webapp/resources/images/시설 관리.gif" width="700">
+    <img src="https://github.com/user-attachments/assets/13d2c753-7758-4adf-9b03-cdf3a105ecaf" width="700">
 
 
 *   알림 관리
 
-    <img src="flokrGroupware/src/main/webapp/resources/images/알림 관리.gif" width="700">
+    <img src="https://github.com/user-attachments/assets/c1609fbb-9153-43ea-a4f6-36743ff27ec9" width="700">
 
 
 ### 🩵 신현정
@@ -220,3 +220,5 @@ ERD CLOUD:
 # 📚 최종 보고서
 
 [Flokr 최종보고서 🎈](https://drive.google.com/file/d/1eLBI3Lt7UkVynXvdukT1v017RzVeII4E/view?usp=drive_link)
+
+[Flokr 발표자료 🎤](https://www.canva.com/design/DAGnl2KblnY/2X79TBQIh3EednxRdwnwvg/edit?utm_content=DAGnl2KblnY&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
